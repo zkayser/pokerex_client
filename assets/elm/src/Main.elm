@@ -14,7 +14,7 @@ init =
 
 initialModel : Model
 initialModel =
-  { greeting = "Hello and welcome to the PokerEx client app, written in Elm." }
+  { greeting = "Hello and welcome to the Elm PokerEx client." }
 
 view : Model -> Html Msg
 view model =
