@@ -16,8 +16,17 @@ import "phoenix_html"
 import Elm from "./main.js";
 
 const ELM_DIV = document.getElementById("elm-div");
-const ELM_APP = Elm.Main.embed(ELM_DIV);
-console.log("App has been rendered...")
+let elmApp = Elm.Main.embed(ELM_DIV, localStorage.session || null);
+
+elmApp.ports.storeSession.subscribe((session) => {
+  localStorage.sesion = session;
+});
+
+window.addEventListener("storage", (event) => {
+  if (event.storageArea === localStorage && event.key === "session") {
+    app.ports.onSessionChange.send(event.newValue);
+  }
+}, false);
 // Import local files
 //
 // Local files can be imported directly using relative

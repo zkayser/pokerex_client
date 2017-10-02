@@ -1,4 +1,11 @@
-module Data.Player exposing (Player, Username, decoder, encode, usernameDecoder, usernameToHtml, usernameToString)
+module Data.Player exposing ( Player
+                            , Username
+                            , decoder
+                            , encode
+                            , encodeUsername
+                            , usernameDecoder
+                            , usernameToHtml
+                            , usernameToString)
 
 import Data.AuthToken as AuthToken exposing (AuthToken)
 import Html exposing (Html)
