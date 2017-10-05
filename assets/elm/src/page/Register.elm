@@ -52,7 +52,7 @@ viewForm =
     , inputFor "Message" Blurb "text"
     , inputFor "Email" Email "text"
     , button [ style [ ("background-color", "blue"), ("color", "white") ] ]
-        [ text "Login" ]
+        [ text "Sign Up" ]
     ]
 
 inputFor : String -> (String -> RegistrationAttr) -> String -> Html Msg
@@ -86,20 +86,20 @@ update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 update msg model =
   case msg of
     SubmitForm ->
-      ( ( model, Cmd.none ), NoOp )
+      ( ( model, Http.send RegistrationCompleted (Request.Player.register model) ), NoOp )
     Set (Username name) ->
-      ( ( model, Cmd.none), NoOp )
+      ( ({ model | username = name }, Cmd.none), NoOp )
     Set (Password password) ->
-      ( ( model, Cmd.none), NoOp )
+      ( ({ model | password = password }, Cmd.none), NoOp )
     Set (FirstName firstName) ->
-      ( ( model, Cmd.none), NoOp )
+      ( ( { model | firstName = firstName }, Cmd.none), NoOp )
     Set (LastName lastName) ->
-      ( ( model, Cmd.none), NoOp )
+      ( ( { model | lastName = lastName }, Cmd.none), NoOp )
     Set (Blurb blurb) ->
-      ( ( model, Cmd.none), NoOp )
+      ( ( { model | blurb = blurb }, Cmd.none), NoOp )
     Set (Email email) ->
-      ( ( model, Cmd.none), NoOp )
+      ( ( { model | email = email }, Cmd.none), NoOp )
     RegistrationCompleted (Err error) ->
-      ( ( model, Cmd.none), NoOp )
+      ( ( { model | errors = [ ("error", toString error) ] }, Cmd.none), NoOp )
     RegistrationCompleted (Ok player) ->
-      ( ( model, Cmd.none), NoOp )
+      ( ( model , Cmd.batch [ storeSession player, Route.modifyUrl Route.Home ] ), SetPlayer player )

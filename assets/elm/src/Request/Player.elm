@@ -20,6 +20,16 @@ storeSession player =
     |> Just
     |> Ports.storeSession
 
+type alias Registration r =
+  { r |
+    username : String
+  , password : String
+  , email : String
+  , firstName : String
+  , lastName : String
+  , blurb : String
+  }
+
 {-
 Not sure if the detailed implementation of this is going to work right off the bat.
 Might need to tweak the server side implementation, add routes for api session requests,
@@ -42,18 +52,21 @@ login { username, password } =
   Decode.field "player" Player.decoder
     |> Http.post (apiUrl ++ "/sessions") body
 
-register : { r | username : String, email : String, password : String } -> Http.Request Player
-register { username, email, password } =
+register : Registration r -> Http.Request Player
+register registration =
   let
-    player =
+    registrationAttrs =
       Encode.object
-        [ ("username", Encode.string username)
-        , ("email", Encode.string email)
-        , ("password", Encode.string password)
+        [ ("name", Encode.string registration.username)
+        , ("email", Encode.string registration.email)
+        , ("first_name", Encode.string registration.firstName)
+        , ("last_name", Encode.string registration.lastName)
+        , ("blurb", Encode.string registration.blurb)
+        , ("password", Encode.string registration.password)
         ]
 
     body =
-      Encode.object [ ("registration", player) ]
+      Encode.object [ ("registration", registrationAttrs) ]
         |> Http.jsonBody
   in
   Decode.field "player" Player.decoder

@@ -32,7 +32,6 @@ type PageState
   = Loaded Page
   | TransitioningFrom Page
 
--- Dummy implementation for bootstrapping purposes
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute maybeRoute model =
   let
@@ -148,6 +147,22 @@ updatePage page msg model =
               { model | session = { player = Just player }}
       in
       ( { newModel | pageState = Loaded (Login pageModel) }, Cmd.map LoginMsg cmd)
+    ( RegisterMsg subMsg, Register subModel) ->
+      let
+        ( ( pageModel, cmd), msgFromPage ) =
+          Register.update subMsg subModel
+
+        newModel =
+          case msgFromPage of
+            Register.NoOp ->
+              model
+            Register.SetPlayer player ->
+              let
+                session = model.session
+              in
+              { model | session = { player = Just player}}
+      in
+      ( { newModel | pageState = Loaded (Register pageModel) }, Cmd.map RegisterMsg cmd)
     ( _, NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->
