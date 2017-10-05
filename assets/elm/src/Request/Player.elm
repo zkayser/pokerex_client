@@ -40,12 +40,12 @@ login { username, password } =
 
   in
   Decode.field "player" Player.decoder
-    |> Http.post (apiUrl "/players") body
+    |> Http.post (apiUrl ++ "/players") body
 
 register : { r | username : String, email : String, password : String } -> Http.Request Player
 register { username, email, password } =
   let
-    user =
+    player =
       Encode.object
         [ ("username", Encode.string username)
         , ("email", Encode.string email)
@@ -57,4 +57,4 @@ register { username, email, password } =
         |> Http.jsonBody
   in
   Decode.field "player" Player.decoder
-    |> Http.post (apiUrl "/players") body
+    |> Http.post (apiUrl ++ "/players") body
