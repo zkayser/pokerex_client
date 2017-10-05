@@ -53,8 +53,8 @@ register { username, email, password } =
         ]
 
     body =
-      Encode.object [ ("player", player) ]
+      Encode.object [ ("registration", player) ]
         |> Http.jsonBody
   in
   Decode.field "player" Player.decoder
-    |> Http.post (apiUrl ++ "/players") body
+    |> Http.post (apiUrl ++ "/registrations") body

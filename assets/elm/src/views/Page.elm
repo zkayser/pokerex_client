@@ -13,6 +13,7 @@ Determines which navbar link will be rendered as active
 type ActivePage
   = Other
   | Login
+  | Registration
 
 frame : Bool -> Maybe Player -> ActivePage -> Html msg -> Html msg
 frame isLoading player page content =

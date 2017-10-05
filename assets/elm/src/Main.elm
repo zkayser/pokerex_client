@@ -13,17 +13,20 @@ import Ports
 import Route exposing (Route)
 import Views.Page as Page exposing (ActivePage)
 import Page.Login as Login
+import Page.Register as Register
 import Page.NotFound as NotFound
 
 type Msg
  = SetRoute (Maybe Route)
  | LoginMsg Login.Msg
+ | RegisterMsg Register.Msg
  | SetPlayer (Maybe Player)
 
 type Page
   = Blank
   | NotFound
   | Login Login.Model
+  | Register Register.Model
 
 type PageState
   = Loaded Page
@@ -44,7 +47,7 @@ setRoute maybeRoute model =
       Just Route.Logout ->
         ( model, Cmd.none )
       Just Route.Register ->
-        ( model, Cmd.none ) -- for now)
+        ( { model | pageState = Loaded (Register Register.initialModel )}, Cmd.none )
       Just Route.Home ->
         ( model, Cmd.none )
 
@@ -99,6 +102,10 @@ viewPage session isLoading page =
       Login.view session subModel
         |> frame Page.Other
         |> Html.map LoginMsg
+    Register subModel ->
+      Register.view session subModel
+        |> frame Page.Other
+        |> Html.map RegisterMsg
     NotFound ->
       NotFound.view session
 
@@ -174,6 +181,8 @@ pageSubscriptions page =
     NotFound ->
       Sub.none
     Login _ ->
+      Sub.none
+    Register _ ->
       Sub.none
 
 main : Program Value Model Msg
