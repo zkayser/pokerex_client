@@ -38,7 +38,7 @@ modifyUrl =
 routeToString : Route -> String
 routeToString page =
   case page of
-    Home -> ""
+    Home -> "/"
     Login -> "login"
     Logout -> "logout"
     Register -> "register"

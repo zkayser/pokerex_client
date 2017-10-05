@@ -12,12 +12,16 @@ import Navigation exposing (Location)
 import Ports
 import Route exposing (Route)
 import Views.Page as Page exposing (ActivePage)
+import Page.Home as Home
+import Page.Errored as Errored exposing (PageLoadError)
 import Page.Login as Login
 import Page.Register as Register
 import Page.NotFound as NotFound
 
 type Msg
  = SetRoute (Maybe Route)
+ | HomeLoaded (Result PageLoadError Home.Model)
+ | HomeMsg Home.Msg
  | LoginMsg Login.Msg
  | RegisterMsg Register.Msg
  | SetPlayer (Maybe Player)
@@ -27,6 +31,7 @@ type Page
   | NotFound
   | Login Login.Model
   | Register Register.Model
+  | Home Home.Model
 
 type PageState
   = Loaded Page
@@ -48,7 +53,7 @@ setRoute maybeRoute model =
       Just Route.Register ->
         ( { model | pageState = Loaded (Register Register.initialModel )}, Cmd.none )
       Just Route.Home ->
-        ( model, Cmd.none )
+        ( { model | pageState = Loaded (Home Home.initialModel)}, Cmd.none )
 
 type alias Model =
   { session : Session
@@ -97,6 +102,10 @@ viewPage session isLoading page =
       -- Very first page load while waiting for data via Http
       Html.text ""
         |> frame Page.Other
+    Home subModel ->
+      Home.view session subModel
+        |> frame Page.Other
+        |> Html.map HomeMsg
     Login subModel ->
       Login.view session subModel
         |> frame Page.Other
@@ -163,6 +172,17 @@ updatePage page msg model =
               { model | session = { player = Just player}}
       in
       ( { newModel | pageState = Loaded (Register pageModel) }, Cmd.map RegisterMsg cmd)
+    ( SetPlayer player, _ ) ->
+      let
+        session =
+          model.session
+        cmd =
+          if session.player /= Nothing && player == Nothing then
+            Route.modifyUrl Route.Home
+          else
+            Cmd.none
+      in
+      ( { model | session = { session | player = player }}, cmd)
     ( _, NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->
@@ -198,6 +218,8 @@ pageSubscriptions page =
     Login _ ->
       Sub.none
     Register _ ->
+      Sub.none
+    Home _ ->
       Sub.none
 
 main : Program Value Model Msg

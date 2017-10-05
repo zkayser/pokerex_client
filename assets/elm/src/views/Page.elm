@@ -14,6 +14,7 @@ type ActivePage
   = Other
   | Login
   | Registration
+  | Home
 
 frame : Bool -> Maybe Player -> ActivePage -> Html msg -> Html msg
 frame isLoading player page content =
