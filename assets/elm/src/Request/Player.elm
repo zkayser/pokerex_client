@@ -40,7 +40,7 @@ login { username, password } =
 
   in
   Decode.field "player" Player.decoder
-    |> Http.post (apiUrl ++ "/players") body
+    |> Http.post (apiUrl ++ "/sessions") body
 
 register : { r | username : String, email : String, password : String } -> Http.Request Player
 register { username, email, password } =

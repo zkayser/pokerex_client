@@ -19,7 +19,8 @@ const ELM_DIV = document.getElementById("elm-div");
 let elmApp = Elm.Main.embed(ELM_DIV, localStorage.session || null);
 
 elmApp.ports.storeSession.subscribe((session) => {
-  localStorage.sesion = session;
+  console.log("Store session port was called with: ", JSON.stringify(session));
+  localStorage.session = session;
 });
 
 window.addEventListener("storage", (event) => {
