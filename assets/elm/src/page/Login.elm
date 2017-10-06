@@ -9,6 +9,8 @@ import Http
 import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
 import Json.Decode.Pipeline as Pipeline exposing (decode, optional)
 import Request.Player exposing (storeSession)
+import Views.Form as Form
+import Validate exposing (..)
 import Route
 
 
@@ -21,7 +23,7 @@ type alias Model =
   }
 
 type alias Error =
-  ( String, String )
+  ( Field, String )
 
 initialModel : Model
 initialModel =
@@ -35,7 +37,9 @@ initialModel =
 view : Session -> Model -> Html Msg
 view session model =
   div [ class "auth-page", style [ ("text-align", "center") ] ]
-    [ viewForm ]
+    [ Form.viewErrors model.errors
+    , viewForm
+    ]
 
 viewForm : Html Msg
 viewForm =
@@ -78,6 +82,45 @@ update msg model =
     SetPassword pass ->
       ( ( { model | password = pass }, Cmd.none), NoOp )
     LoginCompleted (Err error) ->
-      ( ( { model | errors =  [("error", toString error)]}, Cmd.none), NoOp )
+      let
+        errorMessages =
+          case error of
+            Http.BadStatus response ->
+              response.body
+                |> decodeString (field "errors" errorsDecoder)
+                |> Result.withDefault []
+            _ ->
+              ["unable to process login"]
+      in
+      ( ( { model | errors = List.map (\errorMessage -> (Form, errorMessage)) errorMessages }, Cmd.none), NoOp )
     LoginCompleted (Ok player) ->
       ( (model, Cmd.batch [ storeSession player, Route.modifyUrl Route.Home ]), SetPlayer player )
+
+
+-- VALIDATION --
+
+type Field
+  = Form
+  | Username
+  | Password
+
+validate : Model -> List Error
+validate =
+  Validate.all
+    [ .username >> ifBlank (Username, "email can't be blank.")
+    , .password >> ifBlank (Password, "password can't be blank.")
+    ]
+
+errorsDecoder : Decoder (List String)
+errorsDecoder =
+  decode (\username password -> List.concat [ username, password ])
+    |> optionalError "username"
+    |> optionalError "password"
+
+optionalError : String -> Decoder (List String -> a) -> Decoder a
+optionalError fieldName =
+    let
+        errorToString errorMessage =
+            String.join " " [ fieldName, errorMessage ]
+    in
+    optional fieldName (Decode.list (Decode.map errorToString string)) []
