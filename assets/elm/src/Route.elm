@@ -3,7 +3,7 @@ module Route exposing (..)
 import Navigation exposing (Location)
 import Html exposing (Attribute)
 import Html.Attributes as Attr
-import UrlParser as Url exposing (Parser, parsePath, s, oneOf)
+import UrlParser as Url exposing (Parser, parseHash, s, oneOf)
 
 type Route
   = Home
@@ -22,10 +22,10 @@ route =
 
 fromLocation : Location -> Maybe Route
 fromLocation location =
-  if location.pathname == "" then
+  if String.isEmpty location.hash then
     Just Home
   else
-    parsePath route location
+    parseHash route location
 
 href : Route -> Attribute msg
 href route =
@@ -38,7 +38,7 @@ modifyUrl =
 routeToString : Route -> String
 routeToString page =
   case page of
-    Home -> "/"
-    Login -> "login"
-    Logout -> "logout"
-    Register -> "register"
+    Home -> "#/"
+    Login -> "#/login"
+    Logout -> "#/logout"
+    Register -> "#/register"

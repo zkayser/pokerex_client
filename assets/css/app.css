@@ -1,1 +1,25 @@
 /* This file is for your main application css. */
+.nav-top {
+	height: 122px;
+}
+
+nav ul a {
+	font-size: 1.4em;
+}
+
+.always-right {
+	position: absolute;
+	right: 0;
+}
+
+.active a {
+	color: #1de9b6;
+	background-color: #004d40;
+	text-decoration: underline;
+	transition: transform 0.5s ease-out;
+	transform: scale(1.25);
+}
+
+nav ul a:hover {
+	background-color: #004d40; 
+}

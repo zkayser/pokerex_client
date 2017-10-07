@@ -62,7 +62,6 @@ type alias Model =
 
 -- INITIALIZATION --
 
-
 init : Value -> Location -> ( Model, Cmd Msg )
 init val location =
   setRoute (Route.fromLocation location)
@@ -104,15 +103,15 @@ viewPage session isLoading page =
         |> frame Page.Other
     Home subModel ->
       Home.view session subModel
-        |> frame Page.Other
+        |> frame Page.Home
         |> Html.map HomeMsg
     Login subModel ->
       Login.view session subModel
-        |> frame Page.Other
+        |> frame Page.Login
         |> Html.map LoginMsg
     Register subModel ->
       Register.view session subModel
-        |> frame Page.Other
+        |> frame Page.Registration
         |> Html.map RegisterMsg
     NotFound ->
       NotFound.view session
