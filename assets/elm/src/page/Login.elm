@@ -56,7 +56,7 @@ viewForm =
       , onInput SetPassword
       ]
       []
-    , button [ style [ ("background-color", "blue"), ("color", "white") ] ]
+    , button [ class "btn waves-effect blue" ]
         [ text "Login" ]
     ]
 

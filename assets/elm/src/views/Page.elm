@@ -23,7 +23,6 @@ frame isLoading player page content =
   div [ class "page-frame" ]
     [ viewHeader page player isLoading
     , content
-    , viewFooter
     ]
 
 viewHeader : ActivePage -> Maybe Player -> Bool -> Html msg
@@ -46,11 +45,6 @@ navBarLink : Bool -> Route -> List (Html msg) -> Html msg
 navBarLink isActive route linkContent =
   li [ classList [ ("active", isActive) ] ]
     [ a [ Route.href route ] linkContent ]
-
-viewFooter : Html msg
-viewFooter =
-  div [ style [ ("text-align", "center") ] ]
-    [ text "FOOTER" ]
 
 {-
   This id should come from index.Html

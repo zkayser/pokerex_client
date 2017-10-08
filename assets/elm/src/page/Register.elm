@@ -51,7 +51,7 @@ viewForm =
     , inputFor "Last Name" LastName "text"
     , inputFor "Message" Blurb "text"
     , inputFor "Email" Email "text"
-    , button [ style [ ("background-color", "blue"), ("color", "white") ] ]
+    , button [ class "btn blue waves-effect" ]
         [ text "Sign Up" ]
     ]
 
