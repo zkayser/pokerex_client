@@ -11,12 +11,15 @@ import Task
 import Navigation exposing (Location)
 import Ports
 import Route exposing (Route)
-import Views.Page as Page exposing (ActivePage)
+import Views.Page as Page 
+import Views.Helpers as Helpers exposing (ActivePage)
 import Page.Home as Home
 import Page.Errored as Errored exposing (PageLoadError)
 import Page.Login as Login
 import Page.Register as Register
 import Page.NotFound as NotFound
+import Widgets.Dropdown as Dropdown
+import Mouse
 
 type Msg
  = SetRoute (Maybe Route)
@@ -25,6 +28,9 @@ type Msg
  | LoginMsg Login.Msg
  | RegisterMsg Register.Msg
  | SetPlayer (Maybe Player)
+ | Toggle OpenDropdown
+ | NavItemPicked String -- Don't know if this is gonna work
+ | Blur
 
 type Page
   = Blank
@@ -32,6 +38,10 @@ type Page
   | Login Login.Model
   | Register Register.Model
   | Home Home.Model
+
+type OpenDropdown
+  = AllClosed
+  | NavBarDropdown
 
 type PageState
   = Loaded Page
@@ -58,6 +68,7 @@ setRoute maybeRoute model =
 type alias Model =
   { session : Session
   , pageState : PageState
+  , openDropdown : OpenDropdown
   }
 
 -- INITIALIZATION --
@@ -67,6 +78,7 @@ init val location =
   setRoute (Route.fromLocation location)
    { pageState = Loaded initialPage
    , session = { player = decodeUserFromJson val }
+   , openDropdown = AllClosed
    }
 
 decodeUserFromJson : Value -> Maybe Player

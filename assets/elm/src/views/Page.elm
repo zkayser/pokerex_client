@@ -7,16 +7,9 @@ import Html.Events exposing (onClick, Options)
 import Html.Lazy exposing (lazy2)
 import Util exposing (onClickStopPropagation)
 import Route exposing (Route)
+import Views.Helpers as Helpers exposing (ActivePage(..))
+import Widgets.Dropdown as Dropdown
 
-{-
-Determines which navbar link will be rendered as active
--}
-
-type ActivePage
-  = Other
-  | Login
-  | Registration
-  | Home
 
 frame : Bool -> Maybe Player -> ActivePage -> Html msg -> Html msg
 frame isLoading player page content =

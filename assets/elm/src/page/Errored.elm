@@ -3,7 +3,7 @@ module Page.Errored exposing (..)
 import Data.Session as Session exposing (Session)
 import Html exposing (Html, div, h1, main_, p, text)
 import Html.Attributes exposing (class, id)
-import Views.Page as Page exposing (ActivePage)
+import Views.Helpers as Helpers exposing (ActivePage)
 
 type PageLoadError
   = PageLoadError Model
