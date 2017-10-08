@@ -1,4 +1,4 @@
-module Widgets.Dropdown exposing (Context, Config)
+module Widgets.Dropdown exposing (Context, Config, view)
 
 import Html exposing (..)
 import Html.Attributes exposing (style, class, classList)

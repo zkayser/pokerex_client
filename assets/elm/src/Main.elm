@@ -12,7 +12,7 @@ import Navigation exposing (Location)
 import Ports
 import Route exposing (Route)
 import Views.Page as Page 
-import Views.Helpers as Helpers exposing (ActivePage)
+import Views.Helpers as Helpers exposing (ActivePage(..))
 import Page.Home as Home
 import Page.Errored as Errored exposing (PageLoadError)
 import Page.Login as Login
@@ -25,12 +25,9 @@ type Msg
  = SetRoute (Maybe Route)
  | HomeLoaded (Result PageLoadError Home.Model)
  | HomeMsg Home.Msg
- | LoginMsg Login.Msg
+ | LoginMsg Login.Msg 
  | RegisterMsg Register.Msg
  | SetPlayer (Maybe Player)
- | Toggle OpenDropdown
- | NavItemPicked String -- Don't know if this is gonna work
- | Blur
 
 type Page
   = Blank
@@ -112,18 +109,18 @@ viewPage session isLoading page =
     Blank ->
       -- Very first page load while waiting for data via Http
       Html.text ""
-        |> frame Page.Other
+        |> frame Helpers.Other
     Home subModel ->
       Home.view session subModel
-        |> frame Page.Home
+        |> frame Helpers.Home
         |> Html.map HomeMsg
     Login subModel ->
       Login.view session subModel
-        |> frame Page.Login
+        |> frame Helpers.Login
         |> Html.map LoginMsg
     Register subModel ->
       Register.view session subModel
-        |> frame Page.Registration
+        |> frame Helpers.Registration
         |> Html.map RegisterMsg
     NotFound ->
       NotFound.view session

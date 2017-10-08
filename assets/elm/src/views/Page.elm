@@ -14,9 +14,8 @@ import Widgets.Dropdown as Dropdown
 frame : Bool -> Maybe Player -> ActivePage -> Html msg -> Html msg
 frame isLoading player page content =
   div [ class "page-frame" ]
-    [ viewHeader page player isLoading
-    , content
-    ]
+    [ (viewHeader page player isLoading)
+    , content ]
 
 viewHeader : ActivePage -> Maybe Player -> Bool -> Html msg
 viewHeader page player isLoading =
@@ -39,12 +38,12 @@ navBarLink isActive route linkContent =
   li [ classList [ ("active", isActive) ] ]
     [ a [ Route.href route ] linkContent ]
 
-{-
-  This id should come from index.Html
 
-  You can use it to scroll to the top of the page (by ID)
-  when switching pages in the pagination sense
--}
+  --This id should come from index.Html
+
+  --You can use it to scroll to the top of the page (by ID)
+  --when switching pages in the pagination sense
+
 bodyId : String
 bodyId =
   "page-body"
