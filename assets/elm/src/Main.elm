@@ -11,7 +11,8 @@ import Task
 import Navigation exposing (Location)
 import Ports
 import Route exposing (Route)
-import Views.Page as Page 
+import Types.Dropdowns as DropdownType exposing (OpenDropdown)
+import Views.Header as Header 
 import Views.Helpers as Helpers exposing (ActivePage(..))
 import Page.Home as Home
 import Page.Errored as Errored exposing (PageLoadError)
@@ -36,10 +37,6 @@ type Page
   | Login Login.Model
   | Register Register.Model
   | Home Home.Model
-
-type OpenDropdown
-  = AllClosed
-  | NavBarDropdown
 
 type PageState
   = Loaded Page
@@ -81,7 +78,7 @@ init val location =
   setRoute (Route.fromLocation location)
    { pageState = Loaded initialPage
    , session = { player = decodeUserFromJson val }
-   , openDropdown = AllClosed
+   , openDropdown = DropdownType.AllClosed
    }
 
 decodeUserFromJson : Value -> Maybe Player
@@ -170,16 +167,16 @@ navDropdownConfig : Dropdown.Config DropdownMsg
 navDropdownConfig =
   { topLevelHtml = i 
     [  class "material-icons nav-dropdown-btn right always-right hide-on-large-only"
-    , onClick (Toggle NavBarDropdown)
+    , onClick (Toggle DropdownType.NavBarDropdown)
     ] [ text "reorder" ]
-  , clickedMsg = Toggle NavBarDropdown
+  , clickedMsg = Toggle DropdownType.NavBarDropdown
   , itemPickedMsg = NavItemPicked
   }
 
 navDropdownContext : Model -> Dropdown.Context
 navDropdownContext model =
   { selectedItem = Nothing
-  , isOpen = model.openDropdown == NavBarDropdown
+  , isOpen = model.openDropdown == DropdownType.NavBarDropdown
   }
 
 navLinks : List String
@@ -254,14 +251,14 @@ updatePage page msg model =
             Cmd.none
       in
       ( { model | session = { session | player = player }}, cmd)
-    ( HeaderMsg (Toggle dropdown), _) ->
+    ( HeaderMsg (Toggle DropdownType.NavBarDropdown), _) ->
       let
         newDropdown =
-          if model.openDropdown == AllClosed then
-            NavBarDropdown
+          if model.openDropdown == DropdownType.AllClosed then
+            DropdownType.NavBarDropdown
           else
-            AllClosed
-      in
+            DropdownType.AllClosed
+      in 
       ( { model | openDropdown = newDropdown }, Cmd.none )
     ( _, NotFound ) ->
       ( model, Cmd.none )
