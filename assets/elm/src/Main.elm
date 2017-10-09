@@ -255,8 +255,14 @@ updatePage page msg model =
       in
       ( { model | session = { session | player = player }}, cmd)
     ( HeaderMsg (Toggle dropdown), _) ->
-      Debug.log ("GOT TOGGLE MSG")
-        (model, Cmd.none )
+      let
+        newDropdown =
+          if model.openDropdown == AllClosed then
+            NavBarDropdown
+          else
+            AllClosed
+      in
+      ( { model | openDropdown = newDropdown }, Cmd.none )
     ( _, NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->
