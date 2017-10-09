@@ -24,6 +24,7 @@ import Mouse
 type Msg
  = SetRoute (Maybe Route)
  | HomeLoaded (Result PageLoadError Home.Model)
+ | HeaderMsg DropdownMsg
  | HomeMsg Home.Msg
  | LoginMsg Login.Msg 
  | RegisterMsg Register.Msg
@@ -43,6 +44,11 @@ type OpenDropdown
 type PageState
   = Loaded Page
   | TransitioningFrom Page
+
+type DropdownMsg
+  = Toggle OpenDropdown
+  | NavItemPicked String
+  | Blur
 
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute maybeRoute model =
@@ -95,35 +101,92 @@ view : Model -> Html Msg
 view model =
   case model.pageState of
     Loaded page ->
-      viewPage model.session False page
+      (wrapWithHeader model False page) 
+      <| viewPage model.session False page
     TransitioningFrom page ->
-      viewPage model.session True page
+      (wrapWithHeader model True page) 
+      <| viewPage model.session True page
+
+wrapWithHeader : Model -> Bool -> Page -> Html Msg -> Html Msg
+wrapWithHeader model isLoading page children =
+  let
+    player =
+      model.session.player
+    activePage = 
+      activePageFrom page
+  in  
+  div [ class "page-frame"]
+    [ nav [ class "nav-top teal darken-4" ] 
+      [ div [ class "nav-wrapper valign-wrapper" ] 
+        [ a [ Route.href Route.Home, class "brand-logo center" ] [ text "PokerEx"] 
+        , ul [ id "nav-mobile", class "right always-right hide-on-med-and-down" ]
+          (viewNavBarLinks activePage)
+        , Html.map HeaderMsg navDropdownConfig.topLevelHtml
+        , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) navLinks)
+        ]
+      ]
+      , children
+    ]
+
+viewNavBarLinks : ActivePage -> List (Html Msg)
+viewNavBarLinks page =
+  [ navBarLink (page == Helpers.Login) Route.Login [ text "Login" ]
+  , navBarLink (page == Helpers.Registration) Route.Register [ text "Signup" ] 
+  ]
+
+navBarLink : Bool -> Route -> List (Html Msg) -> Html Msg
+navBarLink isActive route linkContent =
+  li [ classList [ ("active", isActive) ] ]
+    [ a [ Route.href route ] linkContent ]
+
+activePageFrom : Page -> ActivePage
+activePageFrom page =
+  case page of
+    Login _ -> Helpers.Login
+    Register _ -> Helpers.Registration
+    Home _ -> Helpers.Home
+    _ -> Helpers.Other
 
 viewPage : Session -> Bool -> Page -> Html Msg
 viewPage session isLoading page =
-  let
-    frame =
-      Page.frame isLoading session.player
-  in
   case page of
     Blank ->
       -- Very first page load while waiting for data via Http
       Html.text ""
-        |> frame Helpers.Other
     Home subModel ->
       Home.view session subModel
-        |> frame Helpers.Home
         |> Html.map HomeMsg
     Login subModel ->
       Login.view session subModel
-        |> frame Helpers.Login
         |> Html.map LoginMsg
     Register subModel ->
       Register.view session subModel
-        |> frame Helpers.Registration
         |> Html.map RegisterMsg
     NotFound ->
       NotFound.view session
+
+-- NavDropdown --
+navDropdownConfig : Dropdown.Config DropdownMsg
+navDropdownConfig =
+  { topLevelHtml = i 
+    [  class "material-icons nav-dropdown-btn right always-right hide-on-large-only"
+    , onClick (Toggle NavBarDropdown)
+    ] [ text "reorder" ]
+  , clickedMsg = Toggle NavBarDropdown
+  , itemPickedMsg = NavItemPicked
+  }
+
+navDropdownContext : Model -> Dropdown.Context
+navDropdownContext model =
+  { selectedItem = Nothing
+  , isOpen = model.openDropdown == NavBarDropdown
+  }
+
+navLinks : List String
+navLinks =
+  [ "Login", "Signup" ]
+
+
 
 -- UPDATE --
 
@@ -191,6 +254,9 @@ updatePage page msg model =
             Cmd.none
       in
       ( { model | session = { session | player = player }}, cmd)
+    ( HeaderMsg (Toggle dropdown), _) ->
+      Debug.log ("GOT TOGGLE MSG")
+        (model, Cmd.none )
     ( _, NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->

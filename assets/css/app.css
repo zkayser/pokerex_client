@@ -23,3 +23,8 @@ nav ul a {
 nav ul a:hover {
 	background-color: #004d40; 
 }
+
+.material-icons.nav-dropdown-btn {
+	font-size: 3em;
+	margin-right: 0.5em;
+}

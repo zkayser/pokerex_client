@@ -11,11 +11,9 @@ import Views.Helpers as Helpers exposing (ActivePage(..))
 import Widgets.Dropdown as Dropdown
 
 
-frame : Bool -> Maybe Player -> ActivePage -> Html msg -> Html msg
-frame isLoading player page content =
-  div [ class "page-frame" ]
-    [ (viewHeader page player isLoading)
-    , content ]
+frame : Html msg -> Html msg
+frame content =
+  content 
 
 viewHeader : ActivePage -> Maybe Player -> Bool -> Html msg
 viewHeader page player isLoading =
