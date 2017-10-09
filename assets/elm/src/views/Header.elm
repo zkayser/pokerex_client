@@ -8,12 +8,8 @@ import Html.Lazy exposing (lazy2)
 import Util exposing (onClickStopPropagation)
 import Route exposing (Route)
 import Views.Helpers as Helpers exposing (ActivePage(..))
-import Types.Dropdowns as DropdownType exposing (OpenDropdown)
+import Types.Dropdowns as DropdownType exposing (OpenDropdown, DropdownMsg)
 import Widgets.Dropdown as Dropdown
-
-type DropdownMsg
-  = Toggle OpenDropdown
-  | NavItemPicked String
 
   --This id should come from index.Html
 

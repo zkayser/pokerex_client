@@ -11,7 +11,7 @@ import Task
 import Navigation exposing (Location)
 import Ports
 import Route exposing (Route)
-import Types.Dropdowns as DropdownType exposing (OpenDropdown)
+import Types.Dropdowns as DropdownType exposing (OpenDropdown, DropdownMsg)
 import Views.Header as Header 
 import Views.Helpers as Helpers exposing (ActivePage(..))
 import Page.Home as Home
@@ -41,11 +41,6 @@ type Page
 type PageState
   = Loaded Page
   | TransitioningFrom Page
-
-type DropdownMsg
-  = Toggle OpenDropdown
-  | NavItemPicked String
-  | Blur
 
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute maybeRoute model =
@@ -167,10 +162,10 @@ navDropdownConfig : Dropdown.Config DropdownMsg
 navDropdownConfig =
   { topLevelHtml = i 
     [  class "material-icons nav-dropdown-btn right always-right hide-on-large-only"
-    , onClick (Toggle DropdownType.NavBarDropdown)
+    , onClick (DropdownType.Toggle DropdownType.NavBarDropdown)
     ] [ text "reorder" ]
-  , clickedMsg = Toggle DropdownType.NavBarDropdown
-  , itemPickedMsg = NavItemPicked
+  , clickedMsg = DropdownType.Toggle DropdownType.NavBarDropdown
+  , itemPickedMsg = DropdownType.NavItemPicked
   }
 
 navDropdownContext : Model -> Dropdown.Context
@@ -182,8 +177,6 @@ navDropdownContext model =
 navLinks : List String
 navLinks =
   [ "Login", "Signup" ]
-
-
 
 -- UPDATE --
 
@@ -251,7 +244,7 @@ updatePage page msg model =
             Cmd.none
       in
       ( { model | session = { session | player = player }}, cmd)
-    ( HeaderMsg (Toggle DropdownType.NavBarDropdown), _) ->
+    ( HeaderMsg (DropdownType.Toggle DropdownType.NavBarDropdown), _) ->
       let
         newDropdown =
           if model.openDropdown == DropdownType.AllClosed then
