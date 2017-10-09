@@ -11,8 +11,9 @@ import Task
 import Navigation exposing (Location)
 import Ports
 import Route exposing (Route)
-import Types.Dropdowns as DropdownType exposing (OpenDropdown, DropdownMsg)
-import Views.Header as Header 
+import Types.Dropdowns as DropdownType exposing (OpenDropdown, DropdownMsg, DropdownItem)
+import Types.Page as Page exposing (Page)
+import Views.Header as Header exposing (activePageFrom, viewNavBarLinks, navDropdownConfig, navDropdownContext, navLinks)
 import Views.Helpers as Helpers exposing (ActivePage(..))
 import Page.Home as Home
 import Page.Errored as Errored exposing (PageLoadError)
@@ -31,13 +32,6 @@ type Msg
  | RegisterMsg Register.Msg
  | SetPlayer (Maybe Player)
 
-type Page
-  = Blank
-  | NotFound
-  | Login Login.Model
-  | Register Register.Model
-  | Home Home.Model
-
 type PageState
   = Loaded Page
   | TransitioningFrom Page
@@ -50,20 +44,21 @@ setRoute maybeRoute model =
   in
     case maybeRoute of
       Nothing ->
-        ( { model | pageState = Loaded NotFound }, Cmd.none)
+        ( { model | pageState = Loaded Page.NotFound }, Cmd.none)
       Just Route.Login ->
-        ( { model | pageState = Loaded (Login Login.initialModel )}, Cmd.none )
+        ( { model | pageState = Loaded (Page.Login Login.initialModel )}, Cmd.none )
       Just Route.Logout ->
         ( model, Cmd.none )
       Just Route.Register ->
-        ( { model | pageState = Loaded (Register Register.initialModel )}, Cmd.none )
+        ( { model | pageState = Loaded (Page.Register Register.initialModel )}, Cmd.none )
       Just Route.Home ->
-        ( { model | pageState = Loaded (Home Home.initialModel)}, Cmd.none )
+        ( { model | pageState = Loaded (Page.Home Home.initialModel)}, Cmd.none )
 
 type alias Model =
   { session : Session
   , pageState : PageState
   , openDropdown : OpenDropdown
+  , selectedItem : DropdownItem
   }
 
 -- INITIALIZATION --
@@ -74,6 +69,7 @@ init val location =
    { pageState = Loaded initialPage
    , session = { player = decodeUserFromJson val }
    , openDropdown = DropdownType.AllClosed
+   , selectedItem = DropdownType.None
    }
 
 decodeUserFromJson : Value -> Maybe Player
@@ -85,7 +81,7 @@ decodeUserFromJson json =
 
 initialPage : Page
 initialPage =
-  Blank
+  Page.Blank
 
 -- VIEW --
 
@@ -120,63 +116,23 @@ wrapWithHeader model isLoading page children =
       , children
     ]
 
-viewNavBarLinks : ActivePage -> List (Html Msg)
-viewNavBarLinks page =
-  [ navBarLink (page == Helpers.Login) Route.Login [ text "Login" ]
-  , navBarLink (page == Helpers.Registration) Route.Register [ text "Signup" ] 
-  ]
-
-navBarLink : Bool -> Route -> List (Html Msg) -> Html Msg
-navBarLink isActive route linkContent =
-  li [ classList [ ("active", isActive) ] ]
-    [ a [ Route.href route ] linkContent ]
-
-activePageFrom : Page -> ActivePage
-activePageFrom page =
-  case page of
-    Login _ -> Helpers.Login
-    Register _ -> Helpers.Registration
-    Home _ -> Helpers.Home
-    _ -> Helpers.Other
-
 viewPage : Session -> Bool -> Page -> Html Msg
 viewPage session isLoading page =
   case page of
-    Blank ->
+    Page.Blank ->
       -- Very first page load while waiting for data via Http
       Html.text ""
-    Home subModel ->
+    Page.Home subModel ->
       Home.view session subModel
         |> Html.map HomeMsg
-    Login subModel ->
+    Page.Login subModel ->
       Login.view session subModel
         |> Html.map LoginMsg
-    Register subModel ->
+    Page.Register subModel ->
       Register.view session subModel
         |> Html.map RegisterMsg
-    NotFound ->
+    Page.NotFound ->
       NotFound.view session
-
--- NavDropdown --
-navDropdownConfig : Dropdown.Config DropdownMsg
-navDropdownConfig =
-  { topLevelHtml = i 
-    [  class "material-icons nav-dropdown-btn right always-right hide-on-large-only"
-    , onClick (DropdownType.Toggle DropdownType.NavBarDropdown)
-    ] [ text "reorder" ]
-  , clickedMsg = DropdownType.Toggle DropdownType.NavBarDropdown
-  , itemPickedMsg = DropdownType.NavItemPicked
-  }
-
-navDropdownContext : Model -> Dropdown.Context
-navDropdownContext model =
-  { selectedItem = Nothing
-  , isOpen = model.openDropdown == DropdownType.NavBarDropdown
-  }
-
-navLinks : List String
-navLinks =
-  [ "Login", "Signup" ]
 
 -- UPDATE --
 
@@ -200,7 +156,7 @@ updatePage page msg model =
   case ( msg, page ) of
     ( SetRoute route, _ ) ->
       setRoute route model
-    ( LoginMsg subMsg, Login subModel ) ->
+    ( LoginMsg subMsg, Page.Login subModel ) ->
       let
         ( ( pageModel, cmd ), msgFromPage ) =
           Login.update subMsg subModel
@@ -216,8 +172,8 @@ updatePage page msg model =
               in
               { model | session = { player = Just player }}
       in
-      ( { newModel | pageState = Loaded (Login pageModel) }, Cmd.map LoginMsg cmd)
-    ( RegisterMsg subMsg, Register subModel) ->
+      ( { newModel | pageState = Loaded (Page.Login pageModel) }, Cmd.map LoginMsg cmd)
+    ( RegisterMsg subMsg, Page.Register subModel) ->
       let
         ( ( pageModel, cmd), msgFromPage ) =
           Register.update subMsg subModel
@@ -232,7 +188,7 @@ updatePage page msg model =
               in
               { model | session = { player = Just player}}
       in
-      ( { newModel | pageState = Loaded (Register pageModel) }, Cmd.map RegisterMsg cmd)
+      ( { newModel | pageState = Loaded (Page.Register pageModel) }, Cmd.map RegisterMsg cmd)
     ( SetPlayer player, _ ) ->
       let
         session =
@@ -253,7 +209,7 @@ updatePage page msg model =
             DropdownType.AllClosed
       in 
       ( { model | openDropdown = newDropdown }, Cmd.none )
-    ( _, NotFound ) ->
+    ( _, Page.NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->
       ( model, Cmd.none )
@@ -281,15 +237,15 @@ sessionChange =
 pageSubscriptions : Page -> Sub Msg
 pageSubscriptions page =
   case page of
-    Blank ->
+    Page.Blank ->
       Sub.none
-    NotFound ->
+    Page.NotFound ->
       Sub.none
-    Login _ ->
+    Page.Login _ ->
       Sub.none
-    Register _ ->
+    Page.Register _ ->
       Sub.none
-    Home _ ->
+    Page.Home _ ->
       Sub.none
 
 main : Program Value Model Msg

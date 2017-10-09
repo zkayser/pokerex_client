@@ -3,10 +3,11 @@ module Widgets.Dropdown exposing (Context, Config, view)
 import Html exposing (..)
 import Html.Attributes exposing (style, class, classList)
 import Html.Events exposing (onWithOptions)
+import Types.Dropdowns as DropdownType exposing (DropdownItem) 
 import Json.Decode as Decode
 
 type alias Context =
-  { selectedItem : Maybe String 
+  { selectedItem : DropdownItem 
   , isOpen : Bool
   }
 
