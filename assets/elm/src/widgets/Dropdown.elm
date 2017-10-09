@@ -25,7 +25,6 @@ view config context data =
         ("display", "block")
       else
         ("display", "none")
-
   in
   ul [ style [ displayStyle ], classList [ ("dropdown-menu", context.isOpen), ("collection", True) ] ]
     (List.map (viewItem config) data)

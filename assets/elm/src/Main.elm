@@ -89,11 +89,9 @@ view : Model -> Html Msg
 view model =
   case model.pageState of
     Loaded page ->
-      (wrapWithHeader model False page) 
-      <| viewPage model.session False page
+      (wrapWithHeader model False page) <| viewPage model.session False page
     TransitioningFrom page ->
-      (wrapWithHeader model True page) 
-      <| viewPage model.session True page
+      (wrapWithHeader model True page) <| viewPage model.session True page
 
 wrapWithHeader : Model -> Bool -> Page -> Html Msg -> Html Msg
 wrapWithHeader model isLoading page children =
@@ -120,7 +118,6 @@ viewPage : Session -> Bool -> Page -> Html Msg
 viewPage session isLoading page =
   case page of
     Page.Blank ->
-      -- Very first page load while waiting for data via Http
       Html.text ""
     Page.Home subModel ->
       Home.view session subModel
