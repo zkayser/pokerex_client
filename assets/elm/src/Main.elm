@@ -84,7 +84,6 @@ initialPage =
   Page.Blank
 
 -- VIEW --
-
 view : Model -> Html Msg
 view model =
   case model.pageState of
@@ -132,7 +131,6 @@ viewPage session isLoading page =
       NotFound.view session
 
 -- UPDATE --
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   updatePage (getPage model.pageState) msg model
@@ -250,6 +248,6 @@ main =
   Navigation.programWithFlags (Route.fromLocation >> SetRoute)
       { init = init
       , view = view
-      , subscriptions = (\model -> Sub.none)
+      , subscriptions = subscriptions
       , update = update
       }
