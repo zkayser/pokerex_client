@@ -41,7 +41,7 @@ activePageFrom page =
 navDropdownConfig : Dropdown.Config DropdownMsg
 navDropdownConfig =
   { topLevelHtml = i 
-    [  class "material-icons nav-dropdown-btn right always-right hide-on-large-only"
+    [  class "material-icons nav-dropdown-btn hide-on-large-only"
     , onClick (DropdownType.Toggle DropdownType.NavBarDropdown)
     ] [ text "reorder" ]
   , clickedMsg = DropdownType.Toggle DropdownType.NavBarDropdown

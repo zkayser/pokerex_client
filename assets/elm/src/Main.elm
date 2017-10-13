@@ -101,15 +101,15 @@ wrapWithHeader model isLoading page children =
       activePageFrom page
   in  
   div [ class "page-frame"]
-    [ nav [ class "nav-top teal darken-4" ] 
-      [ div [ class "nav-wrapper valign-wrapper" ] 
-        [ a [ Route.href Route.Home, class "brand-logo center" ] [ text "PokerEx"] 
-        , ul [ id "nav-mobile", class "right always-right hide-on-med-and-down" ]
+    [ nav [ class "teal darken-4 nav-container" ]
+      [ div [ class "filler"] [] 
+        , div [ class "logo-container" ]
+          [ a [ Route.href Route.Home, class "logo" ] [ text "PokerEx"] ]
+        , ul [ class "nav-links", class "hide-on-med-and-down" ]
           (viewNavBarLinks activePage)
-        , Html.map HeaderMsg navDropdownConfig.topLevelHtml
-        , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) navLinks)
-        ]
+        , div [ class "filler hide-on-large-only" ] [ Html.map HeaderMsg navDropdownConfig.topLevelHtml ]
       ]
+      , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) navLinks) 
       , children
     ]
 

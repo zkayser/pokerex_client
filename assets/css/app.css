@@ -1,15 +1,66 @@
 /* This file is for your main application css. */
-.nav-top {
-	height: 122px;
+:root {
+	--teal: #009688;
+}
+
+body {
+	min-height: 100vh;
+	font-family: Helvetica, Arial, sans-serif; 
+}
+
+main {
+	min-height: inherit;
+}
+
+.nav-container {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	padding-top: 4em;
+	padding-bottom: 4em;
+}
+
+.nav-dropdown {
+	width: 100%;
+	margin-top: 0;
+	padding-top: 0;
+}
+
+.logo-container {
+	flex: 2;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.logo {
+	font-size: 2.25em;
+}
+
+.filler {
+	flex: 1;
+	height: inherit;
+	display: flex;
+	justify-content: center;
+}
+
+.nav-dropdown-item {
+	width: 100%;
+	text-align: center;
+	color: var(--teal);
+}
+
+.nav-links {
+	height: inherit;
+	flex: 1;
+	display: flex;
+	justify-content: center;
 }
 
 nav ul a {
 	font-size: 1.4em;
-}
-
-.always-right {
-	position: absolute;
-	right: 0;
 }
 
 .active a {
@@ -27,4 +78,5 @@ nav ul a:hover {
 .material-icons.nav-dropdown-btn {
 	font-size: 3em;
 	margin-right: 0.5em;
+	cursor: pointer;
 }

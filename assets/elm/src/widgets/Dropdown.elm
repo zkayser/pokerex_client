@@ -26,12 +26,17 @@ view config context data =
       else
         ("display", "none")
   in
-  ul [ style [ displayStyle ], classList [ ("dropdown-menu", context.isOpen), ("collection", True) ] ]
+  ul 
+    [ 
+      style [ displayStyle ]
+      , classList [ ("dropdown-menu", context.isOpen), ("collection", True) ]
+      , class "nav-dropdown"
+    ]
     (List.map (viewItem config) data)
 
 viewItem : Config msg -> String -> Html msg
 viewItem config item =
-  li [ onClick (config.itemPickedMsg item), class "collection-item" ]
+  li [ onClick (config.itemPickedMsg item), class "collection-item nav-dropdown-item" ] 
     [ text item ]   
 
 -- Helper to cancel click anywhere --
