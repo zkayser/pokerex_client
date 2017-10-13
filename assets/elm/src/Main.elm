@@ -204,6 +204,8 @@ updatePage page msg model =
             DropdownType.AllClosed
       in 
       ( { model | openDropdown = newDropdown }, Cmd.none )
+    ( HeaderMsg (DropdownType.Blur), _ ) ->
+      ( { model | openDropdown = DropdownType.AllClosed }, Cmd.none )
     ( _, Page.NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->
@@ -212,11 +214,20 @@ updatePage page msg model =
 -- SUBSCRIPTIONS --
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.batch
-    [ pageSubscriptions (getPage model.pageState)
-    , Sub.map SetPlayer sessionChange
-    ]
-
+  let 
+    subs =
+      [ pageSubscriptions (getPage model.pageState)
+      , Sub.map SetPlayer sessionChange
+      ]
+    withBlur = 
+      case model.openDropdown of
+        DropdownType.AllClosed -> []
+        _ -> [ Sub.map HeaderMsg (Mouse.clicks (always DropdownType.Blur)) ]
+    subsWithBlur = 
+      subs ++ withBlur    
+  in
+  Sub.batch subsWithBlur
+    
 getPage : PageState -> Page
 getPage pageState =
   case pageState of
