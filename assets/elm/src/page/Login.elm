@@ -76,7 +76,11 @@ update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
     SubmitForm ->
-      ( (model, Http.send LoginCompleted (Request.Player.login model) ), NoOp )
+      case validate model of
+        [] ->
+          ( ( { model | errors = [] }, Http.send LoginCompleted (Request.Player.login model) ), NoOp )
+        errors ->
+          ( ( { model | errors = errors }, Cmd.none), NoOp )
     SetUsername name ->
       ( ( { model | username = name }, Cmd.none), NoOp )
     SetPassword pass ->
@@ -107,8 +111,8 @@ type Field
 validate : Model -> List Error
 validate =
   Validate.all
-    [ .username >> ifBlank (Username, "email can't be blank.")
-    , .password >> ifBlank (Password, "password can't be blank.")
+    [ .username >> ifBlank (Username, "Username can't be blank.")
+    , .password >> ifBlank (Password, "Password can't be blank.")
     ]
 
 errorsDecoder : Decoder (List String)

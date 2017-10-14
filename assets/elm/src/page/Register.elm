@@ -9,6 +9,8 @@ import Http
 import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
 import Json.Decode.Pipeline as Pipeline exposing (decode, optional)
 import Request.Player exposing (storeSession)
+import Views.Form as Form
+import Validate exposing (..)
 import Route
 
 -- Model --
@@ -23,7 +25,7 @@ type alias Model =
   }
 
 type alias Error =
-  ( String, String )
+  ( Field, String )
 
 initialModel : Model
 initialModel =
@@ -40,7 +42,9 @@ initialModel =
 view : Session -> Model -> Html Msg
 view session model =
   div [ class "auth-page", style [ ( "text-align", "center" ) ]]
-    [ viewForm ]
+    [ Form.viewErrors model.errors
+    , viewForm 
+    ]
 
 viewForm : Html Msg
 viewForm =
@@ -82,11 +86,29 @@ type RegistrationAttr
  | Blurb String
  | Email String
 
+type Field
+  = Name
+  | Pass
+  | E_mail
+  | Server
+
+validate : Model -> List Error
+validate =
+  Validate.all
+    [ .username >> ifBlank (Name, "Username can't be blank.")
+    , .password >> ifBlank (Pass, "Password can't be blank.")
+    , .email >> ifBlank (E_mail, "Email can't be blank.")
+    ]
+
 update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 update msg model =
   case msg of
     SubmitForm ->
-      ( ( model, Http.send RegistrationCompleted (Request.Player.register model) ), NoOp )
+      case validate model of
+        [] ->
+          ( ( model, Http.send RegistrationCompleted (Request.Player.register model) ), NoOp )
+        errors ->
+          ( ( { model | errors = errors }, Cmd.none ), NoOp)
     Set (Username name) ->
       ( ({ model | username = name }, Cmd.none), NoOp )
     Set (Password password) ->
@@ -100,6 +122,6 @@ update msg model =
     Set (Email email) ->
       ( ( { model | email = email }, Cmd.none), NoOp )
     RegistrationCompleted (Err error) ->
-      ( ( { model | errors = [ ("error", toString error) ] }, Cmd.none), NoOp )
+      ( ( { model | errors = [ (Server, toString error) ] }, Cmd.none), NoOp )
     RegistrationCompleted (Ok player) ->
       ( ( model , Cmd.batch [ storeSession player, Route.modifyUrl Route.Home ] ), SetPlayer player )

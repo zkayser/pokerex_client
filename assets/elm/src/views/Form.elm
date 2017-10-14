@@ -17,9 +17,12 @@ textarea =
 
 viewErrors : List (a, String) -> Html msg
 viewErrors errors =
-  errors
-     |> List.map (\( _, error ) -> li [] [ text error ])
-     |> ul [ class "error-messages" ]
+  case errors of
+    [] -> text ""
+    _ ->
+      errors
+         |> List.map (\( _, error ) -> li [] [ text error ])
+         |> ul [ class "card-panel red darken-1 white-text" ]
 
 -- INTERNAL --
 
