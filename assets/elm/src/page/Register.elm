@@ -42,8 +42,10 @@ initialModel =
 view : Session -> Model -> Html Msg
 view session model =
   div [ class "auth-page", style [ ( "text-align", "center" ) ]]
-    [ Form.viewErrors model.errors
-    , viewForm 
+    [ div [ class "auth-form card-panel z-depth-4 rounded" ]
+      [ Form.viewErrors model.errors
+      , viewForm 
+      ]
     ]
 
 viewForm : Html Msg

@@ -1,0 +1,12 @@
+.auth-page {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: 8em;
+}
+
+.auth-form {
+	padding: 3em;
+	max-width: 40em;
+	margin-bottom: 8em;
+}
