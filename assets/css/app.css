@@ -59,6 +59,14 @@ main {
 	justify-content: center;
 }
 
+.dropdown-menu {
+	transition: max-height 1s;
+}
+
+.cursor-pointer {
+	cursor: pointer;
+}
+
 nav ul a {
 	font-size: 1.4em;
 }

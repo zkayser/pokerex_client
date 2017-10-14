@@ -20,15 +20,25 @@ type alias Config msg =
 view : Config msg -> Context -> List String -> Html msg
 view config context data =
   let
-    displayStyle =
+    displayStyles =
       if context.isOpen then
-        ("display", "block")
+        [ ("transform", "scaleY(1)")
+        , ("transform-origin", "top")
+        , ("transition", "transform 1s ease-in-out") 
+        , ("max-height", "6em")
+        , ("transition", "max-height 0.5s ease-in-out")
+        ]
       else
-        ("display", "none")
+        [ ("transform", "scaleY(0)")
+        , ("transform-origin", "top")
+        , ("transition", "transform 1s ease-in-out")
+        , ("max-height", "0")
+        , ("transition", "max-height 0.5s ease-in-out")
+        ]
   in
   ul 
     [ 
-      style [ displayStyle ]
+      style displayStyles 
       , classList [ ("dropdown-menu", context.isOpen), ("collection", True) ]
       , class "nav-dropdown"
     ]
@@ -37,7 +47,7 @@ view config context data =
 viewItem : Config msg -> String -> Html msg
 viewItem config item =
   li [ onClick (config.itemPickedMsg item), class "collection-item nav-dropdown-item" ] 
-    [ text item ]   
+    [ span [ class "cursor-pointer" ] [ text item ] ]   
 
 -- Helper to cancel click anywhere --
 onClick : msg -> Attribute msg

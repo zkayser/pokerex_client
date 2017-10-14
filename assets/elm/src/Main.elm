@@ -206,6 +206,12 @@ updatePage page msg model =
       ( { model | openDropdown = newDropdown }, Cmd.none )
     ( HeaderMsg (DropdownType.Blur), _ ) ->
       ( { model | openDropdown = DropdownType.AllClosed }, Cmd.none )
+    ( HeaderMsg (DropdownType.NavItemPicked item), _ ) ->
+      let
+        route =
+          urlFromString item
+      in
+      ( { model | openDropdown = DropdownType.AllClosed}, Navigation.modifyUrl route)
     ( _, Page.NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->
@@ -235,6 +241,19 @@ getPage pageState =
       page
     TransitioningFrom page ->
       page
+
+urlFromString : String -> String
+urlFromString string =
+  let
+    formatted =
+      String.toLower string
+    prefix =
+      "#/"
+  in
+  case formatted of
+    "login" -> prefix ++ formatted
+    "signup" -> prefix ++ "register"
+    _ -> prefix   
 
 sessionChange : Sub (Maybe Player)
 sessionChange =
