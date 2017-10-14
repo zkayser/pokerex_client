@@ -18,7 +18,7 @@ initialModel =
 view : Session -> Model -> Html msg
 view session model =
   div [style [ ( "text-align", "center" ) ] ]
-    [ text model.greeting ]
+    [ div [] [ text model.greeting ] ]
 
 -- UPDATE --
 type Msg

@@ -14,9 +14,11 @@
   </head>
 
   <body>
+    <header></header>
     <main role="main">
       <%= render @view_module, @view_template, assigns %>
     </main>
+    <%= render "_footer.html", conn: @conn %>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
   </body>
