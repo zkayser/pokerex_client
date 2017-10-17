@@ -15,6 +15,7 @@ import Types.Dropdowns as DropdownType exposing (OpenDropdown, DropdownMsg, Drop
 import Types.Page as Page exposing (Page)
 import Views.Header as Header exposing (activePageFrom, viewNavBarLinks, navDropdownConfig, navDropdownContext, navLinks)
 import Views.Helpers as Helpers exposing (ActivePage(..))
+import Views.Footer as Footer
 import Page.Home as Home
 import Page.Errored as Errored exposing (PageLoadError)
 import Page.Login as Login
@@ -88,12 +89,12 @@ view : Model -> Html Msg
 view model =
   case model.pageState of
     Loaded page ->
-      (wrapWithHeader model False page) <| viewPage model.session False page
+      (frame model False page) <| viewPage model.session False page
     TransitioningFrom page ->
-      (wrapWithHeader model True page) <| viewPage model.session True page
+      (frame model True page) <| viewPage model.session True page
 
-wrapWithHeader : Model -> Bool -> Page -> Html Msg -> Html Msg
-wrapWithHeader model isLoading page children =
+frame : Model -> Bool -> Page -> Html Msg -> Html Msg
+frame model isLoading page children =
   let
     player =
       model.session.player
@@ -101,16 +102,19 @@ wrapWithHeader model isLoading page children =
       activePageFrom page
   in  
   div [ class "page-frame"]
-    [ nav [ class "teal darken-4 nav-container" ]
-      [ div [ class "filler"] [] 
-        , div [ class "logo-container" ]
-          [ a [ Route.href Route.Home, class "logo" ] [ text "PokerEx"] ]
-        , ul [ class "nav-links", class "hide-on-med-and-down" ]
-          (viewNavBarLinks activePage)
-        , div [ class "filler hide-on-large-only" ] [ Html.map HeaderMsg navDropdownConfig.topLevelHtml ]
+    [ header [] 
+      [ nav [ class "teal darken-4 nav-container" ]
+          [ div [ class "filler"] [] 
+            , div [ class "logo-container" ]
+              [ a [ Route.href Route.Home, class "logo" ] [ text "PokerEx"] ]
+            , ul [ class "nav-links", class "hide-on-med-and-down" ]
+              (viewNavBarLinks activePage)
+            , div [ class "filler hide-on-large-only" ] [ Html.map HeaderMsg navDropdownConfig.topLevelHtml ]
+        ]
       ]
       , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) navLinks) 
-      , children
+      , main_ [] [ children ]
+      , if activePage == Helpers.Home then Footer.view else text ""
     ]
 
 viewPage : Session -> Bool -> Page -> Html Msg

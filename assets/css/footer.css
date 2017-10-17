@@ -1,0 +1,8 @@
+.bottom {
+	position: relative;
+	bottom: -100vh;
+}
+
+.footer-row {
+	margin-bottom: 0;
+}
