@@ -113,7 +113,7 @@ frame model isLoading page children =
         ]
       ]
       , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) navLinks) 
-      , main_ [] [ children ]
+      , children
       , if activePage == Helpers.Home then Footer.view else text ""
     ]
 
