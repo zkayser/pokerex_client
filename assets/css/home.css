@@ -9,16 +9,13 @@
 	text-shadow: 2px 2px 2em #004d40;
 }
 
-.landing-container {
-	margin-left: 1em;
-	margin-right: 1em;
-	display: block;
-}
+@media (min-width: 993px) {
+	.landing {
+		height: 15rem;
+	}
 
-.landing {
-	height: 15rem;
-}
-
-.landing-item {
-	height: 100%;
+	.landing-item {
+		margin-top: 0.5em;
+		height: 100%;
+	}
 }
