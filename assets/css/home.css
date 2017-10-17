@@ -1,0 +1,10 @@
+.hero {
+	background: url("/images/poker.jpg") no-repeat center center fixed;
+	min-height: 50vh;
+	justify-content: center;
+}
+
+.welcome {
+	color: #84ffff;
+	text-shadow: 2px 2px 2em #004d40;
+}

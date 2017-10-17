@@ -1,8 +1,8 @@
 module Page.Home exposing (..)
 
 import Data.Session as Session exposing (Session)
-import Html exposing (Html, div, text)
-import Html.Attributes exposing (style)
+import Html exposing (..)
+import Html.Attributes exposing (style, class)
 
 -- MODEL --
 
@@ -11,14 +11,16 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-  { greeting = "Welcome to the Elm PokerEx Client"}
+  { greeting = "Welcome to PokerEx!"}
 
 -- VIEW --
 
 view : Session -> Model -> Html msg
 view session model =
-  div [style [ ( "text-align", "center" ) ] ]
-    [ div [] [ text model.greeting ] ]
+  div [ class "hero valign-wrapper" ]
+      [ h1 [ class "welcome", style [ ("text-align", "center")] ] 
+        [ text model.greeting ] 
+      ]
 
 -- UPDATE --
 type Msg
