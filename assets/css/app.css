@@ -19,3 +19,29 @@ main {
 .large-text {
 	font-size: xx-large;
 }
+
+.medium-text {
+	font-size: 1.05rem;
+}
+
+.pop-text {
+	font-size: 1.25rem;
+}
+
+.center-align {
+	text-align: center;
+}
+
+@media (max-width: 560px) {
+	.center-align-small {
+		text-align: center;
+	}
+
+	.pad-left-small {
+		padding-left: 10em;
+	}
+
+	.margin-bottom-small {
+		margin-bottom: 2em;
+	}
+}
