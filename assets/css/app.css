@@ -15,3 +15,7 @@ main {
 .rounded {
 	border-radius: 1.5em;
 }
+
+.large-text {
+	font-size: xx-large;
+}
