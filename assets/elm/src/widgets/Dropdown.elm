@@ -20,12 +20,13 @@ type alias Config msg =
 view : Config msg -> Context -> List String -> Html msg
 view config context data =
   let
+    length = (List.length data) * 3
     displayStyles =
       if context.isOpen then
         [ ("transform", "scaleY(1)")
         , ("transform-origin", "top")
         , ("transition", "transform 1s ease-in-out") 
-        , ("max-height", "6em")
+        , ("max-height", (toString length ) ++ "em")
         , ("transition", "max-height 0.5s ease-in-out")
         ]
       else

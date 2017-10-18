@@ -266,6 +266,7 @@ urlFromString string =
   case formatted of
     "login" -> prefix ++ formatted
     "signup" -> prefix ++ "register"
+    "room" -> prefix ++ "room"
     _ -> prefix   
 
 sessionChange : Sub (Maybe Player)
