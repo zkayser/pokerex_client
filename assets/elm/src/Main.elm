@@ -20,6 +20,7 @@ import Page.Home as Home
 import Page.Errored as Errored exposing (PageLoadError)
 import Page.Login as Login
 import Page.Register as Register
+import Page.Room as Room
 import Page.NotFound as NotFound
 import Widgets.Dropdown as Dropdown
 import Mouse
@@ -31,6 +32,7 @@ type Msg
  | HomeMsg Home.Msg
  | LoginMsg Login.Msg 
  | RegisterMsg Register.Msg
+ | RoomMsg Room.Msg
  | SetPlayer (Maybe Player)
 
 type PageState
@@ -54,6 +56,8 @@ setRoute maybeRoute model =
         ( { model | pageState = Loaded (Page.Register Register.initialModel )}, Cmd.none )
       Just Route.Home ->
         ( { model | pageState = Loaded (Page.Home Home.initialModel)}, Cmd.none )
+      Just Route.Room ->
+        ( { model | pageState = Loaded (Page.Room Room.initialModel)}, Cmd.none )
 
 type alias Model =
   { session : Session
@@ -131,6 +135,9 @@ viewPage session isLoading page =
     Page.Register subModel ->
       Register.view session subModel
         |> Html.map RegisterMsg
+    Page.Room subModel ->
+      Room.view session subModel
+        |> Html.map RoomMsg
     Page.NotFound ->
       NotFound.view session
 
@@ -188,6 +195,8 @@ updatePage page msg model =
               { model | session = { player = Just player}}
       in
       ( { newModel | pageState = Loaded (Page.Register pageModel) }, Cmd.map RegisterMsg cmd)
+    ( RoomMsg subMsg, Page.Room subModel ) ->
+      Debug.log "Received a Room Msg" ( model, Cmd.none )
     ( SetPlayer player, _ ) ->
       let
         session =
@@ -276,6 +285,8 @@ pageSubscriptions page =
       Sub.none
     Page.Home _ ->
       Sub.none
+    Page.Room _ ->
+      Sub.none -- Will need to add subscriptions to channel here.
 
 main : Program Value Model Msg
 main =

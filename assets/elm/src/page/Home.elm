@@ -97,7 +97,7 @@ viewButton player =
 
 -- UPDATE --
 type Msg
-  = DoNothing -- Remove when actually implementing
+  = DoNothing -- There is no reason yet for a Msg that does anything here.
 
 type ExternalMsg
   = NoOp

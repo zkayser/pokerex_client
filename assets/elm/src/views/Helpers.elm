@@ -9,3 +9,4 @@ type ActivePage
   | Login
   | Registration
   | Home
+  | Room

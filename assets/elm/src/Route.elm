@@ -5,11 +5,13 @@ import Html exposing (Attribute)
 import Html.Attributes as Attr
 import UrlParser as Url exposing (Parser, parseHash, s, oneOf)
 
+-- TODO - Add more robust routing to Room routes
 type Route
   = Home
   | Login
   | Logout
   | Register
+  | Room -- This will need to be parameterized later on with a slug for the room.
 
 route : Parser (Route -> a) a
 route =
@@ -18,6 +20,7 @@ route =
         , Url.map Login (s "login")
         , Url.map Logout (s "logout")
         , Url.map Register (s "register")
+        , Url.map Room (s "room")
         ]
 
 fromLocation : Location -> Maybe Route
@@ -42,3 +45,4 @@ routeToString page =
     Login -> "#/login"
     Logout -> "#/logout"
     Register -> "#/register"
+    Room -> "#/room"

@@ -21,7 +21,8 @@ type alias NavDropdownInfo r =
 viewNavBarLinks : ActivePage -> List (Html msg)
 viewNavBarLinks page =
   [ navBarLink (page == Helpers.Login) Route.Login [ text "Login" ]
-  , navBarLink (page == Helpers.Registration) Route.Register [ text "Signup" ] 
+  , navBarLink (page == Helpers.Registration) Route.Register [ text "Signup" ]
+  , navBarLink (page == Helpers.Room) Route.Room [ text "Room" ]
   ]
 
 navBarLink : Bool -> Route -> List (Html msg) -> Html msg
@@ -35,6 +36,7 @@ activePageFrom page =
     Page.Login _ -> Helpers.Login
     Page.Register _ -> Helpers.Registration
     Page.Home _ -> Helpers.Home
+    Page.Room _ -> Helpers.Room
     _ -> Helpers.Other
 
 -- NavDropdown --
@@ -56,7 +58,7 @@ navDropdownContext model =
 
 navLinks : List String
 navLinks =
-  [ "Login", "Signup" ]
+  [ "Login", "Signup", "Room" ]
   --This id should come from index.Html
 
   --You can use it to scroll to the top of the page (by ID)
