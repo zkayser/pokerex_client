@@ -235,7 +235,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   let 
     subs =
-      [ pageSubscriptions (getPage model.pageState)
+      [ pageSubscriptions (getPage model.pageState) model.session
       , Sub.map SetPlayer sessionChange
       ]
     withBlur = 
@@ -273,8 +273,8 @@ sessionChange : Sub (Maybe Player)
 sessionChange =
   Ports.onSessionChange (Decode.decodeValue Player.decoder >> Result.toMaybe)
 
-pageSubscriptions : Page -> Sub Msg
-pageSubscriptions page =
+pageSubscriptions : Page -> Session -> Sub Msg
+pageSubscriptions page session =
   case page of
     Page.Blank ->
       Sub.none
@@ -286,8 +286,8 @@ pageSubscriptions page =
       Sub.none
     Page.Home _ ->
       Sub.none
-    Page.Room _ ->
-      Sub.none -- Will need to add subscriptions to channel here.
+    Page.Room subModel ->
+      Sub.map RoomMsg <| Room.subscriptions subModel session
 
 main : Program Value Model Msg
 main =
