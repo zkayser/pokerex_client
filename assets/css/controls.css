@@ -1,0 +1,26 @@
+.controls-container {
+	background-color: rgb(244, 67, 54);
+	position: absolute;
+	bottom: 0;
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+	color: white;
+	padding: 1rem 0 1rem 0;
+}
+
+.controls-container li {
+	list-style-type: none;
+	flex: 1;
+	display: flex;
+	justify-content: center;
+	cursor: pointer;
+}
+
+.controls-container li a {
+	text-decoration: none;
+	color: white;
+	font-size: 1.5rem;
+	width: 100%;
+	text-align: center;
+}

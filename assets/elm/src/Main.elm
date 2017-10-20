@@ -196,7 +196,13 @@ updatePage page msg model =
       in
       ( { newModel | pageState = Loaded (Page.Register pageModel) }, Cmd.map RegisterMsg cmd)
     ( RoomMsg subMsg, Page.Room subModel ) ->
-      Debug.log "Received a Room Msg" ( model, Cmd.none )
+      let
+        ( (roomModel, cmd), msgFromPage ) =
+          Room.update subMsg subModel
+      in
+      Debug.log "Received room msg: "
+      ( { model | pageState = Loaded (Page.Room roomModel) }, Cmd.map RoomMsg cmd)
+            
     ( SetPlayer player, _ ) ->
       let
         session =

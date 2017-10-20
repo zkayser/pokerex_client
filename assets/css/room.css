@@ -1,4 +1,12 @@
 .room-container {
 	min-height: 88vh;
 	border: 1px dashed black;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	position: relative;
 }
+
+
+

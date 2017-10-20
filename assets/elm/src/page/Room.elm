@@ -5,6 +5,7 @@ import Data.Session as Session exposing (Session)
 import Data.AuthToken as AuthToken
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Value)
 import Json.Encode as Encode
 import Phoenix
@@ -17,6 +18,8 @@ type Msg
   = DoNothing
   | NewMsg String
   | Joined
+  | Leave (Maybe Player)
+  | Join (Maybe Player)
   | SocketOpened
   | SocketClosed
   | SocketClosedAbnormally
@@ -28,6 +31,7 @@ type ExternalMsg
 type alias Model =
   { room : String 
   , players : List Player
+  , player : Maybe Player
   }
 
 lobbySocketUrl : String
@@ -64,23 +68,60 @@ initialModel : Model
 initialModel =
   { room = "Elm development"
   , players = []
+  , player = Nothing
   }
 
 view : Session -> Model -> Html Msg
 view session model =
   div [ class "room-container" ] 
-    [ text "This will eventually be the room..." ]
+    [ div [ class "table-container" ]
+      [ text "This will eventually be the room..." ]
+    , div [ class "controls-container"] 
+        [ viewJoinLeaveBtn session model 
+        , viewOtherBtn session model
+        ]
+    ]
+    
+
+viewJoinLeaveBtn : Session -> Model -> Html Msg
+viewJoinLeaveBtn session model =
+  let
+    joinLeaveText =
+      if model.player == Nothing then "Join" else "Leave"
+    joinLeaveMsg =
+      if joinLeaveText == "Join" then Join session.player else Leave session.player 
+  in
+  li [ class "control-item" ] 
+     [ a [ onClick joinLeaveMsg ] [ text joinLeaveText ] ]
+
+viewOtherBtn : Session -> Model -> Html Msg
+viewOtherBtn session model =
+  li [ class "control-item" ]
+    [ a [ ] [ text "Some other button"]]
 
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
-    DoNothing -> Debug.log "Got DoNothing message from room" ( (model, Cmd.none ), NoOp )
-    NewMsg message -> Debug.log ("Got a NewMsg: " ++ message) ( ( model, Cmd.none), NoOp )
-    Joined -> Debug.log "Somebody joined the Room!" ( ( model, Cmd.none), NoOp)
-    SocketOpened -> Debug.log "[ELM]: Socket has been opened." ( ( model, Cmd.none ), NoOp)
-    SocketClosed -> Debug.log "[ELM]: Socket has closed." ( (model, Cmd.none), NoOp )
-    SocketClosedAbnormally -> Debug.log "[ELM]: Abnormal close." ( ( model, Cmd.none), NoOp )
-
+    DoNothing -> ( (model, Cmd.none ), NoOp )
+    NewMsg message -> ( ( model, Cmd.none), NoOp )
+    Joined -> ( ( model, Cmd.none), NoOp)
+    SocketOpened -> ( ( model, Cmd.none ), NoOp)
+    SocketClosed -> ( (model, Cmd.none), NoOp )
+    SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
+    Join (Just player) -> 
+      ( ( { model | player = Just player, players = player :: model.players}, Cmd.none), NoOp )
+    Join Nothing -> ( ( model, Cmd.none), NoOp)
+    Leave (Just player) ->
+      let
+        filterBy =
+          case model.player of
+            Nothing -> ""
+            Just player -> Player.usernameToString player.username
+      in    
+      ( ( { model | player = Nothing, players = 
+            List.filter (\player -> Player.usernameToString(player.username) /= filterBy) model.players }
+        , Cmd.none), NoOp )
+    Leave Nothing -> ( ( model, Cmd.none), NoOp )
 
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
