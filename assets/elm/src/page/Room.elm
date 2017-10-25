@@ -17,7 +17,7 @@ import Phoenix.Channel as Channel exposing (Channel)
 type Msg
   = DoNothing
   | NewMsg String
-  | Joined
+  | Joined -- The next two calls will be nicer if you pass in the player here.
   | Leave (Maybe Player)
   | Join (Maybe Player)
   | SocketOpened
@@ -75,13 +75,17 @@ view : Session -> Model -> Html Msg
 view session model =
   div [ class "room-container" ] 
     [ div [ class "table-container" ]
-      [ text "This will eventually be the room..." ]
+      [ viewTable session model ] -- Probably move this into a widget
     , div [ class "controls-container"] 
         [ viewJoinLeaveBtn session model 
         , viewOtherBtn session model
         ]
     ]
-    
+  
+viewTable : Session -> Model -> Html Msg
+viewTable session model =
+  div [ class "table-center" ]
+    [ img [ id "deck", src "localhost:4000/images/card-back.svg.png"] [] ]  
 
 viewJoinLeaveBtn : Session -> Model -> Html Msg
 viewJoinLeaveBtn session model =

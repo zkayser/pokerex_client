@@ -1,3 +1,16 @@
 .table-container {
-	border: 1px green dashed
+	border: 5px solid black;
+	background-color: #1b5e20;
+	width: 40%;
+	flex: 1;
+	margin-top: 8rem;
+	margin-bottom: 12rem;
+	position: relative;
+}
+
+.table-center {
+	position: absolute;
+	width: 2%;
+	right: 49%;
+	bottom: 50%;
 }
