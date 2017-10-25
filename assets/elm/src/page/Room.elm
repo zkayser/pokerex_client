@@ -85,7 +85,7 @@ view session model =
 viewTable : Session -> Model -> Html Msg
 viewTable session model =
   div [ class "table-center" ]
-    [ img [ id "deck", src "localhost:4000/images/card-back.svg.png"] [] ]  
+    [ img [ id "deck", src "http://localhost:4000/images/card-back.svg.png"] [] ]  
 
 viewJoinLeaveBtn : Session -> Model -> Html Msg
 viewJoinLeaveBtn session model =

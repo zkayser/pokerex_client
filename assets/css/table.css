@@ -10,7 +10,13 @@
 
 .table-center {
 	position: absolute;
-	width: 2%;
+	width: 4rem;
+	height: 4rem;
 	right: 49%;
 	bottom: 50%;
+}
+
+#deck {
+	height: 4rem;
+	width: 4rem;
 }
