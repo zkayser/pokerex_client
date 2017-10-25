@@ -1,3 +1,16 @@
+/*
+	The classes in this module will need
+	to be placed into media queries for responsiveness.
+	The dimensions need to be worked out so that the
+	table container fits on the screen as a square 
+	for a variety of screen sizes. The table-center
+	should contain the deck item itself, and 
+	the math needs to be worked out so that 
+	the spacing relative to the top three class/id
+	rules here stay in sync regardless of the screen
+	size.
+*/
+
 .table-container {
 	border: 5px solid black;
 	background-color: #1b5e20;
