@@ -71,6 +71,7 @@ initialModel =
   { room = "Elm development"
   , players = []
   , player = Nothing
+  , channelSubscriptions = [ lobby ]
   }
 
 view : Session -> Model -> Html Msg
@@ -125,10 +126,10 @@ update msg model =
     SocketOpened -> ( ( model, Cmd.none ), NoOp)
     SocketClosed -> ( (model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
-    Join (Just player) -> 
+    JoinRoom (Just player) -> 
       ( ( { model | player = Just player, players = player :: model.players}, Cmd.none), NoOp )
-    Join Nothing -> ( ( model, Cmd.none), NoOp)
-    Leave (Just player) ->
+    JoinRoom Nothing -> ( ( model, Cmd.none), NoOp)
+    LeaveRoom (Just player) ->
       let
         filterBy =
           case model.player of
