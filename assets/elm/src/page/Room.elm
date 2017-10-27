@@ -75,17 +75,26 @@ view : Session -> Model -> Html Msg
 view session model =
   div [ class "room-container" ] 
     [ div [ class "table-container" ]
-      [ viewTable session model ] -- Probably move this into a widget
+      (viewTableCenter :: viewPlayers session model)
     , div [ class "controls-container"] 
         [ viewJoinLeaveBtn session model 
         , viewOtherBtn session model
         ]
     ]
   
-viewTable : Session -> Model -> Html Msg
-viewTable session model =
+viewPlayers : Session -> Model -> List (Html Msg)
+viewPlayers session model =
+  List.map (viewSeat) (List.range 1 8)
+  
+viewTableCenter : Html Msg
+viewTableCenter =
   div [ class "table-center" ]
-    [ img [ id "deck", src "http://localhost:4000/images/card-back.svg.png"] [] ]  
+    [ img [ id "deck", src "http://localhost:4000/images/card-back.svg.png"] [] ]
+
+viewSeat : Int -> Html Msg
+viewSeat number =
+  div [ id ("seat-" ++ (toString number)), class "player-seat", style [("text-align", "center")] ]
+    [ text (toString number) ]  
 
 viewJoinLeaveBtn : Session -> Model -> Html Msg
 viewJoinLeaveBtn session model =

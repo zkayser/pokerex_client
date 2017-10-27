@@ -49,3 +49,79 @@
 		bottom: calc(20vh - 1.5rem);
 	}
 }
+
+
+/* Player seating */
+.player-seat {
+	border: 1px solid black;
+	border-radius: 50%;
+	background-color: blue;
+	height: 6rem;
+	width: 6rem;
+	position: absolute;
+}
+
+#seat-1 {
+	bottom: 0;
+	right: calc(30vh - 3rem);
+}
+
+#seat-2 {
+	bottom: 0;
+}
+
+#seat-3 {
+	bottom: calc(30vh - 3rem);
+	left: 0;
+}
+
+#seat-5 {
+	top: 0;
+	right: calc(30vh - 3rem);
+}
+
+#seat-6 {
+	top: 0;
+	right: 0;
+}
+
+#seat-7 {
+	right: 0;
+	bottom: calc(30vh - 3rem);
+}
+
+#seat-8 {
+	right: 0;
+	bottom: 0;
+}
+
+@media (max-width: 600px) {
+	#seat-1 {
+		right: calc(20vh - 3rem);
+	}
+
+	#seat-3 {
+		bottom: calc(20vh - 3rem);
+	}
+
+	#seat-5 {
+		right: calc(20vh - 3rem);
+	}
+
+	#seat-7 {
+		bottom: calc(20vh - 3rem);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
