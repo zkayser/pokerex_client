@@ -18,8 +18,9 @@ type Msg
   = DoNothing
   | NewMsg String
   | Joined -- The next two calls will be nicer if you pass in the player here.
-  | Leave (Maybe Player)
-  | Join (Maybe Player)
+  | JoinedRoom
+  | JoinRoom (Maybe Player)
+  | LeaveRoom (Maybe Player)
   | SocketOpened
   | SocketClosed
   | SocketClosedAbnormally
@@ -32,10 +33,11 @@ type alias Model =
   { room : String 
   , players : List Player
   , player : Maybe Player
+  , channelSubscriptions : List (Channel Msg)
   }
 
-lobbySocketUrl : String
-lobbySocketUrl =
+socketUrl : String
+socketUrl =
   "ws://localhost:3000/socket/websocket"
 
 socket : Session -> Socket Msg
@@ -50,7 +52,7 @@ socket session =
           [ ( "guardian_token", token )]
         Nothing -> []
   in
-  Socket.init lobbySocketUrl
+  Socket.init socketUrl
     |> Socket.withParams params
     |> Socket.onOpen (SocketOpened)
     |> Socket.onClose (\_ -> SocketClosed)
@@ -102,7 +104,7 @@ viewJoinLeaveBtn session model =
     joinLeaveText =
       if model.player == Nothing then "Join" else "Leave"
     joinLeaveMsg =
-      if joinLeaveText == "Join" then Join session.player else Leave session.player 
+      if joinLeaveText == "Join" then JoinRoom session.player else LeaveRoom session.player
   in
   li [ class "control-item" ] 
      [ a [ onClick joinLeaveMsg ] [ text joinLeaveText ] ]
@@ -118,6 +120,8 @@ update msg model =
     DoNothing -> ( (model, Cmd.none ), NoOp )
     NewMsg message -> ( ( model, Cmd.none), NoOp )
     Joined -> ( ( model, Cmd.none), NoOp)
+    JoinedRoom -> 
+      Debug.log ">>>>> RECEIVED JOINEDROOM MESSAGE <<<<<<<" ( ( model, Cmd.none ), NoOp )
     SocketOpened -> ( ( model, Cmd.none ), NoOp)
     SocketClosed -> ( (model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
@@ -134,8 +138,8 @@ update msg model =
       ( ( { model | player = Nothing, players = 
             List.filter (\player -> Player.usernameToString(player.username) /= filterBy) model.players }
         , Cmd.none), NoOp )
-    Leave Nothing -> ( ( model, Cmd.none), NoOp )
+    LeaveRoom Nothing -> ( ( model, Cmd.none), NoOp )
 
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
-  Phoenix.connect (socket session) [ lobby ]
+  Phoenix.connect (socket session) model.channelSubscriptions
