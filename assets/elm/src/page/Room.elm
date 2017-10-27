@@ -59,7 +59,7 @@ socket session =
 lobby : Channel Msg
 lobby =
   Channel.init "players:lobby"
-    |> Channel.withPayload (Encode.object [ ("name", Encode.string "BLAH") ] )
+    |> Channel.withPayload (Encode.object [ ("name", Encode.string "USERGUY") ] )
     |> Channel.onJoin (\_ -> Joined)
     |> Channel.withDebug
 
