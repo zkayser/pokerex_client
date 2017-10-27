@@ -59,6 +59,10 @@
 	height: 6rem;
 	width: 6rem;
 	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
 }
 
 #seat-1 {
