@@ -8,6 +8,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Value)
 import Json.Encode as Encode
+import Widgets.PlayerToolbar as PlayerToolbar
 import Phoenix
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
@@ -77,10 +78,7 @@ view session model =
   div [ class "room-container" ] 
     [ div [ class "table-container" ]
       (viewTableCenter :: viewPlayers session model)
-    , div [ class "controls-container"] 
-        [ viewJoinLeaveBtn session model 
-        , viewOtherBtn session model
-        ]
+    , PlayerToolbar.view (toolbarConfig model)
     ]
   
 viewPlayers : Session -> Model -> List (Html Msg)
@@ -97,29 +95,25 @@ viewSeat number =
   div [ id ("seat-" ++ (toString number)), class "player-seat", style [("text-align", "center")] ]
     [ text (toString number) ]  
 
-viewJoinLeaveBtn : Session -> Model -> Html Msg
-viewJoinLeaveBtn session model =
+toolbarConfig : Model -> PlayerToolbar.Config Msg
+toolbarConfig model =
   let
-    joinLeaveText =
-      if List.member model.player model.players then "Leave" else "Join"
-    joinLeaveMsg =
-      if joinLeaveText == "Join" then JoinRoom model.player else LeaveRoom model.player
+    hasJoined =
+      List.member model.player model.players
+    txt =
+      if hasJoined then "Leave" else "Join"
+    msg =
+      if hasJoined then LeaveRoom model.player else JoinRoom model.player
   in
-  li [ class "control-item" ] 
-     [ a [ onClick joinLeaveMsg ] [ text joinLeaveText ] ]
-
-viewOtherBtn : Session -> Model -> Html Msg
-viewOtherBtn session model =
-  li [ class "control-item" ]
-    [ a [ ] [ text "Some other button"]]
+  { joinLeaveMsg = msg, btnText = txt }   
 
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
-    NewMsg message -> ( ( model, Cmd.none), NoOp )
-    Joined ->       ( ( model, Cmd.none), NoOp)
-    SocketOpened -> ( ( model, Cmd.none ), NoOp)
-    SocketClosed -> ( (model, Cmd.none), NoOp )
+    NewMsg message ->         ( ( model, Cmd.none), NoOp )
+    Joined ->                 ( ( model, Cmd.none), NoOp )
+    SocketOpened ->           ( ( model, Cmd.none), NoOp )
+    SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
     JoinRoom player ->
       let
