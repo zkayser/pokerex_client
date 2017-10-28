@@ -57,7 +57,13 @@ setRoute maybeRoute model =
       Just Route.Home ->
         ( { model | pageState = Loaded (Page.Home Home.initialModel)}, Cmd.none )
       Just Route.Room ->
-        ( { model | pageState = Loaded (Page.Room Room.initialModel)}, Cmd.none )
+        let
+          page =
+            case model.session.player of
+              Just player -> Page.Room (Room.initialModel <| player)
+              Nothing -> Page.NotFound
+        in
+        ( { model | pageState = Loaded (page)}, Cmd.none )
 
 type alias Model =
   { session : Session
@@ -200,7 +206,6 @@ updatePage page msg model =
         ( (roomModel, cmd), msgFromPage ) =
           Room.update subMsg subModel
       in
-      Debug.log "Received room msg: "
       ( { model | pageState = Loaded (Page.Room roomModel) }, Cmd.map RoomMsg cmd)
             
     ( SetPlayer player, _ ) ->

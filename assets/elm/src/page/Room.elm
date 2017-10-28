@@ -15,12 +15,10 @@ import Phoenix.Channel as Channel exposing (Channel)
 -- Boiler Plate
 
 type Msg
-  = DoNothing
-  | NewMsg String
-  | Joined -- The next two calls will be nicer if you pass in the player here.
-  | JoinedRoom
-  | JoinRoom (Maybe Player)
-  | LeaveRoom (Maybe Player)
+  = NewMsg String
+  | Joined
+  | JoinRoom Player
+  | LeaveRoom Player
   | SocketOpened
   | SocketClosed
   | SocketClosedAbnormally
@@ -32,7 +30,7 @@ type ExternalMsg
 type alias Model =
   { room : String 
   , players : List Player
-  , player : Maybe Player
+  , player : Player
   , channelSubscriptions : List (Channel Msg)
   }
 
@@ -58,20 +56,20 @@ socket session =
     |> Socket.onClose (\_ -> SocketClosed)
     |> Socket.onAbnormalClose (\_ -> SocketClosedAbnormally)
 
-lobby : Channel Msg
-lobby =
-  Channel.init "players:lobby"
-    |> Channel.withPayload (Encode.object [ ("name", Encode.string "USERGUY") ] )
+room : Model -> Channel Msg
+room model =
+  Channel.init ("players:" ++ model.room)
+    |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public") ] )
     |> Channel.onJoin (\_ -> Joined)
     |> Channel.withDebug
 
 
-initialModel : Model
-initialModel =
-  { room = "Elm development"
+initialModel : Player -> Model
+initialModel player =
+  { room = "room_1" -- Should be updated to take dynamic values on load
   , players = []
-  , player = Nothing
-  , channelSubscriptions = [ lobby ]
+  , player = player
+  , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
   }
 
 view : Session -> Model -> Html Msg
@@ -103,9 +101,9 @@ viewJoinLeaveBtn : Session -> Model -> Html Msg
 viewJoinLeaveBtn session model =
   let
     joinLeaveText =
-      if model.player == Nothing then "Join" else "Leave"
+      if List.member model.player model.players then "Leave" else "Join"
     joinLeaveMsg =
-      if joinLeaveText == "Join" then JoinRoom session.player else LeaveRoom session.player
+      if joinLeaveText == "Join" then JoinRoom model.player else LeaveRoom model.player
   in
   li [ class "control-item" ] 
      [ a [ onClick joinLeaveMsg ] [ text joinLeaveText ] ]
@@ -118,28 +116,36 @@ viewOtherBtn session model =
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
-    DoNothing -> ( (model, Cmd.none ), NoOp )
     NewMsg message -> ( ( model, Cmd.none), NoOp )
-    Joined -> ( ( model, Cmd.none), NoOp)
-    JoinedRoom -> 
-      Debug.log ">>>>> RECEIVED JOINEDROOM MESSAGE <<<<<<<" ( ( model, Cmd.none ), NoOp )
+    Joined ->       ( ( model, Cmd.none), NoOp)
     SocketOpened -> ( ( model, Cmd.none ), NoOp)
     SocketClosed -> ( (model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
-    JoinRoom (Just player) -> 
-      ( ( { model | player = Just player, players = player :: model.players}, Cmd.none), NoOp )
-    JoinRoom Nothing -> ( ( model, Cmd.none), NoOp)
-    LeaveRoom (Just player) ->
+    JoinRoom player ->
       let
-        filterBy =
-          case model.player of
-            Nothing -> ""
-            Just player -> Player.usernameToString player.username
+        newSubscriptions =
+          room model :: model.channelSubscriptions
+      in 
+      ( ( { model | 
+            player = player
+          , players = player :: model.players
+          , channelSubscriptions = newSubscriptions
+          }
+        , Cmd.none)
+      , NoOp
+      )
+    LeaveRoom player ->
+      let
+        filterBy = Player.usernameToString player.username
       in    
-      ( ( { model | player = Nothing, players = 
-            List.filter (\player -> Player.usernameToString(player.username) /= filterBy) model.players }
-        , Cmd.none), NoOp )
-    LeaveRoom Nothing -> ( ( model, Cmd.none), NoOp )
+      ( ( { model | 
+            players = 
+              List.filter (\player -> Player.usernameToString(player.username) /= filterBy) model.players 
+          , channelSubscriptions = []
+          }
+        , Cmd.none)
+      , NoOp
+      )
 
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
