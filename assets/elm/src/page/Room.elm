@@ -20,6 +20,7 @@ import Phoenix.Push as Push exposing (Push)
 type Msg
   = NewMsg String
   | Joined
+  | JoinedChannel
   | JoinRoom Player
   | LeaveRoom Player
   | SocketOpened
@@ -67,7 +68,7 @@ room : Model -> Channel Msg
 room model =
   Channel.init ("players:" ++ model.room)
     |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public") ] )
-    |> Channel.onJoin (\_ -> Joined)
+    |> Channel.onJoin (\_ -> JoinedChannel)
     |> Channel.on "add_player_success" (\payload -> AddPlayerSuccess payload)
     |> Channel.withDebug
 
@@ -149,6 +150,7 @@ update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
     NewMsg message ->         ( ( model, Cmd.none), NoOp )
+    JoinedChannel ->          ( ( model, Cmd.none), NoOp )
     Joined ->                 handleJoined model
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
@@ -178,6 +180,7 @@ handleJoined model =
     newModel =
       { model | modalRendered = False, channelSubscriptions = (room model) :: model.channelSubscriptions } 
   in
+  Debug.log ">>>>> HANDLE JOINED CALLED <<<<<"
   ( ( newModel, (addPlayer model)), NoOp )
 
 -- PUSH MESSAGES --
