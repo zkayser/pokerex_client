@@ -35,6 +35,8 @@ type alias Model =
   , channelSubscriptions : List (Channel Msg)
   }
 
+-- SOCKET & CHANNEL CONFIG --
+
 socketUrl : String
 socketUrl =
   "ws://localhost:3000/socket/websocket"
@@ -73,6 +75,8 @@ initialModel player =
   , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
   }
 
+-- VIEW --
+
 view : Session -> Model -> Html Msg
 view session model =
   div [ class "room-container" ] 
@@ -95,17 +99,19 @@ viewSeat number =
   div [ id ("seat-" ++ (toString number)), class "player-seat", style [("text-align", "center")] ]
     [ text (toString number) ]  
 
+-- WIDGET CONFIGURATIONS --
+
 toolbarConfig : Model -> PlayerToolbar.Config Msg
 toolbarConfig model =
   let
     hasJoined =
       List.member model.player model.players
-    txt =
-      if hasJoined then "Leave" else "Join"
-    msg =
-      if hasJoined then LeaveRoom model.player else JoinRoom model.player
+    (txt, msg) =
+      if hasJoined then ("Leave", LeaveRoom model.player) else ("Join", JoinRoom model.player)
   in
   { joinLeaveMsg = msg, btnText = txt }   
+
+-- UPDATE --
 
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
@@ -115,31 +121,33 @@ update msg model =
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
-    JoinRoom player ->
-      let
-        newSubscriptions =
-          room model :: model.channelSubscriptions
-      in 
-      ( ( { model | 
-            player = player
-          , players = player :: model.players
-          , channelSubscriptions = newSubscriptions
-          }
-        , Cmd.none)
-      , NoOp
-      )
-    LeaveRoom player ->
-      let
-        filterBy = Player.usernameToString player.username
-      in    
-      ( ( { model | 
-            players = 
-              List.filter (\player -> Player.usernameToString(player.username) /= filterBy) model.players 
-          , channelSubscriptions = []
-          }
-        , Cmd.none)
-      , NoOp
-      )
+    JoinRoom player ->        handleJoinRoom player model
+    LeaveRoom player ->       handleLeaveRoom player model
+
+-- UPDATE HELPERS --
+
+handleJoinRoom : Player -> Model -> ( (Model, Cmd Msg), ExternalMsg )
+handleJoinRoom player model =
+  let
+    newSubscriptions =
+      room model :: model.channelSubscriptions
+    newModel = 
+      { model | players = player :: model.players, channelSubscriptions = newSubscriptions }
+  in
+  ( ( newModel, Cmd.none ), NoOp )
+
+handleLeaveRoom : Player -> Model -> ( (Model, Cmd Msg), ExternalMsg )
+handleLeaveRoom player model =
+  let
+    filterBy = Player.usernameToString player.username
+    newModel =
+      { model | players = List.filter (\player -> Player.usernameToString(player.username) /= filterBy) model.players
+              , channelSubscriptions = []
+      }
+  in
+  ( (newModel, Cmd.none), NoOp )
+  
+-- SUBSCRIPTIONS --    
 
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
