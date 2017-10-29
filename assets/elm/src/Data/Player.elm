@@ -19,6 +19,7 @@ type alias Player =
   { email : String
   , token : AuthToken
   , username : Username
+  , chips : Int
   }
 
 -- Serialization --
@@ -28,6 +29,7 @@ decoder =
     |> required "email" Decode.string
     |> required "token" AuthToken.decoder
     |> required "username" usernameDecoder
+    |> required "chips" Decode.int
 
 encode : Player -> Value
 encode player =
