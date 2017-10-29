@@ -13,6 +13,7 @@ import Widgets.Modal as Modal
 import Phoenix
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
+import Phoenix.Push as Push exposing (Push)
 
 -- Boiler Plate
 
@@ -24,6 +25,7 @@ type Msg
   | SocketOpened
   | SocketClosed
   | SocketClosedAbnormally
+  | AddPlayerSuccess Value
 
 type ExternalMsg
   = NoOp
@@ -66,6 +68,7 @@ room model =
   Channel.init ("players:" ++ model.room)
     |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public") ] )
     |> Channel.onJoin (\_ -> Joined)
+    |> Channel.on "add_player_success" (\payload -> AddPlayerSuccess payload)
     |> Channel.withDebug
 
 
@@ -146,12 +149,15 @@ update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
     NewMsg message ->         ( ( model, Cmd.none), NoOp )
-    Joined ->                 ( ( model, Cmd.none), NoOp )
+    Joined ->                 handleJoined model
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
     JoinRoom player ->        ( ( { model | modalRendered = not model.modalRendered }, Cmd.none), NoOp)
     LeaveRoom player ->       handleLeaveRoom player model
+    AddPlayerSuccess room ->
+      Debug.log ("Got AddPlayerSuccess message with room: " ++ (toString room))
+      ( ( model, Cmd.none), NoOp )
 
 -- UPDATE HELPERS --
 
@@ -165,6 +171,31 @@ handleLeaveRoom player model =
       }
   in
   ( (newModel, Cmd.none), NoOp )
+
+handleJoined : Model -> ( (Model, Cmd Msg), ExternalMsg )
+handleJoined model =
+  let
+    newModel =
+      { model | modalRendered = False, channelSubscriptions = (room model) :: model.channelSubscriptions } 
+  in
+  ( ( newModel, (addPlayer model)), NoOp )
+
+-- PUSH MESSAGES --
+-- "add_player"
+addPlayer : Model -> Cmd Msg
+addPlayer model =
+  let
+    payload =
+      Encode.object 
+        [ ("player", Encode.string <| Player.usernameToString model.player.username )
+        , ("room", Encode.string model.room)
+        , ("amount", Encode.int 101) -- harcoded for now
+        ]
+    push =
+      Push.init ("players:" ++ model.room) "add_player"
+        |> Push.withPayload payload
+  in
+  Phoenix.push socketUrl push    
   
 -- SUBSCRIPTIONS --    
 
