@@ -25,6 +25,7 @@ elmApp.ports.storeSession.subscribe((session) => {
 
 window.addEventListener("storage", (event) => {
   if (event.storageArea === localStorage && event.key === "session") {
+  	console.log("onSessionChange received with event: ", event.newValue);
     app.ports.onSessionChange.send(event.newValue);
   }
 }, false);

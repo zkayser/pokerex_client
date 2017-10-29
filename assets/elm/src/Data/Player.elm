@@ -37,6 +37,7 @@ encode player =
     [ ("email", Encode.string player.email)
     , ("token", AuthToken.encode player.token)
     , ("username", encodeUsername player.username)
+    , ("chips", Encode.int player.chips)
     ]
 
 -- Identifiers --

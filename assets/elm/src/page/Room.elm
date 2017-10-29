@@ -9,6 +9,7 @@ import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Value)
 import Json.Encode as Encode
 import Widgets.PlayerToolbar as PlayerToolbar
+import Widgets.Modal as Modal
 import Phoenix
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
@@ -33,6 +34,7 @@ type alias Model =
   , players : List Player
   , player : Player
   , channelSubscriptions : List (Channel Msg)
+  , modalRendered : Bool
   }
 
 -- SOCKET & CHANNEL CONFIG --
@@ -73,6 +75,7 @@ initialModel player =
   , players = []
   , player = player
   , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
+  , modalRendered = False
   }
 
 -- VIEW --
@@ -83,6 +86,7 @@ view session model =
     [ div [ class "table-container" ]
       (viewTableCenter :: viewPlayers session model)
     , PlayerToolbar.view (toolbarConfig model)
+    , maybeViewModal model
     ]
   
 viewPlayers : Session -> Model -> List (Html Msg)
@@ -97,7 +101,26 @@ viewTableCenter =
 viewSeat : Int -> Html Msg
 viewSeat number =
   div [ id ("seat-" ++ (toString number)), class "player-seat", style [("text-align", "center")] ]
-    [ text (toString number) ]  
+    [ text (toString number) ] 
+
+joinView : Model -> Html Msg
+joinView model =
+  div [ class "card-content" ]
+    [ span [ class "card-title" ] [ text "Join the Game" ]
+    , p [] [ text "Enter the amount of chips you would like to bring to the table."]
+    , p [] [ text "You must enter with a minimum of 100 chips."]
+    , p [] [ text ("Current Chip Amount: " ++ (toString model.player.chips )) ]
+    ]
+
+viewJoinActions : Model -> Html Msg
+viewJoinActions model =
+  div [ class "card-action" ]
+    [ a [ class "btn green", onClick Joined ] [ text "Join" ] ] -- Needs editing later on
+
+maybeViewModal model =
+  case model.modalRendered of
+    True -> Modal.view (joinModalConfig model)
+    False -> text ""
 
 -- WIDGET CONFIGURATIONS --
 
@@ -109,7 +132,13 @@ toolbarConfig model =
     (txt, msg) =
       if hasJoined then ("Leave", LeaveRoom model.player) else ("Join", JoinRoom model.player)
   in
-  { joinLeaveMsg = msg, btnText = txt }   
+  { joinLeaveMsg = msg, btnText = txt }
+
+joinModalConfig : Model -> Modal.Config Msg
+joinModalConfig model =
+  { backgroundColor = "white"
+  , contentHtml = [ joinView model, viewJoinActions model ]
+  } 
 
 -- UPDATE --
 
@@ -121,20 +150,10 @@ update msg model =
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
-    JoinRoom player ->        handleJoinRoom player model
+    JoinRoom player ->        ( ( { model | modalRendered = not model.modalRendered }, Cmd.none), NoOp)
     LeaveRoom player ->       handleLeaveRoom player model
 
 -- UPDATE HELPERS --
-
-handleJoinRoom : Player -> Model -> ( (Model, Cmd Msg), ExternalMsg )
-handleJoinRoom player model =
-  let
-    newSubscriptions =
-      room model :: model.channelSubscriptions
-    newModel = 
-      { model | players = player :: model.players, channelSubscriptions = newSubscriptions }
-  in
-  ( ( newModel, Cmd.none ), NoOp )
 
 handleLeaveRoom : Player -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 handleLeaveRoom player model =
