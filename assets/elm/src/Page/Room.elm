@@ -7,6 +7,7 @@ import Data.AuthToken as AuthToken
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Mouse
 import Json.Decode as Decode exposing (Value)
 import Json.Encode as Encode
 import Widgets.PlayerToolbar as PlayerToolbar
@@ -28,9 +29,14 @@ type Msg
   | SocketClosed
   | SocketClosedAbnormally
   | AddPlayerSuccess Value
+  | Blur
 
 type ExternalMsg
   = NoOp
+  
+type ModalState
+  = Closed
+  | JoinModalOpen
 
 type alias Model =
   { room : String
@@ -39,7 +45,7 @@ type alias Model =
   , players : List Player
   , player : Player
   , channelSubscriptions : List (Channel Msg)
-  , modalRendered : Bool
+  , modalRendered : ModalState
   }
 
 -- SOCKET & CHANNEL CONFIG --
@@ -83,7 +89,7 @@ initialModel player roomTitle roomType =
   , players = []
   , player = player
   , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
-  , modalRendered = False
+  , modalRendered = Closed
   }
 
 -- VIEW --
@@ -127,8 +133,8 @@ viewJoinActions model =
 
 maybeViewModal model =
   case model.modalRendered of
-    True -> Modal.view (joinModalConfig model)
-    False -> text ""
+    JoinModalOpen -> Modal.view (joinModalConfig model)
+    Closed -> text ""
 
 -- WIDGET CONFIGURATIONS --
 
@@ -159,7 +165,8 @@ update msg model =
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
-    JoinRoom player ->        ( ( { model | modalRendered = not model.modalRendered }, Cmd.none), NoOp)
+    JoinRoom player ->        ( ( { model | modalRendered = JoinModalOpen }, Cmd.none), NoOp)
+    Blur ->                   ( ( { model | modalRendered = Closed }, Cmd.none), NoOp)
     LeaveRoom player ->       handleLeaveRoom player model
     AddPlayerSuccess room ->
       Debug.log ("Got AddPlayerSuccess message with room: " ++ (toString room))
@@ -182,7 +189,7 @@ handleJoined : Model -> ( (Model, Cmd Msg), ExternalMsg )
 handleJoined model =
   let
     newModel =
-      { model | modalRendered = False, channelSubscriptions = (room model) :: model.channelSubscriptions } 
+      { model | modalRendered = Closed, channelSubscriptions = (room model) :: model.channelSubscriptions } 
   in
   Debug.log ">>>>> HANDLE JOINED CALLED <<<<<"
   ( ( newModel, (addPlayer model)), NoOp )
@@ -208,4 +215,13 @@ addPlayer model =
 
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
-  Phoenix.connect (socket session) model.channelSubscriptions
+  let
+    phoenixSubscriptions =
+      [ Phoenix.connect (socket session) model.channelSubscriptions ]
+    
+    withBlur =
+      case model.modalRendered of
+        Closed -> Sub.none
+        _ -> Mouse.clicks (always Blur)
+  in
+  Sub.batch (phoenixSubscriptions ++ [ withBlur ]) 
