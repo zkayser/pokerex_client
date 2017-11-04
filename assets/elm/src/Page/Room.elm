@@ -8,6 +8,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Mouse
+import Time exposing (Time)
 import Json.Decode as Decode exposing (Value)
 import Json.Encode as Encode
 import Widgets.PlayerToolbar as PlayerToolbar
@@ -24,12 +25,14 @@ type Msg
   | Joined
   | JoinedChannel
   | JoinRoom Player
+  | JoinFailed Value
   | LeaveRoom Player
   | SocketOpened
   | SocketClosed
   | SocketClosedAbnormally
   | AddPlayerSuccess Value
   | Blur
+  | ClearErrorMessage Time
 
 type ExternalMsg
   = NoOp
@@ -46,6 +49,7 @@ type alias Model =
   , player : Player
   , channelSubscriptions : List (Channel Msg)
   , modalRendered : ModalState
+  , errorMessages : List String
   }
 
 -- SOCKET & CHANNEL CONFIG --
@@ -77,6 +81,7 @@ room model =
   Channel.init ("players:" ++ model.room)
     |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public") ] )
     |> Channel.onJoin (\_ -> JoinedChannel)
+    |> Channel.onJoinError (\json -> JoinFailed json)
     |> Channel.on "add_player_success" (\payload -> AddPlayerSuccess payload)
     |> Channel.withDebug
 
@@ -90,6 +95,7 @@ initialModel player roomTitle roomType =
   , player = player
   , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
   , modalRendered = Closed
+  , errorMessages = []
   }
 
 -- VIEW --
@@ -162,11 +168,13 @@ update msg model =
     NewMsg message ->         ( ( model, Cmd.none), NoOp )
     JoinedChannel ->          ( ( model, Cmd.none), NoOp )
     Joined ->                 handleJoined model
+    JoinFailed value ->       handleJoinFailed model value
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
     JoinRoom player ->        ( ( { model | modalRendered = JoinModalOpen }, Cmd.none), NoOp)
     Blur ->                   ( ( { model | modalRendered = Closed }, Cmd.none), NoOp)
+    ClearErrorMessage _ ->    clearErrorMessage model
     LeaveRoom player ->       handleLeaveRoom player model
     AddPlayerSuccess room ->
       Debug.log ("Got AddPlayerSuccess message with room: " ++ (toString room))
@@ -193,6 +201,32 @@ handleJoined model =
   in
   Debug.log ">>>>> HANDLE JOINED CALLED <<<<<"
   ( ( newModel, (addPlayer model)), NoOp )
+  
+handleJoinFailed : Model -> Value -> ( (Model, Cmd Msg), ExternalMsg )
+handleJoinFailed model json =
+  let
+    message =
+      case Decode.decodeValue (Decode.field "message" Decode.string) json of
+        Ok theMessage -> theMessage
+        Err _ -> "An error occurred when trying to join the room. Please try again."
+    newModel =
+      { model | errorMessages = message :: model.errorMessages }
+  in
+  ( (newModel, Cmd.none), NoOp )
+  
+clearErrorMessage : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
+clearErrorMessage model =
+  let
+    firstErrorMessage =
+      case List.head model.errorMessages of
+        Just string -> string
+        Nothing -> ""
+    newErrorMessages =
+      List.filter (\str -> str /= firstErrorMessage) model.errorMessages
+    newModel =
+      { model | errorMessages = newErrorMessages }
+  in
+  ( ( newModel, Cmd.none), NoOp )
 
 -- PUSH MESSAGES --
 -- "add_player"
@@ -223,5 +257,9 @@ subscriptions model session =
       case model.modalRendered of
         Closed -> Sub.none
         _ -> Mouse.clicks (always Blur)
+    withClearError =
+      case model.errorMessages of
+        [] -> Sub.none
+        _ -> Time.every 5000 ClearErrorMessage
   in
-  Sub.batch (phoenixSubscriptions ++ [ withBlur ]) 
+  Sub.batch (phoenixSubscriptions ++ [ withBlur, withClearError ]) 
