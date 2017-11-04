@@ -11,7 +11,7 @@ import Ports
 
 apiUrl : String
 apiUrl =
-  "http://localhost:3000/api" -- Should be configurable, but hitting Phx server on this port for early development
+  "http://phoenix-experiment-zkayser.c9users.io:8080/api" -- Should be configurable, but hitting Phx server on this port for early development
 
 storeSession : Player -> Cmd msg
 storeSession player =

@@ -1,11 +1,4 @@
-module Data.Player exposing ( Player
-                            , Username
-                            , decoder
-                            , encode
-                            , encodeUsername
-                            , usernameDecoder
-                            , usernameToHtml
-                            , usernameToString)
+module Data.Player exposing (..)
 
 import Data.AuthToken as AuthToken exposing (AuthToken)
 import Html exposing (Html)
@@ -19,6 +12,11 @@ type alias Player =
   { email : String
   , token : AuthToken
   , username : Username
+  , chips : Int
+  }
+  
+type alias TablePlayer =
+  { name : Username
   , chips : Int
   }
 
@@ -39,6 +37,12 @@ encode player =
     , ("username", encodeUsername player.username)
     , ("chips", Encode.int player.chips)
     ]
+    
+tablePlayerDecoder : Decoder TablePlayer
+tablePlayerDecoder =
+  decode TablePlayer
+    |> required "name" usernameDecoder
+    |> required "chips" Decode.int
 
 -- Identifiers --
 

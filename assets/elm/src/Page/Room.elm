@@ -2,6 +2,7 @@ module Page.Room exposing (..)
 
 import Data.Player as Player exposing (Player)
 import Data.Session as Session exposing (Session)
+import Data.Room as Room exposing (Room)
 import Data.AuthToken as AuthToken
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -31,9 +32,10 @@ type Msg
 type ExternalMsg
   = NoOp
 
--- This may eventually contain a lot of data (players, chips, table state, etc.)
 type alias Model =
-  { room : String 
+  { room : String
+  , roomModel : Room
+  , roomType : String
   , players : List Player
   , player : Player
   , channelSubscriptions : List (Channel Msg)
@@ -44,7 +46,7 @@ type alias Model =
 
 socketUrl : String
 socketUrl =
-  "ws://localhost:3000/socket/websocket"
+  "ws://phoenix-experiment-zkayser.c9users.io:8080/socket/websocket"
 
 socket : Session -> Socket Msg
 socket session =
@@ -73,9 +75,11 @@ room model =
     |> Channel.withDebug
 
 
-initialModel : Player -> Model
-initialModel player =
-  { room = "room_1" -- Should be updated to take dynamic values on load
+initialModel : Player -> String -> String -> Model
+initialModel player roomTitle roomType =
+  { room =  roomTitle -- Should be updated to take dynamic values on load
+  , roomModel = Room.defaultRoom player
+  , roomType = roomType
   , players = []
   , player = player
   , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
@@ -100,7 +104,7 @@ viewPlayers session model =
 viewTableCenter : Html Msg
 viewTableCenter =
   div [ class "table-center" ]
-    [ img [ id "deck", src "http://localhost:4000/images/card-back.svg.png"] [] ]
+    [ img [ id "deck", src "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"] [] ]
 
 viewSeat : Int -> Html Msg
 viewSeat number =
