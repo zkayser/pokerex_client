@@ -22,7 +22,7 @@ import Phoenix.Push as Push exposing (Push)
 
 type Msg
   = NewMsg String
-  | Joined
+  | Join
   | JoinedChannel
   | JoinRoom Player
   | JoinFailed Value
@@ -33,6 +33,7 @@ type Msg
   | AddPlayerSuccess Value
   | Blur
   | ClearErrorMessage Time
+  | ClearRoomMessage Time
 
 type ExternalMsg
   = NoOp
@@ -40,11 +41,16 @@ type ExternalMsg
 type ModalState
   = Closed
   | JoinModalOpen
+  
+type MessageType
+  = RoomMessage String
+  | ErrorMessage String
 
 type alias Model =
   { room : String
   , roomModel : Room
   , roomType : String
+  , roomMessages : List String
   , players : List Player
   , player : Player
   , channelSubscriptions : List (Channel Msg)
@@ -78,19 +84,19 @@ socket session =
 
 room : Model -> Channel Msg
 room model =
-  Channel.init ("players:" ++ model.room)
-    |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public") ] )
+  Channel.init ("rooms:" ++ model.room)
+    |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public"), ("amount", Encode.int 200) ] )
     |> Channel.onJoin (\_ -> JoinedChannel)
     |> Channel.onJoinError (\json -> JoinFailed json)
-    |> Channel.on "add_player_success" (\payload -> AddPlayerSuccess payload)
     |> Channel.withDebug
 
 
 initialModel : Player -> String -> String -> Model
 initialModel player roomTitle roomType =
   { room =  roomTitle -- Should be updated to take dynamic values on load
-  , roomModel = Room.defaultRoom player
+  , roomModel = Room.defaultRoom
   , roomType = roomType
+  , roomMessages = []
   , players = []
   , player = player
   , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
@@ -107,6 +113,7 @@ view session model =
       (viewTableCenter :: viewPlayers session model)
     , PlayerToolbar.view (toolbarConfig model)
     , maybeViewModal model
+    , viewMessages model
     ]
   
 viewPlayers : Session -> Model -> List (Html Msg)
@@ -135,12 +142,42 @@ joinView model =
 viewJoinActions : Model -> Html Msg
 viewJoinActions model =
   div [ class "card-action" ]
-    [ a [ class "btn green", onClick Joined ] [ text "Join" ] ] -- Needs editing later on
+    [ a [ class "btn green", onClick Join ] [ text "Join" ] ] -- Needs editing later on
 
+maybeViewModal : Model -> Html Msg
 maybeViewModal model =
   case model.modalRendered of
     JoinModalOpen -> Modal.view (joinModalConfig model)
     Closed -> text ""
+
+viewMessages : Model -> Html Msg
+viewMessages model =
+  let 
+    errorMessages =
+      case model.errorMessages of
+        [] -> []
+        _ -> List.map (\msg -> (ErrorMessage msg)) model.errorMessages
+    roomMessages =
+      case model.roomMessages of
+        [] -> []
+        _ -> List.map (\msg -> (RoomMessage msg)) model.roomMessages
+    messagesToView =
+      errorMessages ++ roomMessages
+  in
+  case messagesToView of
+    [] -> text ""
+    _ -> div [ class "room-message-container" ]
+          <| List.map viewMessage messagesToView
+    
+viewMessage : MessageType -> Html Msg
+viewMessage messageType =
+  case messageType of
+    RoomMessage roomMessage ->
+      div [ class "message room-message" ]
+        [ text roomMessage]
+    ErrorMessage errorMessage ->
+      div [ class "message error-message" ]
+        [ text errorMessage ]
 
 -- WIDGET CONFIGURATIONS --
 
@@ -166,8 +203,8 @@ update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
     NewMsg message ->         ( ( model, Cmd.none), NoOp )
-    JoinedChannel ->          ( ( model, Cmd.none), NoOp )
-    Joined ->                 handleJoined model
+    JoinedChannel ->          handleJoinedChannel model
+    Join ->                   handleJoin model
     JoinFailed value ->       handleJoinFailed model value
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
@@ -175,6 +212,7 @@ update msg model =
     JoinRoom player ->        ( ( { model | modalRendered = JoinModalOpen }, Cmd.none), NoOp)
     Blur ->                   ( ( { model | modalRendered = Closed }, Cmd.none), NoOp)
     ClearErrorMessage _ ->    clearErrorMessage model
+    ClearRoomMessage _ ->     clearRoomMessage model
     LeaveRoom player ->       handleLeaveRoom player model
     AddPlayerSuccess room ->
       Debug.log ("Got AddPlayerSuccess message with room: " ++ (toString room))
@@ -193,15 +231,26 @@ handleLeaveRoom player model =
   in
   ( (newModel, Cmd.none), NoOp )
 
-handleJoined : Model -> ( (Model, Cmd Msg), ExternalMsg )
-handleJoined model =
+handleJoin : Model -> ( (Model, Cmd Msg), ExternalMsg )
+handleJoin model =
   let
-    newModel =
-      { model | modalRendered = Closed, channelSubscriptions = (room model) :: model.channelSubscriptions } 
+    newSubscriptions =
+      (room model) :: model.channelSubscriptions
   in
-  Debug.log ">>>>> HANDLE JOINED CALLED <<<<<"
-  ( ( newModel, (addPlayer model)), NoOp )
-  
+  Debug.log ">>>>>> ------------ HANDLEJOIN CALLED --------- <<<<<<<<"
+  ( ( { model | channelSubscriptions = newSubscriptions}, Cmd.none), NoOp )
+
+handleJoinedChannel : Model -> ( (Model, Cmd Msg), ExternalMsg )
+handleJoinedChannel model =
+  let
+    newMessage =
+      "Welcome to " ++ model.room
+    newModel =
+      { model | roomMessages = newMessage :: model.roomMessages }
+  in
+  Debug.log ">>>>> HANDLE JOINEDCHANNEL CALLED <<<<<"
+  ( (newModel, Cmd.none), NoOp )
+
 handleJoinFailed : Model -> Value -> ( (Model, Cmd Msg), ExternalMsg )
 handleJoinFailed model json =
   let
@@ -228,6 +277,20 @@ clearErrorMessage model =
   in
   ( ( newModel, Cmd.none), NoOp )
 
+clearRoomMessage : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+clearRoomMessage model =
+  let
+    firstRoomMessage =
+      case List.head model.roomMessages of
+        Just string -> string
+        Nothing -> ""
+    newRoomMessages =
+      List.filter (\str -> str /= firstRoomMessage) model.roomMessages
+    newModel =
+      { model | roomMessages = newRoomMessages }
+  in
+  ( (newModel, Cmd.none), NoOp )
+
 -- PUSH MESSAGES --
 -- "add_player"
 addPlayer : Model -> Cmd Msg
@@ -252,7 +315,6 @@ subscriptions model session =
   let
     phoenixSubscriptions =
       [ Phoenix.connect (socket session) model.channelSubscriptions ]
-    
     withBlur =
       case model.modalRendered of
         Closed -> Sub.none
@@ -260,6 +322,10 @@ subscriptions model session =
     withClearError =
       case model.errorMessages of
         [] -> Sub.none
-        _ -> Time.every 5000 ClearErrorMessage
+        _ -> Time.every 3000 ClearErrorMessage
+    withClearRoomMessage =
+      case model.roomMessages of
+        [] -> Sub.none
+        _ -> Time.every 3000 ClearRoomMessage
   in
-  Sub.batch (phoenixSubscriptions ++ [ withBlur, withClearError ]) 
+  Sub.batch (phoenixSubscriptions ++ [ withBlur, withClearError, withClearRoomMessage ])

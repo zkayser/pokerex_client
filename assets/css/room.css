@@ -8,5 +8,46 @@
 	position: relative;
 }
 
+.room-message-container {
+	position: fixed;
+	min-width: 25%;
+	right: 0%;
+	top: 15%;
+	display: flex;
+	flex-direction: column;
+	align-items: baseline;
+}
 
+.message {
+	color: white;
+	font-size: 1.25rem;
+	margin: 0.5rem 0;
+	padding: 1rem;
+	box-shadow: 0 0 1rem 0 black;
+	animation: slideInMessage 0.75s ease-in-out;
+}
 
+.error-message {
+	background-color: var(--bright-red);
+}
+
+.room-message {
+	background-color: var(--green-accent);
+}
+
+@keyframes slideInMessage {
+	0% {
+		transform: translateY(100rem);
+		opacity: 0;
+	}
+	50% {
+		opacity: 0;
+	}
+	75% {
+		opacity: 0;
+	}
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}

@@ -1,6 +1,8 @@
 /* This file is for your main application css. */
 :root {
 	--teal: #009688;
+	--bright-red: rgb(244, 67, 54);
+	--green-accent: #00c853;
 }
 
 body {

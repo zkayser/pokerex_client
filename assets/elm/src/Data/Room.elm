@@ -8,7 +8,7 @@ import Dict as Dict exposing (Dict)
 
 type alias Room =
   {
-    active : Username
+    active : Maybe Username
   , currentBigBlind : Maybe Int
   , currentSmallBlind : Maybe Int
   , state : String
@@ -37,7 +37,7 @@ type alias PlayerHand =
 decoder : Decoder Room
 decoder =
   decode Room
-    |> required "active" usernameDecoder
+    |> required "active" (Decode.nullable usernameDecoder)
     |> required "current_big_blind" (Decode.nullable Decode.int)
     |> required "current_small_blind" (Decode.nullable Decode.int)
     |> required "state" Decode.string
@@ -66,9 +66,9 @@ playerHandDecoder =
     |> required "player" usernameDecoder
     |> required "hand" (Decode.list Card.decoder)
     
-defaultRoom : Player -> Room
-defaultRoom player =
-  { active = player.username
+defaultRoom : Room
+defaultRoom =
+  { active = Nothing
   , currentBigBlind = Nothing
   , currentSmallBlind = Nothing
   , state = "idle"
