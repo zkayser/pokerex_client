@@ -26,6 +26,7 @@ type Msg
   | JoinedChannel
   | JoinRoom Player
   | JoinFailed Value
+  | Update Value
   | LeaveRoom Player
   | SocketOpened
   | SocketClosed
@@ -88,6 +89,7 @@ room model =
     |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public"), ("amount", Encode.int 200) ] )
     |> Channel.onJoin (\_ -> JoinedChannel)
     |> Channel.onJoinError (\json -> JoinFailed json)
+    |> Channel.on "update" (\payload -> Update payload)
     |> Channel.withDebug
 
 
@@ -206,6 +208,7 @@ update msg model =
     JoinedChannel ->          handleJoinedChannel model
     Join ->                   handleJoin model
     JoinFailed value ->       handleJoinFailed model value
+    Update payload ->         handleUpdate model payload
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
@@ -263,6 +266,19 @@ handleJoinFailed model json =
   in
   ( (newModel, Cmd.none), NoOp )
   
+handleUpdate : Model -> Value -> ( (Model, Cmd Msg), ExternalMsg )
+handleUpdate model payload =
+  let
+    newRoom =
+      case Decode.decodeValue Room.decoder payload of
+        (Ok room) -> room
+        (Err _) -> model.roomModel
+    newModel =
+      { model | roomModel = newRoom }
+  in
+  Debug.log ">>>>>>> GOT UPDATE WITH NEW ROOM. Check your model <<<<<<<" 
+  ( (newModel, Cmd.none), NoOp)
+
 clearErrorMessage : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 clearErrorMessage model =
   let
