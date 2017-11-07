@@ -127,14 +127,18 @@
 }
 
 
+#player-hand-card-0 {
+	height: 4rem;
+	width: 3rem;
+	position: absolute;
+	top: 5rem;
+	right: 3rem;
+}
 
-
-
-
-
-
-
-
-
-
-
+#player-hand-card-1 {
+	height: 4rem;
+	width: 3rem;
+	position: absolute;
+	top: 5rem;
+	right: -1px;
+}

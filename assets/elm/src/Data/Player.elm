@@ -64,3 +64,7 @@ encodeUsername (Username username) =
 usernameToHtml : Username -> Html msg
 usernameToHtml (Username username) =
   Html.text username
+  
+equals : Username -> Username -> Bool
+equals usernameOne usernameTwo =
+  usernameOne == usernameTwo

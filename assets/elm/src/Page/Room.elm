@@ -123,12 +123,12 @@ view session model =
 viewPlayers : Session -> Model -> List (Html Msg)
 viewPlayers session model =
   let
-    seating = 
-      model.roomModel.seating
-    chipRoll =
-      model.roomModel.chipRoll
+    (seating, chipRoll, playerHands) =
+      (model.roomModel.seating, model.roomModel.chipRoll, model.roomModel.playerHands)
     seatingWithChipRoll =
-      List.map (\seating -> (seating, Dict.get (Player.usernameToString seating.name) chipRoll)) seating
+      List.map (\seating -> 
+        (seating, Dict.get (Player.usernameToString seating.name) chipRoll, handWhereIs seating.name playerHands model.player))
+        seating
   in
   List.map (viewSeat) seatingWithChipRoll
   
@@ -153,19 +153,20 @@ viewTableCard index card =
     , text ("RANK: " ++ (toString card.rank) )
     ]
 
-viewSeat : (Room.Seating, Maybe Int) -> Html Msg
-viewSeat (seating, maybeChipRoll) =
+viewSeat : (Room.Seating, Maybe Int, List Card) -> Html Msg
+viewSeat (seating, maybeChipRoll, cards) =
   let 
     chipsToHtml =
       case maybeChipRoll of
         Nothing -> text ""
         Just chipCount -> text (toString chipCount)
+    cardImages =
+      List.indexedMap Card.cardImageFor cards
   in
-  Debug.log ("<<<<< CHIPSTOHTML: " ++ (toString chipsToHtml))
   div [ id ("seat-" ++ (toString (seating.position + 1))), class "player-seat", style [("text-align", "center")] ]
-    [ p [ class "player-emblem-name" ] [ Player.usernameToHtml seating.name ]
+    ([ p [ class "player-emblem-name" ] [ Player.usernameToHtml seating.name ]
     , p [ class "player-chip-count" ] [ chipsToHtml ]
-    ]
+    ] ++ cardImages)
 
 joinView : Model -> Html Msg
 joinView model =
@@ -377,3 +378,23 @@ subscriptions model session =
         _ -> Time.every 3000 ClearRoomMessage
   in
   Sub.batch (phoenixSubscriptions ++ [ withBlur, withClearError, withClearRoomMessage ])
+  
+-- INTERNAL HELPER FUNCTIONS
+handWhereIs : Player.Username -> List Room.PlayerHand -> Player -> List Card
+handWhereIs username playerHands player =
+  let
+    theHand =
+      case List.filter (\playerHand -> Player.equals username playerHand.player) playerHands of
+        [] -> Nothing
+        [playerHand] -> Just playerHand
+        _ -> Nothing
+    handForPlayer =
+      case theHand of
+        Just hand -> 
+          if Player.equals hand.player player.username then
+            hand.hand
+          else 
+            [ {rank = Card.RankError, suit = Card.SuitError}, {rank = Card.RankError, suit = Card.SuitError} ]
+        _ -> [ { rank = Card.RankError, suit = Card.SuitError}, {rank = Card.RankError, suit = Card.SuitError} ]
+  in
+  handForPlayer
