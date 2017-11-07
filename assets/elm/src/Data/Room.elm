@@ -19,7 +19,7 @@ type alias Room =
   , seating : List Seating
   , playerHands : List PlayerHand
   , pot : Int
-  , table : List Card
+  , table : Table
   }
   
 type alias ChipTracker = Dict String Int
@@ -33,6 +33,9 @@ type alias PlayerHand =
   { player : Username
   , hand : List Card
   }
+  
+type alias Table =
+  List Card
 
 decoder : Decoder Room
 decoder =

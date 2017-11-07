@@ -60,9 +60,18 @@
 	width: 6rem;
 	position: absolute;
 	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	color: white;
+}
+
+.player-emblem-name {
+	margin-bottom: 0;
+}
+
+.player-chip-count {
+	margin-top: 0;
 }
 
 #seat-1 {

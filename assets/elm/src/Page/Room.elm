@@ -3,10 +3,12 @@ module Page.Room exposing (..)
 import Data.Player as Player exposing (Player)
 import Data.Session as Session exposing (Session)
 import Data.Room as Room exposing (Room)
+import Data.Card as Card exposing (Card)
 import Data.AuthToken as AuthToken
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Dict
 import Mouse
 import Time exposing (Time)
 import Json.Decode as Decode exposing (Value)
@@ -112,7 +114,7 @@ view : Session -> Model -> Html Msg
 view session model =
   div [ class "room-container" ] 
     [ div [ class "table-container" ]
-      (viewTableCenter :: viewPlayers session model)
+      ((viewTableCenter model.roomModel.table) :: viewPlayers session model)
     , PlayerToolbar.view (toolbarConfig model)
     , maybeViewModal model
     , viewMessages model
@@ -120,17 +122,50 @@ view session model =
   
 viewPlayers : Session -> Model -> List (Html Msg)
 viewPlayers session model =
-  List.map (viewSeat) (List.range 1 8)
+  let
+    seating = 
+      model.roomModel.seating
+    chipRoll =
+      model.roomModel.chipRoll
+    seatingWithChipRoll =
+      List.map (\seating -> (seating, Dict.get (Player.usernameToString seating.name) chipRoll)) seating
+  in
+  List.map (viewSeat) seatingWithChipRoll
   
-viewTableCenter : Html Msg
-viewTableCenter =
+viewTableCenter : Room.Table -> Html Msg
+viewTableCenter table =
+  let
+    tableCardsToView =
+      case List.isEmpty table of
+        True -> [ text "" ]
+        False -> List.indexedMap (viewTableCard) table
+  in
   div [ class "table-center" ]
-    [ img [ id "deck", src "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"] [] ]
+    ([ img [ id "deck", src "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"] [] ]
+      ++ tableCardsToView
+    )
+    
+    
+viewTableCard : Int -> Card -> Html Msg
+viewTableCard index card =
+  div [ class ("table-card-" ++ (toString index)) ]
+    [ text ("SUIT: " ++ (toString card.suit) )
+    , text ("RANK: " ++ (toString card.rank) )
+    ]
 
-viewSeat : Int -> Html Msg
-viewSeat number =
-  div [ id ("seat-" ++ (toString number)), class "player-seat", style [("text-align", "center")] ]
-    [ text (toString number) ] 
+viewSeat : (Room.Seating, Maybe Int) -> Html Msg
+viewSeat (seating, maybeChipRoll) =
+  let 
+    chipsToHtml =
+      case maybeChipRoll of
+        Nothing -> text ""
+        Just chipCount -> text (toString chipCount)
+  in
+  Debug.log ("<<<<< CHIPSTOHTML: " ++ (toString chipsToHtml))
+  div [ id ("seat-" ++ (toString (seating.position + 1))), class "player-seat", style [("text-align", "center")] ]
+    [ p [ class "player-emblem-name" ] [ Player.usernameToHtml seating.name ]
+    , p [ class "player-chip-count" ] [ chipsToHtml ]
+    ]
 
 joinView : Model -> Html Msg
 joinView model =
@@ -240,7 +275,6 @@ handleJoin model =
     newSubscriptions =
       (room model) :: model.channelSubscriptions
   in
-  Debug.log ">>>>>> ------------ HANDLEJOIN CALLED --------- <<<<<<<<"
   ( ( { model | channelSubscriptions = newSubscriptions}, Cmd.none), NoOp )
 
 handleJoinedChannel : Model -> ( (Model, Cmd Msg), ExternalMsg )
@@ -251,7 +285,6 @@ handleJoinedChannel model =
     newModel =
       { model | roomMessages = newMessage :: model.roomMessages }
   in
-  Debug.log ">>>>> HANDLE JOINEDCHANNEL CALLED <<<<<"
   ( (newModel, Cmd.none), NoOp )
 
 handleJoinFailed : Model -> Value -> ( (Model, Cmd Msg), ExternalMsg )
@@ -276,7 +309,6 @@ handleUpdate model payload =
     newModel =
       { model | roomModel = newRoom }
   in
-  Debug.log ">>>>>>> GOT UPDATE WITH NEW ROOM. Check your model <<<<<<<" 
   ( (newModel, Cmd.none), NoOp)
 
 clearErrorMessage : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
