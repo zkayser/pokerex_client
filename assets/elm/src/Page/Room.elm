@@ -114,7 +114,7 @@ view : Session -> Model -> Html Msg
 view session model =
   div [ class "room-container" ] 
     [ div [ class "table-container" ]
-      ((viewTableCenter model.roomModel.table) :: viewPlayers session model)
+      ((viewTableCenter model.roomModel) :: viewPlayers session model)
     , PlayerToolbar.view (toolbarConfig model)
     , maybeViewModal model
     , viewMessages model
@@ -132,16 +132,18 @@ viewPlayers session model =
   in
   List.map (viewSeat) seatingWithChipRoll
   
-viewTableCenter : Room.Table -> Html Msg
-viewTableCenter table =
+viewTableCenter : Room -> Html Msg
+viewTableCenter room =
   let
     tableCardsToView =
-      case List.isEmpty table of
+      case List.isEmpty room.table of
         True -> [ text "" ]
-        False -> List.indexedMap (viewTableCard) table
+        False -> List.indexedMap (viewTableCard) room.table
   in
   div [ class "table-center" ]
-    ([ img [ id "deck", src "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"] [] ]
+    ([  span [ class "table-pot" ] [ text ("POT: " ++ (toString room.pot)) ]
+     ,  img [ id "deck", src "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"] [] 
+     ]
       ++ tableCardsToView
     )
     

@@ -25,10 +25,16 @@
 
 .table-center {
 	position: absolute;
-	width: 3rem;
+	width: 4rem;
 	height: 3rem;
-	right: calc(30vh - 1.5rem);
-	bottom: calc(30vh - 1.5rem);
+	right: calc(30vh - 2rem);
+	bottom: calc(30vh + 1.5rem);
+}
+
+.table-pot {
+	color: white;
+	font-weight: bold;
+	font-family: fantasy;
 }
 
 #deck {
@@ -45,8 +51,8 @@
 	}
 
 	.table-center {
-		right: calc(20vh - 1.5rem);
-		bottom: calc(20vh - 1.5rem);
+		right: calc(20vh - 2rem);
+		bottom: calc(20vh + 1.5rem);
 	}
 }
 
