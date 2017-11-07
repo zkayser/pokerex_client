@@ -56,11 +56,11 @@ setRoute maybeRoute model =
         ( { model | pageState = Loaded (Page.Register Register.initialModel )}, Cmd.none )
       Just Route.Home ->
         ( { model | pageState = Loaded (Page.Home Home.initialModel)}, Cmd.none )
-      Just Route.Room ->
+      Just (Route.Room roomType roomTitle) ->
         let
           page =
             case model.session.player of
-              Just player -> Page.Room (Room.initialModel player "room_1" "public") -- TODO: Make this dynamic
+              Just player -> Page.Room (Room.initialModel player roomTitle roomType) -- TODO: Make this dynamic
               Nothing -> Page.NotFound
         in
         ( { model | pageState = Loaded (page)}, Cmd.none )

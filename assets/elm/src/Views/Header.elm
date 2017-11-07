@@ -22,7 +22,7 @@ viewNavBarLinks : ActivePage -> List (Html msg)
 viewNavBarLinks page =
   [ navBarLink (page == Helpers.Login) Route.Login [ text "Login" ]
   , navBarLink (page == Helpers.Registration) Route.Register [ text "Signup" ]
-  , navBarLink (page == Helpers.Room) Route.Room [ text "Room" ]
+  , navBarLink (page == Helpers.Room) (Route.Room "public" "room_1") [ text "Room" ]
   ]
 
 navBarLink : Bool -> Route -> List (Html msg) -> Html msg
