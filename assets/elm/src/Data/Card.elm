@@ -94,14 +94,19 @@ rootCardsAssetsUrl : String
 rootCardsAssetsUrl =
   "http://phoenix-experiment-zkayser.c9users.io:8081/images/cards/"
   
-cardImageFor : Int -> Card -> Html msg
-cardImageFor index card =
-  let sourceUrl =
-    case (card.rank, card.suit) of
-      (RankError, SuitError) -> "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"
-      _ -> (rootCardsAssetsUrl ++ (rankToString card) ++ "_of_" ++ (suitToString card) ++ ".svg")
-  in
-  img [ src sourceUrl, id ("player-hand-card-" ++ (toString index)) ] []
+sourceUrlForCardImage : Card -> String
+sourceUrlForCardImage card =
+  case (card.rank, card.suit) of
+    (RankError, SuitError) -> "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"
+    _ -> (rootCardsAssetsUrl ++ (rankToString card) ++ "_of_" ++ (suitToString card) ++ ".svg")
+  
+tableCardImageFor : Card -> Html msg
+tableCardImageFor card =
+  img [ src (sourceUrlForCardImage card), id ("table-card") ] []
+  
+playerHandCardImageFor : Int -> Card -> Html msg
+playerHandCardImageFor index card =
+  img [ src (sourceUrlForCardImage card), id ("player-hand-card-" ++ (toString index)) ] []
     
 rankDecoder : Decoder Rank
 rankDecoder =

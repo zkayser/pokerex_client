@@ -149,9 +149,7 @@ viewTableCenter table =
 viewTableCard : Int -> Card -> Html Msg
 viewTableCard index card =
   div [ class ("table-card-" ++ (toString index)) ]
-    [ text ("SUIT: " ++ (toString card.suit) )
-    , text ("RANK: " ++ (toString card.rank) )
-    ]
+    [ Card.tableCardImageFor card ]
 
 viewSeat : (Room.Seating, Maybe Int, List Card) -> Html Msg
 viewSeat (seating, maybeChipRoll, cards) =
@@ -161,7 +159,7 @@ viewSeat (seating, maybeChipRoll, cards) =
         Nothing -> text ""
         Just chipCount -> text (toString chipCount)
     cardImages =
-      List.indexedMap Card.cardImageFor cards
+      List.indexedMap Card.playerHandCardImageFor cards
   in
   div [ id ("seat-" ++ (toString (seating.position + 1))), class "player-seat", style [("text-align", "center")] ]
     ([ p [ class "player-emblem-name" ] [ Player.usernameToHtml seating.name ]
