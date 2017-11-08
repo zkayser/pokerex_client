@@ -7,6 +7,7 @@ import Html.Events exposing (onClick)
 type alias Config msg =
   { joinLeaveMsg : msg
   , btnText : String
+  , actionPressedMsg : msg
   }
 
 view : Config msg -> Html msg
@@ -15,7 +16,7 @@ view config =
     [ li [ class "control-item" ]
       [ a [ onClick config.joinLeaveMsg ] [ text config.btnText ] ]
     , li [ class "control-item" ]
-      [ a [ ] [ text "Actions" ] ]
+      [ a [ onClick config.actionPressedMsg ] [ text "Actions" ] ]
     , li [ class "control-item" ]
       [ a [ ] [ text "Account"] ]
     , li [ class "control-item" ]

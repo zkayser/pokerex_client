@@ -15,6 +15,7 @@ import Json.Decode as Decode exposing (Value)
 import Json.Encode as Encode
 import Widgets.PlayerToolbar as PlayerToolbar
 import Widgets.Modal as Modal
+import Views.Actions as Actions
 import Phoenix
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
@@ -28,6 +29,9 @@ type Msg
   | JoinedChannel
   | JoinRoom Player
   | JoinFailed Value
+  | ActionPressed
+  | ActionMsg String Encode.Value
+  | OpenRaisePressed
   | Update Value
   | LeaveRoom Player
   | SocketOpened
@@ -44,6 +48,14 @@ type ExternalMsg
 type ModalState
   = Closed
   | JoinModalOpen
+  | BottomModalOpen BottomModalType
+  | RaiseModalOpen
+  
+type BottomModalType
+  = Actions
+  | Account
+  | Chat
+  | Bank
   
 type MessageType
   = RoomMessage String
@@ -186,6 +198,11 @@ maybeViewModal : Model -> Html Msg
 maybeViewModal model =
   case model.modalRendered of
     JoinModalOpen -> Modal.view (joinModalConfig model)
+    RaiseModalOpen -> text ""
+    BottomModalOpen Actions -> Modal.bottomModalView (actionsModalConfig model)
+    BottomModalOpen Account -> text ""
+    BottomModalOpen Chat -> text ""
+    BottomModalOpen Bank -> text ""
     Closed -> text ""
 
 viewMessages : Model -> Html Msg
@@ -227,13 +244,43 @@ toolbarConfig model =
     (txt, msg) =
       if hasJoined then ("Leave", LeaveRoom model.player) else ("Join", JoinRoom model.player)
   in
-  { joinLeaveMsg = msg, btnText = txt }
+  { joinLeaveMsg = msg 
+  , btnText = txt 
+  , actionPressedMsg = ActionPressed
+  }
 
 joinModalConfig : Model -> Modal.Config Msg
 joinModalConfig model =
   { backgroundColor = "white"
   , contentHtml = [ joinView model, viewJoinActions model ]
   } 
+  
+actionsViewConfig : Model -> Actions.ActionsModel Msg
+actionsViewConfig model =
+  let
+    isActive =
+      case model.roomModel.active of
+        Nothing -> False
+        Just username -> Player.equals model.player.username username
+    chips =
+      case Dict.get (Player.usernameToString model.player.username) model.roomModel.chipRoll of
+        Just chipCount -> chipCount
+        Nothing -> 0
+  in
+  { isActive = isActive
+  , chips = chips
+  , toCall = model.roomModel.toCall
+  , player = model.player.username
+  , actionMsg = ActionMsg
+  , openRaiseMsg = OpenRaisePressed
+  , closeModalMsg = Blur
+  }
+  
+actionsModalConfig : Model -> Modal.Config Msg
+actionsModalConfig model =
+  { backgroundColor = "white"
+  , contentHtml = [ Actions.view (actionsViewConfig model)]  
+  }
 
 -- UPDATE --
 
@@ -245,11 +292,14 @@ update msg model =
     Join ->                   handleJoin model
     JoinFailed value ->       handleJoinFailed model value
     Update payload ->         handleUpdate model payload
+    ActionPressed ->          ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp)
+    ActionMsg action val ->   handleActionMsg model action val
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
     JoinRoom player ->        ( ( { model | modalRendered = JoinModalOpen }, Cmd.none), NoOp)
     Blur ->                   ( ( { model | modalRendered = Closed }, Cmd.none), NoOp)
+    OpenRaisePressed ->       ( ( { model | modalRendered = RaiseModalOpen }, Cmd.none), NoOp)
     ClearErrorMessage _ ->    clearErrorMessage model
     ClearRoomMessage _ ->     clearRoomMessage model
     LeaveRoom player ->       handleLeaveRoom player model
@@ -339,6 +389,12 @@ clearRoomMessage model =
       { model | roomMessages = newRoomMessages }
   in
   ( (newModel, Cmd.none), NoOp )
+  
+handleActionMsg : Model -> String -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleActionMsg model actionString value =
+  case List.member actionString ["action_raise", "action_call", "action_check", "action_fold"] of
+    False -> ( ( model, Cmd.none), NoOp )
+    True -> ( ( model, actionPush actionString value), NoOp)
 
 -- PUSH MESSAGES --
 -- "add_player"
@@ -355,7 +411,11 @@ addPlayer model =
       Push.init ("players:" ++ model.room) "add_player"
         |> Push.withPayload payload
   in
-  Phoenix.push socketUrl push    
+  Phoenix.push socketUrl push 
+  
+actionPush : String -> Value -> Cmd Msg
+actionPush actionString value =
+  Cmd.none
   
 -- SUBSCRIPTIONS --    
 

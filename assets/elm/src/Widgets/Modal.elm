@@ -16,3 +16,10 @@ view config =
     [ div [ class ("modal-content card-panel " ++ config.backgroundColor) ]   
       config.contentHtml
     ]
+    
+bottomModalView : Config msg -> Html msg
+bottomModalView config =
+  div [ class "modal-backdrop" ]
+    [ div [ class ("bottom-modal " ++ config.backgroundColor) ] 
+      config.contentHtml
+    ]

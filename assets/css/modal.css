@@ -16,3 +16,17 @@
 	padding: 2rem 3rem;
 	overflow: auto;
 }
+
+.bottom-modal {
+	position: fixed;
+	width: 100vw;
+	height: 20vh;
+	bottom: 0;
+	text-align: center;
+}
+
+.modal-header {
+	font-weight: bold;
+	font-size: 1.5rem;
+	text-decoration: underline;
+}
