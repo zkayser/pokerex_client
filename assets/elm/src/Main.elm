@@ -277,7 +277,7 @@ urlFromString string =
   case formatted of
     "login" -> prefix ++ formatted
     "signup" -> prefix ++ "register"
-    "room" -> prefix ++ "room"
+    "room" -> prefix ++ "rooms/public/room_1" -- TODO: Restore to "rooms" after implementing room list view
     _ -> prefix   
 
 sessionChange : Sub (Maybe Player)
