@@ -37,6 +37,7 @@ type Msg
   | SocketOpened
   | SocketClosed
   | SocketClosedAbnormally
+  | Rejoined Value
   | AddPlayerSuccess Value
   | Blur
   | ClearErrorMessage Time
@@ -103,6 +104,7 @@ room model =
     |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public"), ("amount", Encode.int 200) ] )
     |> Channel.onJoin (\_ -> JoinedChannel)
     |> Channel.onJoinError (\json -> JoinFailed json)
+    |> Channel.onRejoin (\json -> Rejoined json)
     |> Channel.on "update" (\payload -> Update payload)
     |> Channel.withDebug
 
@@ -153,16 +155,14 @@ viewTableCenter room =
         False -> List.indexedMap (viewTableCard) room.table
   in
   div [ class "table-center" ]
-    ([  span [ class "table-pot" ] [ text ("POT: " ++ (toString room.pot)) ]
-     ,  img [ id "deck", src "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"] [] 
-     ]
-      ++ tableCardsToView
-    )
-    
+    [  span [ class "table-pot" ] [ text ("POT: " ++ (toString room.pot)) ]
+    ,  img [ id "deck", src "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"] []
+    ,  div [ class "table-card-container" ] tableCardsToView
+    ]
     
 viewTableCard : Int -> Card -> Html Msg
 viewTableCard index card =
-  div [ class ("table-card-" ++ (toString index)) ]
+  div [ class ("table-card table-card-" ++ (toString index)) ]
     [ Card.tableCardImageFor card ]
 
 viewSeat : (Room.Seating, Maybe Int, List Card) -> Html Msg
@@ -297,6 +297,7 @@ update msg model =
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
+    Rejoined _ ->             handleRejoin model
     JoinRoom player ->        ( ( { model | modalRendered = JoinModalOpen }, Cmd.none), NoOp)
     Blur ->                   ( ( { model | modalRendered = Closed }, Cmd.none), NoOp)
     OpenRaisePressed ->       ( ( { model | modalRendered = RaiseModalOpen }, Cmd.none), NoOp)
@@ -394,7 +395,15 @@ handleActionMsg : Model -> String -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleActionMsg model actionString value =
   case List.member actionString ["action_raise", "action_call", "action_check", "action_fold"] of
     False -> ( ( model, Cmd.none), NoOp )
-    True -> ( ( model, actionPush actionString value), NoOp)
+    True -> ( ( model, actionPush model.room actionString value), NoOp)
+    
+handleRejoin : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleRejoin model =
+  let
+    newModel =
+      { model | roomMessages = model.roomMessages ++ [ "Your connection has been re-established."] }
+  in
+  ( (newModel, Cmd.none), NoOp)
 
 -- PUSH MESSAGES --
 -- "add_player"
@@ -413,9 +422,14 @@ addPlayer model =
   in
   Phoenix.push socketUrl push 
   
-actionPush : String -> Value -> Cmd Msg
-actionPush actionString value =
-  Cmd.none
+actionPush : String -> String -> Value -> Cmd Msg
+actionPush room actionString value =
+  let
+    push =
+      Push.init ("rooms:" ++ room) actionString
+        |> Push.withPayload value
+  in
+  Phoenix.push socketUrl push
   
 -- SUBSCRIPTIONS --    
 

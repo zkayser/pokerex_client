@@ -37,6 +37,19 @@
 	font-family: fantasy;
 }
 
+.table-card-container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	height: 5rem;
+	width: 20rem;
+}
+
+.table-card {
+	width: 3rem;
+	height: 3rem;
+}
+
 #deck {
 	height: 3rem;
 	width: 3rem;
@@ -147,4 +160,9 @@
 	position: absolute;
 	top: 5rem;
 	right: -1px;
+}
+
+#table-card {
+	height: 4rem;
+	width: 4rem;
 }
