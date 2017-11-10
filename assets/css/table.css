@@ -39,19 +39,35 @@
 
 .table-card-container {
 	display: flex;
-	justify-content: space-between;
+	justify-content: flex-start;
 	align-items: center;
 	height: 5rem;
-	width: 20rem;
+	width: 45vh;
+	transform: translate(-17vh, 1rem);
 }
 
-.table-card {
-	width: 3rem;
-	height: 3rem;
+.table-card-0 {
+	animation: animate-card-0 0.75s ease-in-out
+}
+
+.table-card-1 {
+	animation: animate-card-1 0.75s ease-in-out
+}
+
+.table-card-2 {
+	animation: animate-card-2 0.75s ease-in-out
+}
+
+.table-card-3 {
+	animation: animate-card-3 0.75s ease-in-out
+}
+
+.table-card-4 {
+	animation: animate-card-4 0.75s ease-in-out
 }
 
 #deck {
-	height: 3rem;
+	height: 4rem;
 	width: 3rem;
 }
 
@@ -165,4 +181,50 @@
 #table-card {
 	height: 4rem;
 	width: 4rem;
+}
+
+/* Keyframes for table cards */
+@keyframes animate-card-0 {
+	from {
+		transform: translate(15.75vh, -5.5rem);
+	}
+	to {
+		transform: translate(0, 0);
+	}
+}
+
+@keyframes animate-card-1 {
+	from {
+		transform: translate(7.75vh, -5.5rem);
+	}
+	to {
+		transform: translate(0, 0);
+	}
+}
+
+@keyframes animate-card-2 {
+	from {
+		transform: translate(-0.75vh, -5.5rem);
+	}
+	to {
+		transform: translate(0, 0);
+	}
+}
+
+@keyframes animate-card-3 {
+	from {
+		transform: translate(-8.75vh, -5.5rem);
+	}
+	to {
+		transform: translate(0, 0);
+	}
+}
+
+@keyframes animate-card-4 {
+	from {
+		transform: translate(-16.75vh, -5.5rem);
+	}
+	to {
+		transform: translate(0, 0);
+	}
 }

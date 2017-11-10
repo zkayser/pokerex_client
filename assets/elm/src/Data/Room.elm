@@ -18,6 +18,7 @@ type alias Room =
   , chipRoll : ChipTracker
   , seating : List Seating
   , playerHands : List PlayerHand
+  , round : ChipTracker
   , pot : Int
   , table : Table
   }
@@ -50,6 +51,7 @@ decoder =
     |> required "chip_roll" chipTrackerDecoder
     |> required "seating" (Decode.list seatingDecoder)
     |> required "player_hands" (Decode.list playerHandDecoder)
+    |> required "round" chipTrackerDecoder
     |> required "pot" Decode.int
     |> required "table" (Decode.list Card.decoder)
     
@@ -81,6 +83,7 @@ defaultRoom =
   , chipRoll = Dict.empty
   , seating = []
   , playerHands = []
+  , round = Dict.empty
   , pot = 0
   , table = []
   }

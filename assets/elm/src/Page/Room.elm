@@ -266,9 +266,14 @@ actionsViewConfig model =
       case Dict.get (Player.usernameToString model.player.username) model.roomModel.chipRoll of
         Just chipCount -> chipCount
         Nothing -> 0
+    paidInRound =
+      case Dict.get (Player.usernameToString model.player.username) model.roomModel.round of
+        Just paid -> paid
+        Nothing -> 0
   in
   { isActive = isActive
   , chips = chips
+  , paidInRound = paidInRound
   , toCall = model.roomModel.toCall
   , player = model.player.username
   , actionMsg = ActionMsg
