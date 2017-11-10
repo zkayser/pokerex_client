@@ -106,6 +106,7 @@ room model =
     |> Channel.onJoinError (\json -> JoinFailed json)
     |> Channel.onRejoin (\json -> Rejoined json)
     |> Channel.on "update" (\payload -> Update payload)
+    |> Channel.on "game_started" (\payload -> Update payload)
     |> Channel.withDebug
 
 
@@ -366,6 +367,7 @@ handleUpdate model payload =
     newModel =
       { model | roomModel = newRoom }
   in
+  Debug.log ("<<<<< UPDATE FUNCTION WITH PAYLOAD:" ++ (toString payload))
   ( (newModel, Cmd.none), NoOp)
 
 clearErrorMessage : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
