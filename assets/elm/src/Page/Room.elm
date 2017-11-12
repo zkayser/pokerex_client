@@ -8,7 +8,7 @@ import Data.AuthToken as AuthToken
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Dict
+import Dict exposing (Dict)
 import Mouse
 import Time exposing (Time)
 import Json.Decode as Decode exposing (Value)
@@ -32,13 +32,17 @@ type Msg
   | ActionPressed
   | ActionMsg String Encode.Value
   | OpenRaisePressed
+  | CloseRaiseModal
+  | IncreaseRaise Int
+  | DecreaseRaise Int
+  | SetRaise Int
   | Update Value
+  | GameStarted Value
   | LeaveRoom Player
   | SocketOpened
   | SocketClosed
   | SocketClosedAbnormally
   | Rejoined Value
-  | AddPlayerSuccess Value
   | Blur
   | ClearErrorMessage Time
   | ClearRoomMessage Time
@@ -72,6 +76,8 @@ type alias Model =
   , channelSubscriptions : List (Channel Msg)
   , modalRendered : ModalState
   , errorMessages : List String
+  , raiseAmount : Int
+  , raiseInterval : Int
   }
 
 -- SOCKET & CHANNEL CONFIG --
@@ -106,7 +112,7 @@ room model =
     |> Channel.onJoinError (\json -> JoinFailed json)
     |> Channel.onRejoin (\json -> Rejoined json)
     |> Channel.on "update" (\payload -> Update payload)
-    |> Channel.on "game_started" (\payload -> Update payload)
+    |> Channel.on "game_started" (\payload -> GameStarted payload)
     |> Channel.withDebug
 
 
@@ -121,6 +127,8 @@ initialModel player roomTitle roomType =
   , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
   , modalRendered = Closed
   , errorMessages = []
+  , raiseAmount = 0
+  , raiseInterval = 5
   }
 
 -- VIEW --
@@ -199,7 +207,7 @@ maybeViewModal : Model -> Html Msg
 maybeViewModal model =
   case model.modalRendered of
     JoinModalOpen -> Modal.view (joinModalConfig model)
-    RaiseModalOpen -> text ""
+    RaiseModalOpen -> Modal.view (raiseModalConfig model)
     BottomModalOpen Actions -> Modal.bottomModalView (actionsModalConfig model)
     BottomModalOpen Account -> text ""
     BottomModalOpen Chat -> text ""
@@ -241,36 +249,36 @@ toolbarConfig : Model -> PlayerToolbar.Config Msg
 toolbarConfig model =
   let
     hasJoined =
-      List.member model.player model.players
+      List.member model.player.username (List.map .name model.roomModel.players)
     (txt, msg) =
       if hasJoined then ("Leave", LeaveRoom model.player) else ("Join", JoinRoom model.player)
+    isActive = getIsActive model
   in
   { joinLeaveMsg = msg 
   , btnText = txt 
   , actionPressedMsg = ActionPressed
+  , isActive = isActive
   }
 
 joinModalConfig : Model -> Modal.Config Msg
 joinModalConfig model =
   { backgroundColor = "white"
   , contentHtml = [ joinView model, viewJoinActions model ]
-  } 
+  }
+  
+raiseModalConfig : Model -> Modal.Config Msg
+raiseModalConfig model =
+  { backgroundColor = "white"
+  , contentHtml = 
+    [ Actions.raiseContent (actionsViewConfig model) ]
+  }
   
 actionsViewConfig : Model -> Actions.ActionsModel Msg
 actionsViewConfig model =
   let
-    isActive =
-      case model.roomModel.active of
-        Nothing -> False
-        Just username -> Player.equals model.player.username username
-    chips =
-      case Dict.get (Player.usernameToString model.player.username) model.roomModel.chipRoll of
-        Just chipCount -> chipCount
-        Nothing -> 0
-    paidInRound =
-      case Dict.get (Player.usernameToString model.player.username) model.roomModel.round of
-        Just paid -> paid
-        Nothing -> 0
+    isActive = getIsActive model
+    chips = getChips model model.roomModel.chipRoll
+    paidInRound = getChips model model.roomModel.round
   in
   { isActive = isActive
   , chips = chips
@@ -280,6 +288,14 @@ actionsViewConfig model =
   , actionMsg = ActionMsg
   , openRaiseMsg = OpenRaisePressed
   , closeModalMsg = Blur
+  , closeRaiseMsg = CloseRaiseModal
+  , increaseRaiseMsg = IncreaseRaise
+  , decreaseRaiseMsg = DecreaseRaise
+  , setRaiseMsg = SetRaise
+  , raiseAmount = model.raiseAmount
+  , raiseMax = chips
+  , raiseMin = 0
+  , raiseInterval = model.raiseInterval
   }
   
 actionsModalConfig : Model -> Modal.Config Msg
@@ -298,8 +314,13 @@ update msg model =
     Join ->                   handleJoin model
     JoinFailed value ->       handleJoinFailed model value
     Update payload ->         handleUpdate model payload
+    GameStarted payload ->    handleUpdate model payload
     ActionPressed ->          ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp)
     ActionMsg action val ->   handleActionMsg model action val
+    CloseRaiseModal ->        ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
+    IncreaseRaise amount ->   ( ( { model | raiseAmount = model.raiseAmount + amount}, Cmd.none), NoOp)
+    DecreaseRaise amount ->   ( ( { model | raiseAmount = model.raiseAmount - amount}, Cmd.none), NoOp)
+    SetRaise amount ->        ( ( { model | raiseAmount = amount}, Cmd.none), NoOp)
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
@@ -310,9 +331,6 @@ update msg model =
     ClearErrorMessage _ ->    clearErrorMessage model
     ClearRoomMessage _ ->     clearRoomMessage model
     LeaveRoom player ->       handleLeaveRoom player model
-    AddPlayerSuccess room ->
-      Debug.log ("Got AddPlayerSuccess message with room: " ++ (toString room))
-      ( ( model, Cmd.none), NoOp )
 
 -- UPDATE HELPERS --
 
@@ -365,11 +383,10 @@ handleUpdate model payload =
         (Ok room) -> room
         (Err _) -> model.roomModel
     newModel =
-      { model | roomModel = newRoom }
+      { model | roomModel = newRoom, modalRendered = Closed }
   in
-  Debug.log ("<<<<< UPDATE FUNCTION WITH PAYLOAD:" ++ (toString payload))
   ( (newModel, Cmd.none), NoOp)
-
+  
 clearErrorMessage : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 clearErrorMessage model =
   let
@@ -413,22 +430,6 @@ handleRejoin model =
   ( (newModel, Cmd.none), NoOp)
 
 -- PUSH MESSAGES --
--- "add_player"
-addPlayer : Model -> Cmd Msg
-addPlayer model =
-  let
-    payload =
-      Encode.object 
-        [ ("player", Encode.string <| Player.usernameToString model.player.username )
-        , ("room", Encode.string model.room)
-        , ("amount", Encode.int 101) -- harcoded for now
-        ]
-    push =
-      Push.init ("players:" ++ model.room) "add_player"
-        |> Push.withPayload payload
-  in
-  Phoenix.push socketUrl push 
-  
 actionPush : String -> String -> Value -> Cmd Msg
 actionPush room actionString value =
   let
@@ -448,6 +449,7 @@ subscriptions model session =
     withBlur =
       case model.modalRendered of
         Closed -> Sub.none
+        RaiseModalOpen -> Sub.none
         _ -> Mouse.clicks (always Blur)
     withClearError =
       case model.errorMessages of
@@ -479,3 +481,15 @@ handWhereIs username playerHands player =
         _ -> [ { rank = Card.RankError, suit = Card.SuitError}, {rank = Card.RankError, suit = Card.SuitError} ]
   in
   handForPlayer
+  
+getChips : Model -> Dict String Int -> Int
+getChips model dict =
+  case Dict.get (Player.usernameToString model.player.username) dict of
+    Nothing -> 0
+    Just chips -> chips
+    
+getIsActive : Model -> Bool
+getIsActive model =
+  case model.roomModel.active of
+    Nothing -> False
+    Just username -> Player.equals model.player.username username

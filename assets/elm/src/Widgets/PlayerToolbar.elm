@@ -8,6 +8,7 @@ type alias Config msg =
   { joinLeaveMsg : msg
   , btnText : String
   , actionPressedMsg : msg
+  , isActive : Bool
   }
 
 view : Config msg -> Html msg
@@ -16,7 +17,7 @@ view config =
     [ li [ class "control-item" ]
       [ a [ onClick config.joinLeaveMsg ] [ text config.btnText ] ]
     , li [ class "control-item" ]
-      [ a [ onClick config.actionPressedMsg ] [ text "Actions" ] ]
+      [ viewActionBtn config ]
     , li [ class "control-item" ]
       [ a [ ] [ text "Account"] ]
     , li [ class "control-item" ]
@@ -24,3 +25,10 @@ view config =
     , li [ class "control-item" ]
       [ a [ ] [ text "Bank" ] ]
     ]
+    
+viewActionBtn : Config msg -> Html msg
+viewActionBtn config =
+  if config.isActive then
+    a [ onClick config.actionPressedMsg, class "control-active" ] [ text "Actions" ]
+  else
+    a [] [ text "" ]

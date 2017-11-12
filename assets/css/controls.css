@@ -24,3 +24,16 @@
 	width: 100%;
 	text-align: center;
 }
+
+@keyframes highlight-active {
+	from {
+		background-color: rgb(244, 67, 54);
+	}
+	to {
+		background-color: #ff8a80;
+	}
+}
+
+.control-active {
+	animation: 2s linear 0s infinite alternate highlight-active;
+}

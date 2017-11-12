@@ -30,3 +30,14 @@
 	font-size: 1.5rem;
 	text-decoration: underline;
 }
+
+.close-modal {
+	cursor: pointer;
+}
+
+.actions-container .close-modal {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	margin: 0 1rem 1rem 0;
+}

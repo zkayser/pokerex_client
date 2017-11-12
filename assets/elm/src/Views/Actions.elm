@@ -21,8 +21,16 @@ type alias ActionsModel msg =
   , actionMsg : (String -> Value -> msg)
   , openRaiseMsg : msg
   , closeModalMsg : msg
+  , closeRaiseMsg : msg
+  , increaseRaiseMsg : (Int -> msg)
+  , decreaseRaiseMsg : (Int -> msg)
+  , setRaiseMsg : (Int -> msg)
+  , raiseAmount : Int
+  , raiseMax : Int
+  , raiseMin : Int
+  , raiseInterval : Int
   }
-
+  
 view : ActionsModel msg -> Html msg
 view actionsModel =
   div [ class "actions-container" ]
@@ -38,6 +46,8 @@ view actionsModel =
         [ viewActionBtn actionsModel Check ]
       , div [ class "col s6" ]
         [ viewActionBtn actionsModel Fold ]
+      , i [ class "material-icons close-modal", onClick actionsModel.closeModalMsg ]
+        [ text "close" ]
       ]
     ]
     
@@ -63,10 +73,26 @@ viewActionBtn actionsModel action =
   case canCallAction actionsModel action of
     True -> a [ class (actionBtnClass color), onClick message] [ text btnText ]
     False -> text ""
+    
+raiseContent : ActionsModel msg -> Html msg
+raiseContent actionsModel =
+  div [] 
+    [
+      p [] [ text "Here is a raise panel."]
+    , i [ class "material-icons close-modal", onClick actionsModel.closeRaiseMsg ] [ text "close"]
+    ]
 
 actionMsgWith : ActionsModel msg -> String -> msg
 actionMsgWith actionsModel pushMessage =
   actionsModel.actionMsg pushMessage (encodeUsernamePayload actionsModel.player)
+  
+raiseMsgWith : ActionsModel msg -> String -> msg
+raiseMsgWith actionsModel pushMessage =
+  actionsModel.actionMsg pushMessage 
+    (Encode.object <| 
+      [ ("player", Player.encodeUsername actionsModel.player)
+      , ("amount", Encode.int actionsModel.raiseAmount)
+      ])
   
 canCallAction : ActionsModel msg -> Action -> Bool
 canCallAction actionsModel action =
