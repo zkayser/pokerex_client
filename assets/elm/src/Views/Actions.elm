@@ -82,10 +82,9 @@ raiseContent actionsModel =
       p [] [ text "Here is a raise panel."]
     , span [] [ text <| toString actionsModel.raiseAmount]
     , input 
-      [ type_ "range"
+      [ type_ "number"
       , Attrs.min <| toString actionsModel.raiseMin
       , Attrs.max <| toString actionsModel.raiseMax
-      , Attrs.step <| toString actionsModel.raiseInterval
       , onRangeChange actionsModel.setRaiseMsg
       ] []
     , a [ onClick <| actionsModel.decreaseRaiseMsg actionsModel.raiseInterval, class "btn btn-large waves-effect" ]

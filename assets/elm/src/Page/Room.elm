@@ -438,7 +438,16 @@ handleRejoin model =
 handleSetRaise : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSetRaise model stringAmount =
   case String.toInt stringAmount of
-    Ok amount -> ( ( { model | raiseAmount = amount }, Cmd.none), NoOp )
+    Ok amount -> 
+      let
+        chips = 
+          getChips model model.roomModel.chipRoll
+        paidInRound =
+          getChips model model.roomModel.round
+      in
+      case amount >= (paidInRound + chips) of
+        True -> ( ( { model | raiseAmount = chips }, Cmd.none), NoOp )
+        False -> ( ( { model | raiseAmount = amount }, Cmd.none), NoOp )
     Err _ -> ( ( model, Cmd.none), NoOp )
     
 handleIncreaseRaise : Model -> Int -> ( ( Model, Cmd Msg), ExternalMsg )
