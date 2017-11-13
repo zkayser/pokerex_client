@@ -382,8 +382,14 @@ handleUpdate model payload =
       case Decode.decodeValue Room.decoder payload of
         (Ok room) -> room
         (Err _) -> model.roomModel
+    chips =
+      getChips model newRoom.chipRoll
+    initRaiseAmount =
+      case (newRoom.toCall + 5) > chips of
+        True -> newRoom.toCall + chips
+        False -> newRoom.toCall + 5
     newModel =
-      { model | roomModel = newRoom, modalRendered = Closed }
+      { model | roomModel = newRoom, modalRendered = Closed, raiseAmount = initRaiseAmount }
   in
   ( (newModel, Cmd.none), NoOp)
   
@@ -449,8 +455,8 @@ handleIncreaseRaise model amount =
     
 handleDecreaseRaise : Model -> Int -> ( ( Model, Cmd Msg), ExternalMsg )
 handleDecreaseRaise model amount =
-  case (model.raiseAmount - amount) <= 0 of 
-    True -> ( ( { model | raiseAmount = 0}, Cmd.none ), NoOp )
+  case (model.raiseAmount - amount) <= model.roomModel.toCall of 
+    True -> ( ( model, Cmd.none ), NoOp )
     False -> ( ( { model | raiseAmount = model.raiseAmount - amount }, Cmd.none), NoOp )
   
 -- PUSH MESSAGES --

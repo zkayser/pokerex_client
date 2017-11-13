@@ -93,6 +93,9 @@ raiseContent actionsModel =
     , a [ onClick <| actionsModel.increaseRaiseMsg actionsModel.raiseInterval, class "btn btn-large waves-effect" ]
         [ i [ class "large material-icons" ] [ text "add" ] ]
     , i [ class "material-icons close-modal", onClick actionsModel.closeRaiseMsg ] [ text "close"]
+    , br [] []
+    , a [ class "btn btn-large green waves-effect white-text", onClick <| raiseMsgWith actionsModel "action_raise" ] 
+      [ text <| "Raise " ++ (toString actionsModel.raiseAmount) ]
     ]
 
 actionMsgWith : ActionsModel msg -> String -> msg
