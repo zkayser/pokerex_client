@@ -318,8 +318,8 @@ update msg model =
     ActionPressed ->          ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp)
     ActionMsg action val ->   handleActionMsg model action val
     CloseRaiseModal ->        ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
-    IncreaseRaise amount ->   ( ( { model | raiseAmount = model.raiseAmount + amount}, Cmd.none), NoOp)
-    DecreaseRaise amount ->   ( ( { model | raiseAmount = model.raiseAmount - amount}, Cmd.none), NoOp)
+    IncreaseRaise amount ->   handleIncreaseRaise model amount
+    DecreaseRaise amount ->   handleDecreaseRaise model amount
     SetRaise amount ->        handleSetRaise model amount
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
@@ -434,7 +434,25 @@ handleSetRaise model stringAmount =
   case String.toInt stringAmount of
     Ok amount -> ( ( { model | raiseAmount = amount }, Cmd.none), NoOp )
     Err _ -> ( ( model, Cmd.none), NoOp )
-
+    
+handleIncreaseRaise : Model -> Int -> ( ( Model, Cmd Msg), ExternalMsg )
+handleIncreaseRaise model amount =
+  let
+    chips =
+      getChips model model.roomModel.chipRoll
+    paidInRound =
+      getChips model model.roomModel.round
+  in
+  case (( model.raiseAmount + amount ) >= (paidInRound + chips))  of
+    True -> ( ( { model | raiseAmount = chips }, Cmd.none), NoOp )
+    False -> ( ( { model | raiseAmount = model.raiseAmount + amount }, Cmd.none), NoOp )
+    
+handleDecreaseRaise : Model -> Int -> ( ( Model, Cmd Msg), ExternalMsg )
+handleDecreaseRaise model amount =
+  case (model.raiseAmount - amount) <= 0 of 
+    True -> ( ( { model | raiseAmount = 0}, Cmd.none ), NoOp )
+    False -> ( ( { model | raiseAmount = model.raiseAmount - amount }, Cmd.none), NoOp )
+  
 -- PUSH MESSAGES --
 actionPush : String -> String -> Value -> Cmd Msg
 actionPush room actionString value =
