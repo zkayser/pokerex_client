@@ -1,9 +1,10 @@
 module Views.Actions exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (class)
-import Html.Events exposing (onClick)
+import Html.Attributes as Attrs exposing (..)
+import Html.Events exposing (onClick, on, targetValue)
 import Json.Encode as Encode exposing (Value)
+import Json.Decode as Decode
 import Data.Player as Player exposing (Username)
 
 type Action
@@ -24,7 +25,7 @@ type alias ActionsModel msg =
   , closeRaiseMsg : msg
   , increaseRaiseMsg : (Int -> msg)
   , decreaseRaiseMsg : (Int -> msg)
-  , setRaiseMsg : (Int -> msg)
+  , setRaiseMsg : (String -> msg)
   , raiseAmount : Int
   , raiseMax : Int
   , raiseMin : Int
@@ -76,9 +77,15 @@ viewActionBtn actionsModel action =
     
 raiseContent : ActionsModel msg -> Html msg
 raiseContent actionsModel =
-  div [] 
+  div [ class "raise-modal" ] 
     [
       p [] [ text "Here is a raise panel."]
+    , input 
+      [ type_ "range"
+      , Attrs.min <| toString actionsModel.raiseMin
+      , Attrs.max <| toString actionsModel.raiseMax
+      , onRangeChange actionsModel.setRaiseMsg
+      ] []
     , i [ class "material-icons close-modal", onClick actionsModel.closeRaiseMsg ] [ text "close"]
     ]
 
@@ -104,3 +111,7 @@ canCallAction actionsModel action =
       Check -> actionsModel.paidInRound == actionsModel.toCall
       Raise -> (actionsModel.chips > actionsModel.toCall)
       Fold -> actionsModel.paidInRound < actionsModel.toCall
+      
+onRangeChange : (String -> msg) -> Attribute msg
+onRangeChange msg =
+  on "change" <| Decode.map msg targetValue

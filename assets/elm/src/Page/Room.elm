@@ -35,7 +35,7 @@ type Msg
   | CloseRaiseModal
   | IncreaseRaise Int
   | DecreaseRaise Int
-  | SetRaise Int
+  | SetRaise String
   | Update Value
   | GameStarted Value
   | LeaveRoom Player
@@ -320,7 +320,7 @@ update msg model =
     CloseRaiseModal ->        ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     IncreaseRaise amount ->   ( ( { model | raiseAmount = model.raiseAmount + amount}, Cmd.none), NoOp)
     DecreaseRaise amount ->   ( ( { model | raiseAmount = model.raiseAmount - amount}, Cmd.none), NoOp)
-    SetRaise amount ->        ( ( { model | raiseAmount = amount}, Cmd.none), NoOp)
+    SetRaise amount ->        handleSetRaise model amount
     SocketOpened ->           ( ( model, Cmd.none), NoOp )
     SocketClosed ->           ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
@@ -428,6 +428,12 @@ handleRejoin model =
       { model | roomMessages = model.roomMessages ++ [ "Your connection has been re-established."] }
   in
   ( (newModel, Cmd.none), NoOp)
+  
+handleSetRaise : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handleSetRaise model stringAmount =
+  case String.toInt stringAmount of
+    Ok amount -> ( ( { model | raiseAmount = amount }, Cmd.none), NoOp )
+    Err _ -> ( ( model, Cmd.none), NoOp )
 
 -- PUSH MESSAGES --
 actionPush : String -> String -> Value -> Cmd Msg
