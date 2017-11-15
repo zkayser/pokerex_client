@@ -94,7 +94,7 @@ raiseContent actionsModel =
       [ a [ onClick <| actionsModel.decreaseRaiseMsg actionsModel.raiseInterval, class "btn btn-large waves-effect raise-btn" ]
           [ i [ class "large material-icons" ] [ text "remove" ] ]
       , a [ class "btn btn-large green waves-effect white-text raise-submit", onClick <| raiseMsgWith actionsModel "action_raise" ] 
-          [ text <| "Submit Raise" ]
+          [ text "Raise" ]
       , a [ onClick <| actionsModel.increaseRaiseMsg actionsModel.raiseInterval, class "btn btn-large waves-effect raise-btn" ]
           [ i [ class "large material-icons" ] [ text "add" ] ]
       ]

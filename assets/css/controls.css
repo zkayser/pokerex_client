@@ -37,31 +37,3 @@
 .control-active {
 	animation: 2s linear 0s infinite alternate highlight-active;
 }
-
-.raise-buttons-container {
-	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
-}
-
-.raise-buttons-container:nth-child(1) {
-	flex: 1;
-}
-
-.raise-buttons-container:nth-child(2) {
-	flex: 1;
-}
-
-.raise-buttons-container:nth-child(3) {
-	flex: 1;
-}
-
-.raise-modal-header {
-	text-align: center;
-}
-
-.raise-modal-close-row {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 6rem;
-}
