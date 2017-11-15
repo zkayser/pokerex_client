@@ -38,6 +38,7 @@ type Msg
   | SetRaise String
   | Update Value
   | GameStarted Value
+  | WinnerMessage Value
   | LeaveRoom Player
   | SocketOpened
   | SocketClosed
@@ -113,6 +114,7 @@ room model =
     |> Channel.onRejoin (\json -> Rejoined json)
     |> Channel.on "update" (\payload -> Update payload)
     |> Channel.on "game_started" (\payload -> GameStarted payload)
+    |> Channel.on "winner_message" (\payload -> WinnerMessage payload)
     |> Channel.withDebug
 
 
@@ -315,6 +317,7 @@ update msg model =
     JoinFailed value ->       handleJoinFailed model value
     Update payload ->         handleUpdate model payload
     GameStarted payload ->    handleUpdate model payload
+    WinnerMessage payload ->  handleWinnerMessage model payload
     ActionPressed ->          ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp)
     ActionMsg action val ->   handleActionMsg model action val
     CloseRaiseModal ->        ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
@@ -470,6 +473,13 @@ handleDecreaseRaise model amount =
   case (model.raiseAmount - amount) <= model.roomModel.toCall of 
     True -> ( ( model, Cmd.none ), NoOp )
     False -> ( ( { model | raiseAmount = model.raiseAmount - amount }, Cmd.none), NoOp )
+    
+handleWinnerMessage : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleWinnerMessage model payload =
+  case Decode.decodeValue (Decode.at ["message"] Decode.string) payload of
+    Ok message -> 
+      ( ( { model | roomMessages = message :: model.roomMessages }, Cmd.none), NoOp )
+    _ -> ( ( model, Cmd.none), NoOp )
   
 -- PUSH MESSAGES --
 actionPush : String -> String -> Value -> Cmd Msg
