@@ -79,22 +79,27 @@ raiseContent : ActionsModel msg -> Html msg
 raiseContent actionsModel =
   div [ class "raise-modal" ] 
     [
-      p [] [ text "Here is a raise panel."]
-    , span [] [ text <| toString actionsModel.raiseAmount]
+      div [ class "raise-modal-header" ] 
+        [ h3 [ class "red-text" ] 
+          [ text <| "Raise to " ++ (toString actionsModel.raiseAmount)  ]
+        ]
     , input 
       [ type_ "number"
       , Attrs.min <| toString actionsModel.raiseMin
       , Attrs.max <| toString actionsModel.raiseMax
+      , Attrs.placeholder "Enter your raise here"
       , onRangeChange actionsModel.setRaiseMsg
       ] []
-    , a [ onClick <| actionsModel.decreaseRaiseMsg actionsModel.raiseInterval, class "btn btn-large waves-effect" ]
-        [ i [ class "large material-icons" ] [ text "remove" ] ]
-    , a [ onClick <| actionsModel.increaseRaiseMsg actionsModel.raiseInterval, class "btn btn-large waves-effect" ]
-        [ i [ class "large material-icons" ] [ text "add" ] ]
-    , i [ class "material-icons close-modal", onClick actionsModel.closeRaiseMsg ] [ text "close"]
-    , br [] []
-    , a [ class "btn btn-large green waves-effect white-text", onClick <| raiseMsgWith actionsModel "action_raise" ] 
-      [ text <| "Raise " ++ (toString actionsModel.raiseAmount) ]
+    , div [ class "raise-buttons-container" ] 
+      [ a [ onClick <| actionsModel.decreaseRaiseMsg actionsModel.raiseInterval, class "btn btn-large waves-effect raise-btn" ]
+          [ i [ class "large material-icons" ] [ text "remove" ] ]
+      , a [ class "btn btn-large green waves-effect white-text raise-submit", onClick <| raiseMsgWith actionsModel "action_raise" ] 
+          [ text <| "Submit Raise" ]
+      , a [ onClick <| actionsModel.increaseRaiseMsg actionsModel.raiseInterval, class "btn btn-large waves-effect raise-btn" ]
+          [ i [ class "large material-icons" ] [ text "add" ] ]
+      ]
+    , div [ class "raise-modal-close-row" ]
+      [ i [ class "material-icons close-modal", onClick actionsModel.closeRaiseMsg ] [ text "close"] ]
     ]
 
 actionMsgWith : ActionsModel msg -> String -> msg

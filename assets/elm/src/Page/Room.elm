@@ -447,7 +447,10 @@ handleSetRaise model stringAmount =
       in
       case amount >= (paidInRound + chips) of
         True -> ( ( { model | raiseAmount = chips }, Cmd.none), NoOp )
-        False -> ( ( { model | raiseAmount = amount }, Cmd.none), NoOp )
+        False -> 
+          case amount < model.roomModel.toCall of
+            True -> ( ( model, Cmd.none), NoOp )
+            False -> ( ( { model | raiseAmount = abs amount }, Cmd.none), NoOp )
     Err _ -> ( ( model, Cmd.none), NoOp )
     
 handleIncreaseRaise : Model -> Int -> ( ( Model, Cmd Msg), ExternalMsg )

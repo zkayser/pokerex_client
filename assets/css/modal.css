@@ -17,6 +17,13 @@
 	overflow: auto;
 }
 
+@media (max-width: 600px) {
+	.modal-content {
+		right: 0;
+		left: 0;
+	}
+}
+
 .bottom-modal {
 	position: fixed;
 	width: 100vw;
