@@ -4,6 +4,7 @@ import Data.Player as Player exposing (Player)
 import Data.Session as Session exposing (Session)
 import Data.Room as Room exposing (Room)
 import Data.Card as Card exposing (Card)
+import Data.WinningHand as WinningHand exposing (WinningHand)
 import Data.AuthToken as AuthToken
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -39,6 +40,7 @@ type Msg
   | Update Value
   | GameStarted Value
   | WinnerMessage Value
+  | PresentWinningHand Value
   | LeaveRoom Player
   | SocketOpened
   | SocketClosed
@@ -47,6 +49,8 @@ type Msg
   | Blur
   | ClearErrorMessage Time
   | ClearRoomMessage Time
+  | ClearWinningHandModal Time
+  | CloseWinningHandModal
 
 type ExternalMsg
   = NoOp
@@ -56,6 +60,7 @@ type ModalState
   | JoinModalOpen
   | BottomModalOpen BottomModalType
   | RaiseModalOpen
+  | WinningHandModal WinningHand
   
 type BottomModalType
   = Actions
@@ -115,6 +120,7 @@ room model =
     |> Channel.on "update" (\payload -> Update payload)
     |> Channel.on "game_started" (\payload -> GameStarted payload)
     |> Channel.on "winner_message" (\payload -> WinnerMessage payload)
+    |> Channel.on "present_winning_hand" (\payload -> PresentWinningHand payload)
     |> Channel.withDebug
 
 
@@ -214,6 +220,7 @@ maybeViewModal model =
     BottomModalOpen Account -> text ""
     BottomModalOpen Chat -> text ""
     BottomModalOpen Bank -> text ""
+    WinningHandModal winningHand -> Modal.view (winningHandConfig winningHand model)
     Closed -> text ""
 
 viewMessages : Model -> Html Msg
@@ -244,6 +251,23 @@ viewMessage messageType =
     ErrorMessage errorMessage ->
       div [ class "message error-message" ]
         [ text errorMessage ]
+        
+viewWinningHandContent : WinningHand -> Html Msg
+viewWinningHandContent winningHand =
+  div [ class "winning-hand-container" ]
+    [ div [ class "winning-hand-message"]
+      [ h3 [ class "teal-text" ]
+        [ text <| winningHand.winner ++ " wins with " ++ winningHand.handType ]
+      ]
+    , div [ class "winning-hand-cards" ]
+      (List.map viewWinningCard winningHand.cards)
+    , div [ class "winning-hand-close-row" ]
+      [ i [ class "material-icons", onClick CloseWinningHandModal ] [ text "close" ] ]
+    ]
+
+viewWinningCard : Card -> Html Msg
+viewWinningCard card =
+  img [ src (Card.sourceUrlForCardImage card) ] []
 
 -- WIDGET CONFIGURATIONS --
 
@@ -305,35 +329,44 @@ actionsModalConfig model =
   { backgroundColor = "white"
   , contentHtml = [ Actions.view (actionsViewConfig model)]  
   }
+  
+winningHandConfig : WinningHand -> Model -> Modal.Config Msg
+winningHandConfig winningHand model =
+  { backgroundColor = "white"
+  , contentHtml = [ viewWinningHandContent winningHand ]  
+  }
 
 -- UPDATE --
 
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
-    NewMsg message ->         ( ( model, Cmd.none), NoOp )
-    JoinedChannel ->          handleJoinedChannel model
-    Join ->                   handleJoin model
-    JoinFailed value ->       handleJoinFailed model value
-    Update payload ->         handleUpdate model payload
-    GameStarted payload ->    handleUpdate model payload
-    WinnerMessage payload ->  handleWinnerMessage model payload
-    ActionPressed ->          ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp)
-    ActionMsg action val ->   handleActionMsg model action val
-    CloseRaiseModal ->        ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
-    IncreaseRaise amount ->   handleIncreaseRaise model amount
-    DecreaseRaise amount ->   handleDecreaseRaise model amount
-    SetRaise amount ->        handleSetRaise model amount
-    SocketOpened ->           ( ( model, Cmd.none), NoOp )
-    SocketClosed ->           ( ( model, Cmd.none), NoOp )
-    SocketClosedAbnormally -> ( ( model, Cmd.none), NoOp )
-    Rejoined _ ->             handleRejoin model
-    JoinRoom player ->        ( ( { model | modalRendered = JoinModalOpen }, Cmd.none), NoOp)
-    Blur ->                   ( ( { model | modalRendered = Closed }, Cmd.none), NoOp)
-    OpenRaisePressed ->       ( ( { model | modalRendered = RaiseModalOpen }, Cmd.none), NoOp)
-    ClearErrorMessage _ ->    clearErrorMessage model
-    ClearRoomMessage _ ->     clearRoomMessage model
-    LeaveRoom player ->       handleLeaveRoom player model
+    NewMsg message ->             ( ( model, Cmd.none), NoOp )
+    JoinedChannel ->              handleJoinedChannel model
+    Join ->                       handleJoin model
+    JoinFailed value ->           handleJoinFailed model value
+    Update payload ->             handleUpdate model payload
+    GameStarted payload ->        handleUpdate model payload
+    WinnerMessage payload ->      handleWinnerMessage model payload
+    PresentWinningHand payload -> handlePresentWinningHand model payload
+    ActionPressed ->              ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp)
+    ActionMsg action val ->       handleActionMsg model action val
+    CloseRaiseModal ->            ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
+    IncreaseRaise amount ->       handleIncreaseRaise model amount
+    DecreaseRaise amount ->       handleDecreaseRaise model amount
+    SetRaise amount ->            handleSetRaise model amount
+    SocketOpened ->               ( ( model, Cmd.none), NoOp )
+    SocketClosed ->               ( ( model, Cmd.none), NoOp )
+    SocketClosedAbnormally ->     ( ( model, Cmd.none), NoOp )
+    Rejoined _ ->                 handleRejoin model
+    JoinRoom player ->            ( ( { model | modalRendered = JoinModalOpen }, Cmd.none), NoOp)
+    Blur ->                       ( ( { model | modalRendered = Closed }, Cmd.none), NoOp)
+    OpenRaisePressed ->           ( ( { model | modalRendered = RaiseModalOpen }, Cmd.none), NoOp)
+    ClearErrorMessage _ ->        clearErrorMessage model
+    ClearRoomMessage _ ->         clearRoomMessage model
+    ClearWinningHandModal _ ->    clearWinningHandModal model
+    CloseWinningHandModal ->      clearWinningHandModal model
+    LeaveRoom player ->           handleLeaveRoom player model
 
 -- UPDATE HELPERS --
 
@@ -391,8 +424,12 @@ handleUpdate model payload =
       case (newRoom.toCall + 5) > chips of
         True -> newRoom.toCall + chips
         False -> newRoom.toCall + 5
+    modalRendered =
+      case model.modalRendered of
+        WinningHandModal _ -> model.modalRendered
+        _ -> Closed
     newModel =
-      { model | roomModel = newRoom, modalRendered = Closed, raiseAmount = initRaiseAmount }
+      { model | roomModel = newRoom, modalRendered = modalRendered, raiseAmount = initRaiseAmount }
   in
   ( (newModel, Cmd.none), NoOp)
   
@@ -423,6 +460,10 @@ clearRoomMessage model =
       { model | roomMessages = newRoomMessages }
   in
   ( (newModel, Cmd.none), NoOp )
+  
+clearWinningHandModal : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+clearWinningHandModal model =
+  ( ( { model | modalRendered = Closed }, Cmd.none), NoOp )
   
 handleActionMsg : Model -> String -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleActionMsg model actionString value =
@@ -480,7 +521,13 @@ handleWinnerMessage model payload =
     Ok message -> 
       ( ( { model | roomMessages = message :: model.roomMessages }, Cmd.none), NoOp )
     _ -> ( ( model, Cmd.none), NoOp )
-  
+    
+handlePresentWinningHand : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handlePresentWinningHand model payload =
+  case Decode.decodeValue WinningHand.decoder payload of
+    Ok winningHand -> ( ( { model | modalRendered = WinningHandModal winningHand }, Cmd.none), NoOp )
+    _ -> ( ( model, Cmd.none), NoOp )
+
 -- PUSH MESSAGES --
 actionPush : String -> String -> Value -> Cmd Msg
 actionPush room actionString value =
@@ -502,6 +549,7 @@ subscriptions model session =
       case model.modalRendered of
         Closed -> Sub.none
         RaiseModalOpen -> Sub.none
+        WinningHandModal _ -> Time.every 5000 ClearWinningHandModal
         _ -> Mouse.clicks (always Blur)
     withClearError =
       case model.errorMessages of

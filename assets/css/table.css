@@ -109,6 +109,34 @@
 	margin-top: 0;
 }
 
+.winning-hand-message {
+	text-align: center;
+}
+
+.winning-hand-cards {
+	display: flex;
+	height: 10rem;
+	justify-content: space-between;
+}
+
+.winning-hand-cards > * {
+	width: 10vw;
+	flex: 1;
+}
+
+@media (max-width: 600px) {
+	.winning-hand-cards > * {
+		width: 15vw;
+	}
+}
+
+.winning-hand-close-row {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 2rem;
+	cursor: pointer;
+}
+
 #seat-1 {
 	bottom: 0;
 	right: calc(30vh - 3rem);
