@@ -10,6 +10,12 @@ body {
 	font-family: Helvetica, Arial, sans-serif; 
 }
 
+@media (max-width: 600px) {
+	body {
+		width: 100vw;
+	}
+}
+
 main {
 	min-height: inherit;
 }

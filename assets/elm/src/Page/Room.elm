@@ -176,7 +176,10 @@ viewTableCenter room =
         False -> List.indexedMap (viewTableCard) room.table
   in
   div [ class "table-center" ]
-    [  span [ class "table-pot" ] [ text ("POT: " ++ (toString room.pot)) ]
+    [  span [ class "table-pot" ] 
+      [ span [ class "table-pot-text" ] [ text "POT: " ]
+      , text (toString room.pot) 
+      ]
     ,  img [ id "deck", src "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"] []
     ,  div [ class "table-card-container" ] tableCardsToView
     ]

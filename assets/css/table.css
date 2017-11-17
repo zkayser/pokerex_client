@@ -71,21 +71,6 @@
 	width: 3rem;
 }
 
-@media (max-width: 600px) {
-	.table-container {
-		width: 40vh;
-		height: 40vh;
-		margin-top: 8rem;
-		margin-bottom: 12rem;
-	}
-
-	.table-center {
-		right: calc(20vh - 2rem);
-		bottom: calc(20vh + 1.5rem);
-	}
-}
-
-
 /* Player seating */
 .player-seat {
 	border: 1px solid black;
@@ -122,12 +107,6 @@
 .winning-hand-cards > * {
 	width: 10vw;
 	flex: 1;
-}
-
-@media (max-width: 600px) {
-	.winning-hand-cards > * {
-		width: 15vw;
-	}
 }
 
 .winning-hand-close-row {
@@ -189,7 +168,6 @@
 	}
 }
 
-
 #player-hand-card-0 {
 	height: 4rem;
 	width: 3rem;
@@ -221,6 +199,11 @@
 	}
 }
 
+@keyframes animate-card-0-mobile {
+	0% { transform: translate(32vw, -9vh);}
+	100% { transform: translate(0, 0);}
+}
+
 @keyframes animate-card-1 {
 	from {
 		transform: translate(7.75vh, -5.5rem);
@@ -228,6 +211,11 @@
 	to {
 		transform: translate(0, 0);
 	}
+}
+
+@keyframes animate-card-1-mobile {
+	0% { transform: translate(17vw, -9vh);}
+	100% { transform: translate(0, 0);}
 }
 
 @keyframes animate-card-2 {
@@ -239,6 +227,11 @@
 	}
 }
 
+@keyframes animate-card-2-mobile {
+	0% { transform: translate(2vw, -9vh);}
+	100% { transform: translate(0, 0);}
+}
+
 @keyframes animate-card-3 {
 	from {
 		transform: translate(-8.75vh, -5.5rem);
@@ -248,6 +241,11 @@
 	}
 }
 
+@keyframes animate-card-3-mobile {
+	0% { transform: translate(-13vw, -9vh);}
+	100% { transform: translate(0, 0);}
+}
+
 @keyframes animate-card-4 {
 	from {
 		transform: translate(-16.75vh, -5.5rem);
@@ -255,4 +253,92 @@
 	to {
 		transform: translate(0, 0);
 	}
+}
+
+@keyframes animate-card-4-mobile {
+	0% { transform: translate(-28vw, -9vh);}
+	100% { transform: translate(0, 0);}
+}
+
+@media (max-width: 600px) {
+	.table-container {
+		width: 100vw;
+		height: 70vh;
+		margin-top: 0;
+		margin-bottom: 0;
+		position: absolute;
+		top: 0;
+	}
+	
+	#table-card {
+		height: 3.5rem;
+		width: 3.5rem;
+	}
+	
+	#deck {
+		height: 2rem;
+		width: 2rem;
+		flex: 1;
+	}
+	
+	.table-pot {
+		flex: 1;
+	}
+	
+	.table-pot-text {
+		display: none;
+	}
+	
+	.table-center {
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+	
+	.player-seat {
+		height: 4rem;
+		width: 4rem;
+	}
+	
+	#seat-1 {
+		left: 50%;
+		transform: translateX(-50%);
+	}
+	
+	.player-emblem-name {
+		font-size: 0.75rem;
+	}
+	
+	.player-chip-count {
+		font-size: 0.75rem;
+	}
+	
+	#player-hand-card-0 {
+		height: 3.5rem;
+		width: 3.5rem;
+		top: 3rem;
+		right: 1.5rem;
+	}
+	
+	#player-hand-card-1 {
+		height: 3.5rem;
+		width: 3.5rem;
+		top: 3rem;
+		right: -1rem;
+	}
+	
+	.table-card-container {
+		transform: translate(0, 7vh);
+	}
+}
+
+@media (max-width: 600px) {
+	.winning-hand-cards > * {
+		width: 15vw;
+	}
+	
 }
