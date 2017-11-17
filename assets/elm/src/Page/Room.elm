@@ -40,6 +40,7 @@ type Msg
   | Update Value
   | GameStarted Value
   | WinnerMessage Value
+  | Clear Value
   | PresentWinningHand Value
   | LeaveRoom Player
   | SocketOpened
@@ -121,6 +122,7 @@ room model =
     |> Channel.on "game_started" (\payload -> GameStarted payload)
     |> Channel.on "winner_message" (\payload -> WinnerMessage payload)
     |> Channel.on "present_winning_hand" (\payload -> PresentWinningHand payload)
+    |> Channel.on "clear_ui" Clear
     |> Channel.withDebug
 
 
@@ -349,6 +351,7 @@ update msg model =
     GameStarted payload ->        handleUpdate model payload
     WinnerMessage payload ->      handleWinnerMessage model payload
     PresentWinningHand payload -> handlePresentWinningHand model payload
+    Clear _ ->                    handleClear model
     ActionPressed ->              ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp)
     ActionMsg action val ->       handleActionMsg model action val
     CloseRaiseModal ->            ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
@@ -527,6 +530,16 @@ handlePresentWinningHand model payload =
   case Decode.decodeValue WinningHand.decoder payload of
     Ok winningHand -> ( ( { model | modalRendered = WinningHandModal winningHand }, Cmd.none), NoOp )
     _ -> ( ( model, Cmd.none), NoOp )
+    
+handleClear : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleClear model =
+  let
+    defaultRoom =
+      Room.defaultRoom
+    newRoom =
+      { defaultRoom | seating = [{ name = model.player.username, position = 0 }], chipRoll = model.roomModel.chipRoll }
+  in
+  ( ( { model | roomModel = newRoom }, Cmd.none), NoOp)
 
 -- PUSH MESSAGES --
 actionPush : String -> String -> Value -> Cmd Msg
