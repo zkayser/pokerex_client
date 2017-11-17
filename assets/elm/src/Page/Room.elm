@@ -80,6 +80,7 @@ type alias Model =
   , roomMessages : List String
   , players : List Player
   , player : Player
+  , joined : Bool
   , channelSubscriptions : List (Channel Msg)
   , modalRendered : ModalState
   , errorMessages : List String
@@ -134,6 +135,7 @@ initialModel player roomTitle roomType =
   , roomMessages = []
   , players = []
   , player = player
+  , joined = False
   , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
   , modalRendered = Closed
   , errorMessages = []
@@ -362,7 +364,7 @@ update msg model =
     SocketClosed ->               ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally ->     ( ( model, Cmd.none), NoOp )
     Rejoined _ ->                 handleRejoin model
-    JoinRoom player ->            ( ( { model | modalRendered = JoinModalOpen }, Cmd.none), NoOp)
+    JoinRoom player ->            ( ( { model | modalRendered = JoinModalOpen, joined = True }, Cmd.none), NoOp)
     Blur ->                       ( ( { model | modalRendered = Closed }, Cmd.none), NoOp)
     OpenRaisePressed ->           ( ( { model | modalRendered = RaiseModalOpen }, Cmd.none), NoOp)
     ClearErrorMessage _ ->        clearErrorMessage model
@@ -376,13 +378,14 @@ update msg model =
 handleLeaveRoom : Player -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 handleLeaveRoom player model =
   let
-    filterBy = Player.usernameToString player.username
-    newModel =
-      { model | players = List.filter (\player -> Player.usernameToString(player.username) /= filterBy) model.players
-              , channelSubscriptions = []
-      }
+    payload = 
+      Actions.encodeUsernamePayload model.player.username
+    actionMsg =
+      "action_leave"
+    phoenixPush =
+      actionPush model.room actionMsg payload
   in
-  ( (newModel, Cmd.none), NoOp )
+  ( ( {model | joined = False }, phoenixPush), NoOp )
 
 handleJoin : Model -> ( (Model, Cmd Msg), ExternalMsg )
 handleJoin model =
@@ -534,10 +537,12 @@ handlePresentWinningHand model payload =
 handleClear : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleClear model =
   let
+    seating =
+      if model.joined then [{ name = model.player.username, position = 0 }] else []
     defaultRoom =
       Room.defaultRoom
     newRoom =
-      { defaultRoom | seating = [{ name = model.player.username, position = 0 }], chipRoll = model.roomModel.chipRoll }
+      { defaultRoom | seating = seating, chipRoll = model.roomModel.chipRoll }
   in
   ( ( { model | roomModel = newRoom }, Cmd.none), NoOp)
 
