@@ -1,19 +1,36 @@
 .controls-container {
 	background-color: rgb(244, 67, 54);
-	position: absolute;
+	/*position: absolute;*/
 	bottom: 0;
+	display: -webkit-box;
+	display: -ms-flexbox;
 	display: flex;
-	justify-content: space-between;
+	-webkit-box-pack: justify;
+	    -ms-flex-pack: justify;
+	        justify-content: space-between;
 	width: 100%;
 	color: white;
 	padding: 1rem 0 1rem 0;
 }
 
+@media (max-width: 600px) {
+	.controls-container {
+		position: absolute;
+		right: 0;
+	}
+}
+
 .controls-container li {
 	list-style-type: none;
-	flex: 1;
-	display: flex;
-	justify-content: center;
+	-webkit-box-flex: 1;
+	    -ms-flex: 1;
+	        flex: 1;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex; 
+	-webkit-box-pack: center; 
+	    -ms-flex-pack: center; 
+	        justify-content: center;
 	cursor: pointer;
 }
 
@@ -23,6 +40,15 @@
 	font-size: 1.5rem;
 	width: 100%;
 	text-align: center;
+}
+
+@-webkit-keyframes highlight-active {
+	from {
+		background-color: rgb(244, 67, 54);
+	}
+	to {
+		background-color: #ff8a80;
+	}
 }
 
 @keyframes highlight-active {
@@ -35,5 +61,6 @@
 }
 
 .control-active {
-	animation: 2s linear 0s infinite alternate highlight-active;
+	-webkit-animation: 2s linear 0s infinite alternate highlight-active;
+	        animation: 2s linear 0s infinite alternate highlight-active;
 }

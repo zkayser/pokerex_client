@@ -92,7 +92,7 @@ type alias Model =
 
 socketUrl : String
 socketUrl =
-  "ws://phoenix-experiment-zkayser.c9users.io:8080/socket/websocket"
+  "ws://localhost:8080/socket/websocket"
 
 socket : Session -> Socket Msg
 socket session =
@@ -180,7 +180,7 @@ viewTableCenter room =
       [ span [ class "table-pot-text" ] [ text "POT: " ]
       , text (toString room.pot) 
       ]
-    ,  img [ id "deck", src "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"] []
+    ,  img [ id "deck", src "http://localhost:8081/images/card-back.svg.png"] []
     ,  div [ class "table-card-container" ] tableCardsToView
     ]
     

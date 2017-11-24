@@ -92,12 +92,12 @@ rankToString card =
     
 rootCardsAssetsUrl : String
 rootCardsAssetsUrl =
-  "http://phoenix-experiment-zkayser.c9users.io:8081/images/cards/"
+  "http://localhost:8081/images/cards/"
   
 sourceUrlForCardImage : Card -> String
 sourceUrlForCardImage card =
   case (card.rank, card.suit) of
-    (RankError, SuitError) -> "http://phoenix-experiment-zkayser.c9users.io:8081/images/card-back.svg.png"
+    (RankError, SuitError) -> "http://localhost:8081/images/card-back.svg.png"
     _ -> (rootCardsAssetsUrl ++ (rankToString card) ++ "_of_" ++ (suitToString card) ++ ".svg")
   
 tableCardImageFor : Card -> Html msg

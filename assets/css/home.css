@@ -1,14 +1,19 @@
-	.hero {
-		background: url("/images/poker.jpg") no-repeat center center fixed;
-		min-height: 45vh;
-		justify-content: center;
-		flex-direction: column;
-	}
+.hero {
+	background: url("/images/poker.jpg") no-repeat center center fixed;
+	min-height: 45vh;
+	-webkit-box-pack: center;
+	    -ms-flex-pack: center;
+	        justify-content: center;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	    -ms-flex-direction: column;
+	        flex-direction: column;
+}
 
-	.welcome {
-		color: #84ffff;
-		text-shadow: 2px 2px 2em #004d40;
-	}
+.welcome {
+	color: #84ffff;
+	text-shadow: 2px 2px 2em #004d40;
+}
 
 @media (max-width: 993px) {
 		.landing-item:first-of-type {

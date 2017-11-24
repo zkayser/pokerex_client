@@ -1,9 +1,19 @@
 .nav-container {
+	display: -webkit-box;
+	display: -ms-flexbox;
 	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: center;
-	flex-wrap: wrap;
+	-webkit-box-orient: horizontal;
+	-webkit-box-direction: normal;
+	    -ms-flex-direction: row;
+	        flex-direction: row;
+	-webkit-box-align: center;
+	    -ms-flex-align: center;
+	        align-items: center;
+	-webkit-box-pack: center;
+	    -ms-flex-pack: center;
+	        justify-content: center;
+	-ms-flex-wrap: nowrap;
+	    flex-wrap: nowrap;
 	padding-top: 4em;
 	padding-bottom: 4em;
 }
@@ -17,10 +27,18 @@
 }
 
 .logo-container {
-	flex: 2;
+	-webkit-box-flex: 2;
+	    -ms-flex: 2;
+	        flex: 2;
+	display: -webkit-box;
+	display: -ms-flexbox;
 	display: flex;
-	align-items: center;
-	justify-content: center;
+	-webkit-box-align: center;
+	    -ms-flex-align: center;
+	        align-items: center;
+	-webkit-box-pack: center;
+	    -ms-flex-pack: center;
+	        justify-content: center;
 }
 
 .logo {
@@ -28,10 +46,16 @@
 }
 
 .filler {
-	flex: 1;
+	-webkit-box-flex: 1;
+	    -ms-flex: 1;
+	        flex: 1;
 	height: inherit;
+	display: -webkit-box;
+	display: -ms-flexbox;
 	display: flex;
-	justify-content: center;
+	-webkit-box-pack: center;
+	    -ms-flex-pack: center;
+	        justify-content: center;
 }
 
 .nav-dropdown-item {
@@ -42,12 +66,20 @@
 
 .nav-links {
 	height: inherit;
-	flex: 1;
+	-webkit-box-flex: 1;
+	    -ms-flex: 1;
+	        flex: 1;
+	display: -webkit-box;
+	display: -ms-flexbox;
 	display: flex;
-	justify-content: center;
+	-webkit-box-pack: center;
+	    -ms-flex-pack: center;
+	        justify-content: center;
 }
 
 .dropdown-menu {
+	-webkit-transition: max-height 1s;
+	-o-transition: max-height 1s;
 	transition: max-height 1s;
 }
 
@@ -63,8 +95,14 @@ nav ul a {
 	color: #1de9b6;
 	background-color: #004d40;
 	text-decoration: underline;
+	-webkit-transition: -webkit-transform 0.5s ease-out;
+	transition: -webkit-transform 0.5s ease-out;
+	-o-transition: transform 0.5s ease-out;
 	transition: transform 0.5s ease-out;
-	transform: scale(1.25);
+	transition: transform 0.5s ease-out, -webkit-transform 0.5s ease-out;
+	-webkit-transform: scale(1.25);
+	    -ms-transform: scale(1.25);
+	        transform: scale(1.25);
 }
 
 nav ul a:hover {
