@@ -467,6 +467,7 @@
 @media (max-width: 600px) {
 	.winning-hand-cards > * {
 		width: 15vw;
+		height: 4rem;
 	}
 	
 }
