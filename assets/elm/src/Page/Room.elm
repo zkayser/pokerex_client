@@ -32,6 +32,7 @@ type Msg
   | JoinFailed Value
   | ActionPressed
   | ActionMsg String Encode.Value
+  | BankPressed
   | OpenRaisePressed
   | CloseRaiseModal
   | IncreaseRaise Int
@@ -226,7 +227,7 @@ maybeViewModal model =
     BottomModalOpen Actions -> Modal.bottomModalView (actionsModalConfig model)
     BottomModalOpen Account -> text ""
     BottomModalOpen Chat -> text ""
-    BottomModalOpen Bank -> text ""
+    BottomModalOpen Bank -> Modal.bottomModalView (bankModalConfig model)
     WinningHandModal winningHand -> Modal.view (winningHandConfig winningHand model)
     Closed -> text ""
 
@@ -291,6 +292,7 @@ toolbarConfig model =
   , btnText = txt 
   , actionPressedMsg = ActionPressed
   , isActive = isActive
+  , bankPressedMsg = BankPressed
   }
 
 joinModalConfig : Model -> Modal.Config Msg
@@ -336,6 +338,12 @@ actionsModalConfig model =
   { backgroundColor = "white"
   , contentHtml = [ Actions.view (actionsViewConfig model)]  
   }
+
+bankModalConfig : Model -> Modal.Config Msg
+bankModalConfig model =
+  { backgroundColor = "white"
+  , contentHtml = [ p [] [ text "Here is a thing" ] ]
+  }
   
 winningHandConfig : WinningHand -> Model -> Modal.Config Msg
 winningHandConfig winningHand model =
@@ -357,8 +365,9 @@ update msg model =
     WinnerMessage payload ->      handleWinnerMessage model payload
     PresentWinningHand payload -> handlePresentWinningHand model payload
     Clear _ ->                    handleClear model
-    ActionPressed ->              ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp)
+    ActionPressed ->              ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     ActionMsg action val ->       handleActionMsg model action val
+    BankPressed ->                ( ( { model | modalRendered = BottomModalOpen Bank }, Cmd.none ), NoOp )
     CloseRaiseModal ->            ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     IncreaseRaise amount ->       handleIncreaseRaise model amount
     DecreaseRaise amount ->       handleDecreaseRaise model amount

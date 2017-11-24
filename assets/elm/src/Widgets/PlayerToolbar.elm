@@ -9,6 +9,7 @@ type alias Config msg =
   , btnText : String
   , actionPressedMsg : msg
   , isActive : Bool
+  , bankPressedMsg : msg
   }
 
 view : Config msg -> Html msg
@@ -23,7 +24,7 @@ view config =
     , li [ class "control-item" ]
       [ a [ ] [ text "Chat" ] ]
     , li [ class "control-item" ]
-      [ a [ ] [ text "Bank" ] ]
+      [ a [ onClick config.bankPressedMsg ] [ text "Bank" ] ]
     ]
     
 viewActionBtn : Config msg -> Html msg

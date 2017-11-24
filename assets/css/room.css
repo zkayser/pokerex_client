@@ -1,10 +1,19 @@
 .room-container {
 	min-height: 88vh;
 	border: 1px dashed black;
+	display: -webkit-box;
+	display: -ms-flexbox;
 	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	    -ms-flex-direction: column;
+	        flex-direction: column;
+	-webkit-box-align: center;
+	    -ms-flex-align: center;
+	        align-items: center;
+	-webkit-box-pack: center;
+	    -ms-flex-pack: center;
+	        justify-content: center;
 	position: relative;
 }
 
@@ -13,9 +22,16 @@
 	min-width: 25%;
 	right: 0%;
 	top: 15%;
+	display: -webkit-box;
+	display: -ms-flexbox;
 	display: flex;
-	flex-direction: column;
-	align-items: baseline;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	    -ms-flex-direction: column;
+	        flex-direction: column;
+	-webkit-box-align: baseline;
+	    -ms-flex-align: baseline;
+	        align-items: baseline;
 }
 
 .message {
@@ -23,8 +39,10 @@
 	font-size: 1.25rem;
 	margin: 0.5rem 0;
 	padding: 1rem;
-	box-shadow: 0 0 1rem 0 black;
-	animation: slideInMessage 0.75s ease-in-out;
+	-webkit-box-shadow: 0 0 1rem 0 black;
+	        box-shadow: 0 0 1rem 0 black;
+	-webkit-animation: slideInMessage 0.75s ease-in-out;
+	        animation: slideInMessage 0.75s ease-in-out;
 }
 
 .error-message {
@@ -35,9 +53,10 @@
 	background-color: var(--green-accent);
 }
 
-@keyframes slideInMessage {
+@-webkit-keyframes slideInMessage {
 	0% {
-		transform: translateY(100rem);
+		-webkit-transform: translateY(100rem);
+		        transform: translateY(100rem);
 		opacity: 0;
 	}
 	50% {
@@ -47,7 +66,27 @@
 		opacity: 0;
 	}
 	100% {
-		transform: translateY(0);
+		-webkit-transform: translateY(0);
+		        transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+@keyframes slideInMessage {
+	0% {
+		-webkit-transform: translateY(100rem);
+		        transform: translateY(100rem);
+		opacity: 0;
+	}
+	50% {
+		opacity: 0;
+	}
+	75% {
+		opacity: 0;
+	}
+	100% {
+		-webkit-transform: translateY(0);
+		        transform: translateY(0);
 		opacity: 1;
 	}
 }
