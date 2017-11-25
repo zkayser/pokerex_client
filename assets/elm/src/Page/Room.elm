@@ -36,6 +36,7 @@ type Msg
   | BankPressed
   | OpenRaisePressed
   | CloseRaiseModal
+  | CloseModal
   | IncreaseRaise Int
   | DecreaseRaise Int
   | SetRaise String
@@ -359,7 +360,7 @@ actionsModalConfig model =
 bankModalConfig : Model -> Modal.Config Msg
 bankModalConfig model =
   { backgroundColor = "white"
-  , contentHtml = [ Bank.view model (SetAddAmount, ActionMsg) ]
+  , contentHtml = [ Bank.view model (SetAddAmount, ActionMsg, CloseModal) ]
   }
   
 winningHandConfig : WinningHand -> Model -> Modal.Config Msg
@@ -402,6 +403,7 @@ update msg model =
     ClearRoomMessage _ ->         clearRoomMessage model
     ClearWinningHandModal _ ->    clearWinningHandModal model
     CloseWinningHandModal ->      clearWinningHandModal model
+    CloseModal ->                 ( ( { model | modalRendered = Closed }, Cmd.none), NoOp )
     LeaveRoom player ->           handleLeaveRoom player model
 
 -- UPDATE HELPERS --
@@ -504,9 +506,15 @@ clearWinningHandModal model =
   
 handleActionMsg : Model -> String -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleActionMsg model actionString value =
+  let
+      newModel =
+        case actionString of
+          "action_add_chips" -> { model | addAmount = 0, modalRendered = Closed }
+          _ -> model
+  in
   case List.member actionString possibleActions of
     False -> ( ( model, Cmd.none), NoOp )
-    True -> ( ( model, actionPush model.room actionString value), NoOp)
+    True -> ( ( newModel, actionPush model.room actionString value), NoOp)
     
 handleRejoin : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleRejoin model =
@@ -538,10 +546,10 @@ handleSetAddAmount : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSetAddAmount model stringAmount =
     case String.toInt stringAmount of
       Ok amount -> 
-        case amount > 0 && amount <= model.chipsAvailable of
+        case amount >= 0 && amount <= model.chipsAvailable of
           True -> ( ( { model | addAmount = amount }, Cmd.none), NoOp )
           False -> ( ( model, Cmd.none), NoOp )
-      Err _ -> ( ( model, Cmd.none), NoOp )
+      Err _ -> ( ( { model | addAmount = 0 }, Cmd.none), NoOp )
     
 handleIncreaseRaise : Model -> Int -> ( ( Model, Cmd Msg), ExternalMsg )
 handleIncreaseRaise model amount =
@@ -624,6 +632,7 @@ subscriptions model session =
       case model.modalRendered of
         Closed -> Sub.none
         RaiseModalOpen -> Sub.none
+        BankModalOpen -> Sub.none
         WinningHandModal _ -> Time.every 5000 ClearWinningHandModal
         _ -> Mouse.clicks (always Blur)
     withClearError =

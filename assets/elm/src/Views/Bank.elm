@@ -10,12 +10,14 @@ type alias Model r =
   { r |
     addAmount : Int
   , player : Player
+  , chipsAvailable : Int
   }
 
-view : Model r -> (String -> msg, String -> Value -> msg) -> Html msg
-view model (setMsg, submitMsg) =
+view : Model r -> (String -> msg, String -> Value -> msg, msg) -> Html msg
+view model (setMsg, submitMsg, closeMsg) =
   div [ class "bank-container center-align" ]
-    [ span [ class "modal-header red-text" ] [ text "Add chips?"] 
+    [ span [ class "modal-header red-text" ] [ viewTitle model ] 
+    , h4 [ class "red-text" ] [ text <| "You currently have " ++ (toString model.chipsAvailable) ++ " chips available." ]
     , div [ class "bank-form-container" ] 
       [ div [ class "bank-form" ]
         [ Html.form [ onSubmit (submitMsg "action_add_chips" (encodePayload model)) ]  
@@ -37,7 +39,13 @@ view model (setMsg, submitMsg) =
             [ text "Add chips"]
         ]
       ]
+    , i [ class "close-modal material-icons small", onClick closeMsg ] [ text "close" ]
     ]
+
+viewTitle : Model r -> Html msg
+viewTitle model =
+  if model.addAmount == 0 then text "Add chips?"
+  else text <| "Add " ++ (toString model.addAmount) ++ " chips?"
 
 encodePayload : Model r -> Value
 encodePayload model =

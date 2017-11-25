@@ -42,7 +42,7 @@
 	cursor: pointer;
 }
 
-.actions-container .close-modal {
+.actions-container .close-modal, .bank-container .close-modal {
 	position: absolute;
 	right: 0;
 	bottom: 0;
