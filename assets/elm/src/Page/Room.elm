@@ -38,6 +38,7 @@ type Msg
   | IncreaseRaise Int
   | DecreaseRaise Int
   | SetRaise String
+  | SetBankInfo Value
   | Update Value
   | GameStarted Value
   | WinnerMessage Value
@@ -60,6 +61,7 @@ type ExternalMsg
 type ModalState
   = Closed
   | JoinModalOpen
+  | BankModalOpen
   | BottomModalOpen BottomModalType
   | RaiseModalOpen
   | WinningHandModal WinningHand
@@ -68,7 +70,6 @@ type BottomModalType
   = Actions
   | Account
   | Chat
-  | Bank
   
 type MessageType
   = RoomMessage String
@@ -87,6 +88,7 @@ type alias Model =
   , errorMessages : List String
   , raiseAmount : Int
   , raiseInterval : Int
+  , chipsAvailable : Int
   }
 
 -- SOCKET & CHANNEL CONFIG --
@@ -125,6 +127,7 @@ room model =
     |> Channel.on "winner_message" (\payload -> WinnerMessage payload)
     |> Channel.on "present_winning_hand" (\payload -> PresentWinningHand payload)
     |> Channel.on "clear_ui" Clear
+    |> Channel.on "bank_info" (\payload -> SetBankInfo payload)
     |> Channel.withDebug
 
 
@@ -142,6 +145,7 @@ initialModel player roomTitle roomType =
   , errorMessages = []
   , raiseAmount = 0
   , raiseInterval = 5
+  , chipsAvailable = player.chips
   }
 
 -- VIEW --
@@ -236,7 +240,7 @@ maybeViewModal model =
     BottomModalOpen Actions -> Modal.bottomModalView (actionsModalConfig model)
     BottomModalOpen Account -> text ""
     BottomModalOpen Chat -> text ""
-    BottomModalOpen Bank -> Modal.bottomModalView (bankModalConfig model)
+    BankModalOpen -> Modal.view (bankModalConfig model)
     WinningHandModal winningHand -> Modal.view (winningHandConfig winningHand model)
     Closed -> text ""
 
@@ -351,7 +355,7 @@ actionsModalConfig model =
 bankModalConfig : Model -> Modal.Config Msg
 bankModalConfig model =
   { backgroundColor = "white"
-  , contentHtml = [ p [] [ text "Here is a thing" ] ]
+  , contentHtml = [ p [] [ text <| toString model.chipsAvailable ] ]
   }
   
 winningHandConfig : WinningHand -> Model -> Modal.Config Msg
@@ -373,10 +377,11 @@ update msg model =
     GameStarted payload ->        handleUpdate model payload
     WinnerMessage payload ->      handleWinnerMessage model payload
     PresentWinningHand payload -> handlePresentWinningHand model payload
+    SetBankInfo payload ->        handleSetBankInfo model payload
     Clear _ ->                    handleClear model
     ActionPressed ->              ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     ActionMsg action val ->       handleActionMsg model action val
-    BankPressed ->                ( ( { model | modalRendered = BottomModalOpen Bank }, Cmd.none ), NoOp )
+    BankPressed ->                handleBankPressed model
     CloseRaiseModal ->            ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     IncreaseRaise amount ->       handleIncreaseRaise model amount
     DecreaseRaise amount ->       handleDecreaseRaise model amount
@@ -494,7 +499,7 @@ clearWinningHandModal model =
   
 handleActionMsg : Model -> String -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleActionMsg model actionString value =
-  case List.member actionString ["action_raise", "action_call", "action_check", "action_fold"] of
+  case List.member actionString possibleActions of
     False -> ( ( model, Cmd.none), NoOp )
     True -> ( ( model, actionPush model.room actionString value), NoOp)
     
@@ -554,7 +559,24 @@ handlePresentWinningHand model payload =
   case Decode.decodeValue WinningHand.decoder payload of
     Ok winningHand -> ( ( { model | modalRendered = WinningHandModal winningHand }, Cmd.none), NoOp )
     _ -> ( ( model, Cmd.none), NoOp )
-    
+
+handleSetBankInfo : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleSetBankInfo model payload =
+  case Decode.decodeValue (Decode.at ["chips"] Decode.int) payload of
+    Ok chipsAvailable ->
+      ( ( { model | chipsAvailable = chipsAvailable }, Cmd.none), NoOp )
+    _ -> ( ( model, Cmd.none), NoOp )
+
+handleBankPressed : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleBankPressed model =
+  let
+    payload =
+      Encode.object [("player", Player.encodeUsername model.player.username)]
+    cmd =
+      actionPush model.room "get_bank" payload 
+   in
+   ( ( { model | modalRendered = BankModalOpen }, cmd), NoOp)
+
 handleClear : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleClear model =
   let
@@ -632,3 +654,7 @@ getIsActive model =
   case model.roomModel.active of
     Nothing -> False
     Just username -> Player.equals model.player.username username
+
+possibleActions : List String
+possibleActions =
+  [ "action_raise", "action_check", "action_call", "action_fold", "action_add_chips" ]
