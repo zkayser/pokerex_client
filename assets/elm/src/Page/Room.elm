@@ -17,6 +17,7 @@ import Json.Encode as Encode
 import Widgets.PlayerToolbar as PlayerToolbar
 import Widgets.Modal as Modal
 import Views.Actions as Actions
+import Views.Bank as Bank
 import Phoenix
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
@@ -39,6 +40,7 @@ type Msg
   | DecreaseRaise Int
   | SetRaise String
   | SetBankInfo Value
+  | SetAddAmount String
   | Update Value
   | GameStarted Value
   | WinnerMessage Value
@@ -89,6 +91,7 @@ type alias Model =
   , raiseAmount : Int
   , raiseInterval : Int
   , chipsAvailable : Int
+  , addAmount : Int
   }
 
 -- SOCKET & CHANNEL CONFIG --
@@ -146,6 +149,7 @@ initialModel player roomTitle roomType =
   , raiseAmount = 0
   , raiseInterval = 5
   , chipsAvailable = player.chips
+  , addAmount = 0
   }
 
 -- VIEW --
@@ -355,7 +359,7 @@ actionsModalConfig model =
 bankModalConfig : Model -> Modal.Config Msg
 bankModalConfig model =
   { backgroundColor = "white"
-  , contentHtml = [ p [] [ text <| toString model.chipsAvailable ] ]
+  , contentHtml = [ Bank.view model (SetAddAmount, ActionMsg) ]
   }
   
 winningHandConfig : WinningHand -> Model -> Modal.Config Msg
@@ -386,6 +390,7 @@ update msg model =
     IncreaseRaise amount ->       handleIncreaseRaise model amount
     DecreaseRaise amount ->       handleDecreaseRaise model amount
     SetRaise amount ->            handleSetRaise model amount
+    SetAddAmount amount ->        handleSetAddAmount model amount
     SocketOpened ->               ( ( model, Cmd.none), NoOp )
     SocketClosed ->               ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally ->     ( ( model, Cmd.none), NoOp )
@@ -528,6 +533,15 @@ handleSetRaise model stringAmount =
             True -> ( ( model, Cmd.none), NoOp )
             False -> ( ( { model | raiseAmount = abs amount }, Cmd.none), NoOp )
     Err _ -> ( ( model, Cmd.none), NoOp )
+
+handleSetAddAmount : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handleSetAddAmount model stringAmount =
+    case String.toInt stringAmount of
+      Ok amount -> 
+        case amount > 0 && amount <= model.chipsAvailable of
+          True -> ( ( { model | addAmount = amount }, Cmd.none), NoOp )
+          False -> ( ( model, Cmd.none), NoOp )
+      Err _ -> ( ( model, Cmd.none), NoOp )
     
 handleIncreaseRaise : Model -> Int -> ( ( Model, Cmd Msg), ExternalMsg )
 handleIncreaseRaise model amount =
