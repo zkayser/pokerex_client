@@ -9,14 +9,22 @@
 	margin-top: 4rem;
 	margin-bottom: 8rem;
 	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
 }
 
 .table-center {
-	position: absolute;
 	width: 4rem;
 	height: 3rem;
 	right: calc(30vh - 2rem);
 	bottom: calc(30vh + 1.5rem);
+	display: flex;
+	flex-direction: column;
+	flex: 0.2;
+	justify-content: center;
+	align-items: center;
 }
 
 .table-pot {
@@ -37,9 +45,9 @@
 	        align-items: center;
 	height: 5rem;
 	width: 45vh;
-	-webkit-transform: translate(-17vh, 1rem);
-	    -ms-transform: translate(-17vh, 1rem);
-	        transform: translate(-17vh, 1rem);
+	align-items: center;
+	justify-content: center;
+	margin-top: 1.25rem;
 }
 
 .table-card-0 {
@@ -143,10 +151,16 @@
 
 #seat-2 {
 	bottom: 0;
+	left: 0;
 }
 
 #seat-3 {
 	bottom: calc(30vh - 3rem);
+	left: 0;
+}
+
+#seat-4 {
+	top: 0;
 	left: 0;
 }
 
@@ -211,161 +225,52 @@
 
 /* Keyframes for table cards */
 @-webkit-keyframes animate-card-0 {
-	from {
-		-webkit-transform: translate(15.75vh, -5.5rem);
-		        transform: translate(15.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
+	0% { -webkit-transform: translate(100%, -9.5vh); transform: translate(100%, -9.5vh); }
+	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0); }
 }
+
 @keyframes animate-card-0 {
-	from {
-		-webkit-transform: translate(15.75vh, -5.5rem);
-		        transform: translate(15.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
-}
-
-@-webkit-keyframes animate-card-0-mobile {
-	0% { -webkit-transform: translate(32vw, -9vh); transform: translate(32vw, -9vh);}
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
-}
-
-@keyframes animate-card-0-mobile {
-	0% { -webkit-transform: translate(32vw, -9vh); transform: translate(32vw, -9vh);}
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
+	0% { -webkit-transform: translate(100%, -9.5vh); transform: translate(100%, -9.5vh); }
+	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0); }
 }
 
 @-webkit-keyframes animate-card-1 {
-	from {
-		-webkit-transform: translate(7.75vh, -5.5rem);
-		        transform: translate(7.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
-}
-
-@keyframes animate-card-1 {
-	from {
-		-webkit-transform: translate(7.75vh, -5.5rem);
-		        transform: translate(7.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
-}
-
-@-webkit-keyframes animate-card-1-mobile {
-	0% { -webkit-transform: translate(17vw, -9vh); transform: translate(17vw, -9vh);}
+	0% { -webkit-transform: translate(0, -9.5vh); transform: translate(0, -9.5vh); }
 	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
 }
 
-@keyframes animate-card-1-mobile {
-	0% { -webkit-transform: translate(17vw, -9vh); transform: translate(17vw, -9vh);}
+@keyframes animate-card-1 {
+	0% { -webkit-transform: translate(0, -9.5vh); transform: translate(0, -9.5vh); }
 	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
 }
 
 @-webkit-keyframes animate-card-2 {
-	from {
-		-webkit-transform: translate(-0.75vh, -5.5rem);
-		        transform: translate(-0.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
-}
-
-@keyframes animate-card-2 {
-	from {
-		-webkit-transform: translate(-0.75vh, -5.5rem);
-		        transform: translate(-0.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
-}
-
-@-webkit-keyframes animate-card-2-mobile {
-	0% { -webkit-transform: translate(2vw, -9vh); transform: translate(2vw, -9vh);}
+	0% { -webkit-transform: translate(-100%, -9.5vh); transform: translate(-100%, -9.5vh); }
 	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
 }
 
-@keyframes animate-card-2-mobile {
-	0% { -webkit-transform: translate(2vw, -9vh); transform: translate(2vw, -9vh);}
+@keyframes animate-card-2 {
+	0% { -webkit-transform: translate(-100%, -9.5vh); transform: translate(-100%, -9.5vh); }
 	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
 }
 
 @-webkit-keyframes animate-card-3 {
-	from {
-		-webkit-transform: translate(-8.75vh, -5.5rem);
-		        transform: translate(-8.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
-}
-
-@keyframes animate-card-3 {
-	from {
-		-webkit-transform: translate(-8.75vh, -5.5rem);
-		        transform: translate(-8.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
-}
-
-@-webkit-keyframes animate-card-3-mobile {
-	0% { -webkit-transform: translate(-13vw, -9vh); transform: translate(-13vw, -9vh);}
+	0% { -webkit-transform: translate(-100%, -9.5vh); transform: translate(-100%, -9.5vh); }
 	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
 }
 
-@keyframes animate-card-3-mobile {
-	0% { -webkit-transform: translate(-13vw, -9vh); transform: translate(-13vw, -9vh);}
+@keyframes animate-card-3 {
+	0% { -webkit-transform: translate(-100%, -9.5vh); transform: translate(-100%, -9.5vh); }
 	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
 }
 
 @-webkit-keyframes animate-card-4 {
-	from {
-		-webkit-transform: translate(-16.75vh, -5.5rem);
-		        transform: translate(-16.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
-}
-
-@keyframes animate-card-4 {
-	from {
-		-webkit-transform: translate(-16.75vh, -5.5rem);
-		        transform: translate(-16.75vh, -5.5rem);
-	}
-	to {
-		-webkit-transform: translate(0, 0);
-		        transform: translate(0, 0);
-	}
-}
-
-@-webkit-keyframes animate-card-4-mobile {
-	0% { -webkit-transform: translate(-28vw, -9vh); transform: translate(-28vw, -9vh);}
+	0% { -webkit-transform: translate(-200%, -9.5vh); transform: translate(-200%, -9.5vh); }
 	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
 }
 
-@keyframes animate-card-4-mobile {
-	0% { -webkit-transform: translate(-28vw, -9vh); transform: translate(-28vw, -9vh);}
+@keyframes animate-card-4 {
+	0% { -webkit-transform: translate(-200%, -9.5vh); transform: translate(-200%, -9.5vh); }
 	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
 }
 
@@ -387,40 +292,19 @@
 	#deck {
 		height: 2rem;
 		width: 2rem;
-		-webkit-box-flex: 1;
-		    -ms-flex: 1;
-		        flex: 1;
+		-webkit-box-flex: 0.2;
+		    -ms-flex: 0.2;
+		        flex: 0.2;
 	}
 	
 	.table-pot {
-		-webkit-box-flex: 1;
-		    -ms-flex: 1;
-		        flex: 1;
+		-webkit-box-flex: 0.2;
+		    -ms-flex: 0.2;
+		        flex: 0.2;
 	}
 	
 	.table-pot-text {
 		display: none;
-	}
-	
-	.table-center {
-		top: 50%;
-		left: 50%;
-		-webkit-transform: translate(-50%, -50%);
-		    -ms-transform: translate(-50%, -50%);
-		        transform: translate(-50%, -50%);
-		display: -webkit-box;
-		display: -ms-flexbox;
-		display: flex;
-		-webkit-box-orient: vertical;
-		-webkit-box-direction: normal;
-		    -ms-flex-direction: column;
-		        flex-direction: column;
-		-webkit-box-pack: center;
-		    -ms-flex-pack: center;
-		        justify-content: center;
-		-webkit-box-align: center;
-		    -ms-flex-align: center;
-		        align-items: center;
 	}
 	
 	.player-seat {
@@ -455,12 +339,6 @@
 		width: 3.5rem;
 		top: 3rem;
 		right: -1rem;
-	}
-	
-	.table-card-container {
-		-webkit-transform: translate(0, 7vh);
-		    -ms-transform: translate(0, 7vh);
-		        transform: translate(0, 7vh);
 	}
 }
 

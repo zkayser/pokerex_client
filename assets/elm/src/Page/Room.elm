@@ -150,7 +150,7 @@ view : Session -> Model -> Html Msg
 view session model =
   div [ class "room-container" ] 
     [ div [ class "table-container" ]
-      ((viewTableCenter model.roomModel) :: viewPlayers session model)
+      ((viewTableCenter model.roomModel) :: (viewTableCards model.roomModel) :: viewPlayers session model)
     , PlayerToolbar.view (toolbarConfig model)
     , maybeViewModal model
     , viewMessages model
@@ -182,8 +182,17 @@ viewTableCenter room =
       , text (toString room.pot) 
       ]
     ,  img [ id "deck", src "http://localhost:8081/images/card-back.svg.png"] []
-    ,  div [ class "table-card-container" ] tableCardsToView
     ]
+
+viewTableCards : Room -> Html Msg
+viewTableCards room =
+  let
+    cardsToHtml =
+      case List.isEmpty room.table of
+        True -> [ text "" ]
+        False -> List.indexedMap (viewTableCard) room.table
+  in
+  div [ class "table-card-container" ] cardsToHtml
     
 viewTableCard : Int -> Card -> Html Msg
 viewTableCard index card =
