@@ -596,7 +596,14 @@ handleSetBankInfo : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSetBankInfo model payload =
   case Decode.decodeValue (Decode.at ["chips"] Decode.int) payload of
     Ok chipsAvailable ->
-      ( ( { model | chipsAvailable = chipsAvailable }, Cmd.none), NoOp )
+      let
+        player =
+          model.player
+        newPlayer =
+          { player | chips = chipsAvailable }
+      in
+          
+      ( ( { model | chipsAvailable = chipsAvailable, player = newPlayer }, Cmd.none), NoOp )
     _ -> ( ( model, Cmd.none), NoOp )
 
 handleBankPressed : Model -> ( ( Model, Cmd Msg), ExternalMsg )
@@ -615,7 +622,7 @@ handleAccountPressed model =
     payload =
       Encode.object [ ("player", Player.encodeUsername model.player.username) ]
     cmd =
-      actionPush model.room "get_player_info" payload
+      actionPush model.room "get_bank" payload
   in
   ( ( { model | modalRendered = BottomModalOpen Account }, cmd), NoOp )
 
