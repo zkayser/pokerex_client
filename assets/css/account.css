@@ -1,0 +1,10 @@
+.account-info {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+.account-info-item {
+	flex: 1;
+}

@@ -10,6 +10,7 @@ type alias Config msg =
   , actionPressedMsg : msg
   , isActive : Bool
   , bankPressedMsg : msg
+  , accountPressedMsg : msg
   }
 
 view : Config msg -> Html msg
@@ -20,7 +21,7 @@ view config =
     , li [ class "control-item" ]
       [ viewActionBtn config ]
     , li [ class "control-item" ]
-      [ a [ ] [ text "Account"] ]
+      [ a [ onClick config.accountPressedMsg ] [ text "Account"] ]
     , li [ class "control-item" ]
       [ a [ ] [ text "Chat" ] ]
     , li [ class "control-item" ]

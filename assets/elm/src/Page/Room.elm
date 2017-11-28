@@ -18,6 +18,7 @@ import Widgets.PlayerToolbar as PlayerToolbar
 import Widgets.Modal as Modal
 import Views.Actions as Actions
 import Views.Bank as Bank
+import Views.Account as Account
 import Phoenix
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
@@ -34,6 +35,7 @@ type Msg
   | ActionPressed
   | ActionMsg String Encode.Value
   | BankPressed
+  | AccountPressed
   | OpenRaisePressed
   | CloseRaiseModal
   | CloseModal
@@ -243,7 +245,7 @@ maybeViewModal model =
     JoinModalOpen -> Modal.view (joinModalConfig model)
     RaiseModalOpen -> Modal.view (raiseModalConfig model)
     BottomModalOpen Actions -> Modal.bottomModalView (actionsModalConfig model)
-    BottomModalOpen Account -> text ""
+    BottomModalOpen Account -> Modal.bottomModalView (accountModalConfig model)
     BottomModalOpen Chat -> text ""
     BankModalOpen -> Modal.view (bankModalConfig model)
     WinningHandModal winningHand -> Modal.view (winningHandConfig winningHand model)
@@ -311,6 +313,7 @@ toolbarConfig model =
   , actionPressedMsg = ActionPressed
   , isActive = isActive
   , bankPressedMsg = BankPressed
+  , accountPressedMsg = AccountPressed
   }
 
 joinModalConfig : Model -> Modal.Config Msg
@@ -362,6 +365,12 @@ bankModalConfig model =
   { backgroundColor = "white"
   , contentHtml = [ Bank.view model (SetAddAmount, ActionMsg, CloseModal) ]
   }
+
+accountModalConfig : Model -> Modal.Config Msg
+accountModalConfig model =
+  { backgroundColor = "white"
+  , contentHtml = [ Account.view model.player ]
+  }
   
 winningHandConfig : WinningHand -> Model -> Modal.Config Msg
 winningHandConfig winningHand model =
@@ -387,6 +396,7 @@ update msg model =
     ActionPressed ->              ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     ActionMsg action val ->       handleActionMsg model action val
     BankPressed ->                handleBankPressed model
+    AccountPressed ->             handleAccountPressed model
     CloseRaiseModal ->            ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     IncreaseRaise amount ->       handleIncreaseRaise model amount
     DecreaseRaise amount ->       handleDecreaseRaise model amount
@@ -593,11 +603,21 @@ handleBankPressed : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleBankPressed model =
   let
     payload =
-      Encode.object [("player", Player.encodeUsername model.player.username)]
+      Encode.object [("player", Player.encodeUsername model.player.username) ]
     cmd =
       actionPush model.room "get_bank" payload 
    in
    ( ( { model | modalRendered = BankModalOpen }, cmd), NoOp)
+
+handleAccountPressed : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleAccountPressed model =
+  let
+    payload =
+      Encode.object [ ("player", Player.encodeUsername model.player.username) ]
+    cmd =
+      actionPush model.room "get_player_info" payload
+  in
+  ( ( { model | modalRendered = BottomModalOpen Account }, cmd), NoOp )
 
 handleClear : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleClear model =
