@@ -1,7 +1,7 @@
 module Views.Chat exposing (Chat, view)
 
 import Html as Html exposing (..)
-import Html.Attributes as Attrs exposing (class)
+import Html.Attributes as Attrs exposing (class, id)
 import Html.Events as Events
 
 type alias PlayerName = String
@@ -18,7 +18,7 @@ view : Chat -> Html msg
 view chat =
   div [ class "chat-wrapper" ]
     [ span [ class "modal-header red-text" ] [ text "Chat" ]
-    , ul [ class "chat-container collection" ]
+    , ul [ class "chat-container collection", id "chat" ]
       (List.map viewMessage chat)
     ]
 

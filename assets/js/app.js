@@ -23,6 +23,11 @@ elmApp.ports.storeSession.subscribe((session) => {
   localStorage.session = session;
 });
 
+elmApp.ports.scrollChatToTop.subscribe(() => {
+	let chat = document.findElementById('chat');
+	chat.scrollTop = chat.scrollHeight;
+})
+
 window.addEventListener("storage", (event) => {
   if (event.storageArea === localStorage && event.key === "session") {
   	console.log("onSessionChange received with event: ", event.newValue);

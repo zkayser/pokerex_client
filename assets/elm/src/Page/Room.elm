@@ -16,6 +16,7 @@ import Mouse
 import Time exposing (Time)
 import Json.Decode as Decode exposing (Value)
 import Json.Encode as Encode
+import Ports exposing (scrollChatToTop)
 import Widgets.PlayerToolbar as PlayerToolbar
 import Widgets.Modal as Modal
 import Views.Actions as Actions
@@ -634,9 +635,12 @@ handleNewChatMsg : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleNewChatMsg model payload =
   case Decode.decodeValue Data.Chat.decoder payload of
     Ok res ->
-      Debug.log "OKAY!!!"
-      ( ( model, Cmd.none), NoOp )
-    _ -> Debug.log "NOT OKAY :( " ( ( model, Cmd.none ), NoOp )
+      let
+        newChat =
+          List.append model.chat [ res ]
+      in
+      ( ( { model | chat = newChat }, scrollChatToTop () ), NoOp )
+    _ -> ( ( model, Cmd.none ), NoOp )
 
 handleBankPressed : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleBankPressed model =
@@ -692,6 +696,7 @@ subscriptions model session =
         Closed -> Sub.none
         RaiseModalOpen -> Sub.none
         BankModalOpen -> Sub.none
+        BottomModalOpen Chat -> Sub.none
         WinningHandModal _ -> Time.every 5000 ClearWinningHandModal
         _ -> Mouse.clicks (always Blur)
     withClearError =
