@@ -37,8 +37,33 @@
 	transform: translateY(-1rem);
 }
 
+.chat-submit-mobile {
+	display: none;
+}
+
 .close-chat {
 	position: absolute;
 	top: 5px;
 	right: 5px;
+}
+
+@media (max-width: 600px) {
+	.chat-input-container {
+		padding-right: 2rem;
+	}
+
+	.chat-container {
+		height: 25vh;
+	}
+
+	.chat-submit-btn {
+		display: none;
+	}
+
+	.chat-submit-mobile {
+		display: initial;
+		flex: 0.5;
+		margin-left: 1rem;
+		translateY:	(-1rem);
+	}
 }

@@ -25,6 +25,10 @@ view chat currentMsg inputMsg submitMsg closeModalMsg =
     , Html.form [ class "chat-input-container", Events.onSubmit submitMsg ] 
       [ (chatInput currentMsg inputMsg) 
       , a [ class "btn blue white-text chat-submit-btn", Events.onClick submitMsg ] [ text "Send" ]
+      , a [ class "btn-floating green white-text chat-submit-mobile", Events.onClick submitMsg ]
+        [ i [ class "material-icons" ]
+          [ text "send"]
+        ]
       ]
     ]
 
