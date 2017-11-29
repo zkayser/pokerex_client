@@ -24,8 +24,8 @@ elmApp.ports.storeSession.subscribe((session) => {
 });
 
 elmApp.ports.scrollChatToTop.subscribe(() => {
-	let chat = document.findElementById('chat');
-	chat.scrollTop = chat.scrollHeight;
+	let chat = document.getElementById('chat');
+	chat ? chat.scrollTo(0, 0) : null;
 })
 
 window.addEventListener("storage", (event) => {

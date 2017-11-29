@@ -55,6 +55,8 @@ type Msg
   | Clear Value
   | PresentWinningHand Value
   | NewChatMsg Value
+  | SetChatMsg String
+  | SubmitChat
   | LeaveRoom Player
   | SocketOpened
   | SocketClosed
@@ -102,6 +104,7 @@ type alias Model =
   , chipsAvailable : Int
   , addAmount : Int
   , chat : Chat
+  , currentChatMsg : String
   }
 
 -- SOCKET & CHANNEL CONFIG --
@@ -163,6 +166,7 @@ initialModel player roomTitle roomType =
   , addAmount = 0
   , chat = [{ playerName = "Bob", message = "Some messages"}, 
             { playerName = "Jan", message = "some other messages"}]
+  , currentChatMsg = ""
   }
 
 -- VIEW --
@@ -390,7 +394,7 @@ accountModalConfig model =
 chatModalConfig : Model -> Modal.Config Msg
 chatModalConfig model =
   { backgroundColor = "white"
-  , contentHtml = [ Chat.view model.chat ]
+  , contentHtml = [ Chat.view model.chat model.currentChatMsg SetChatMsg SubmitChat CloseModal ]
   , styles = Just [ ("height", "40vh") ]
   }
   
@@ -427,6 +431,8 @@ update msg model =
     DecreaseRaise amount ->       handleDecreaseRaise model amount
     SetRaise amount ->            handleSetRaise model amount
     SetAddAmount amount ->        handleSetAddAmount model amount
+    SetChatMsg message ->         handleSetChatMsg model message
+    SubmitChat ->                 handleSubmitChat model
     SocketOpened ->               ( ( model, Cmd.none), NoOp )
     SocketClosed ->               ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally ->     ( ( model, Cmd.none), NoOp )
@@ -637,7 +643,7 @@ handleNewChatMsg model payload =
     Ok res ->
       let
         newChat =
-          List.append model.chat [ res ]
+          res :: model.chat
       in
       ( ( { model | chat = newChat }, scrollChatToTop () ), NoOp )
     _ -> ( ( model, Cmd.none ), NoOp )
@@ -673,6 +679,25 @@ handleClear model =
       { defaultRoom | seating = seating, chipRoll = model.roomModel.chipRoll }
   in
   ( ( { model | roomModel = newRoom }, Cmd.none), NoOp)
+
+handleSetChatMsg : Model -> String -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleSetChatMsg model message =
+  ( ( { model | currentChatMsg = message }, Cmd.none ), NoOp )
+
+handleSubmitChat : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleSubmitChat model =
+  case model.currentChatMsg of
+    "" -> ( ( model, Cmd.none), NoOp )
+    _ ->
+      let
+        payload =
+          Data.Chat.encode model.player model.currentChatMsg
+        push =
+          Push.init ("rooms:" ++ model.room) "chat_msg"
+            |> Push.withPayload payload
+      in
+      ( ( { model | currentChatMsg = "" }, Phoenix.push socketUrl push), NoOp )
+      
 
 -- PUSH MESSAGES --
 actionPush : String -> String -> Value -> Cmd Msg

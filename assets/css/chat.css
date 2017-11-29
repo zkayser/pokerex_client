@@ -19,3 +19,26 @@
 	text-align: left;
 	flex: 6;
 }
+
+.chat-input-container {
+	display: flex;
+	justify-content: baseline;
+	align-items: center;
+	padding-right: 4rem;
+	padding-left: 4rem;
+}
+
+.chat-input {
+	flex: 3;
+}
+
+.chat-submit-btn {
+	flex: 0.2;
+	transform: translateY(-1rem);
+}
+
+.close-chat {
+	position: absolute;
+	top: 5px;
+	right: 5px;
+}
