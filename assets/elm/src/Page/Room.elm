@@ -19,6 +19,7 @@ import Widgets.Modal as Modal
 import Views.Actions as Actions
 import Views.Bank as Bank
 import Views.Account as Account
+import Views.Chat as Chat exposing (Chat)
 import Phoenix
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
@@ -36,6 +37,7 @@ type Msg
   | ActionMsg String Encode.Value
   | BankPressed
   | AccountPressed
+  | ChatPressed
   | OpenRaisePressed
   | CloseRaiseModal
   | CloseModal
@@ -95,6 +97,7 @@ type alias Model =
   , raiseInterval : Int
   , chipsAvailable : Int
   , addAmount : Int
+  , chat : Chat
   }
 
 -- SOCKET & CHANNEL CONFIG --
@@ -153,6 +156,7 @@ initialModel player roomTitle roomType =
   , raiseInterval = 5
   , chipsAvailable = player.chips
   , addAmount = 0
+  , chat = [("Bob", "Some messages"), ("Jan", "some other messages")]
   }
 
 -- VIEW --
@@ -246,7 +250,7 @@ maybeViewModal model =
     RaiseModalOpen -> Modal.view (raiseModalConfig model)
     BottomModalOpen Actions -> Modal.bottomModalView (actionsModalConfig model)
     BottomModalOpen Account -> Modal.bottomModalView (accountModalConfig model)
-    BottomModalOpen Chat -> text ""
+    BottomModalOpen Chat -> Modal.bottomModalView (chatModalConfig model)
     BankModalOpen -> Modal.view (bankModalConfig model)
     WinningHandModal winningHand -> Modal.view (winningHandConfig winningHand model)
     Closed -> text ""
@@ -314,19 +318,21 @@ toolbarConfig model =
   , isActive = isActive
   , bankPressedMsg = BankPressed
   , accountPressedMsg = AccountPressed
+  , chatPressedMsg = ChatPressed
   }
 
 joinModalConfig : Model -> Modal.Config Msg
 joinModalConfig model =
   { backgroundColor = "white"
   , contentHtml = [ joinView model, viewJoinActions model ]
+  , styles = Nothing
   }
   
 raiseModalConfig : Model -> Modal.Config Msg
 raiseModalConfig model =
   { backgroundColor = "white"
-  , contentHtml = 
-    [ Actions.raiseContent (actionsViewConfig model) ]
+  , contentHtml = [ Actions.raiseContent (actionsViewConfig model) ]
+  , styles = Nothing
   }
   
 actionsViewConfig : Model -> Actions.ActionsModel Msg
@@ -357,25 +363,36 @@ actionsViewConfig model =
 actionsModalConfig : Model -> Modal.Config Msg
 actionsModalConfig model =
   { backgroundColor = "white"
-  , contentHtml = [ Actions.view (actionsViewConfig model)]  
+  , contentHtml = [ Actions.view (actionsViewConfig model) ]
+  , styles = Nothing  
   }
 
 bankModalConfig : Model -> Modal.Config Msg
 bankModalConfig model =
   { backgroundColor = "white"
   , contentHtml = [ Bank.view model (SetAddAmount, ActionMsg, CloseModal) ]
+  , styles = Nothing
   }
 
 accountModalConfig : Model -> Modal.Config Msg
 accountModalConfig model =
   { backgroundColor = "white"
   , contentHtml = [ Account.view model.player ]
+  , styles = Nothing
+  }
+
+chatModalConfig : Model -> Modal.Config Msg
+chatModalConfig model =
+  { backgroundColor = "white"
+  , contentHtml = [ Chat.view model.chat ]
+  , styles = Just [ ("height", "40vh") ]
   }
   
 winningHandConfig : WinningHand -> Model -> Modal.Config Msg
 winningHandConfig winningHand model =
   { backgroundColor = "white"
-  , contentHtml = [ viewWinningHandContent winningHand ]  
+  , contentHtml = [ viewWinningHandContent winningHand ] 
+  , styles = Nothing 
   }
 
 -- UPDATE --
@@ -397,6 +414,7 @@ update msg model =
     ActionMsg action val ->       handleActionMsg model action val
     BankPressed ->                handleBankPressed model
     AccountPressed ->             handleAccountPressed model
+    ChatPressed ->                ( ( { model | modalRendered = BottomModalOpen Chat }, Cmd.none), NoOp )
     CloseRaiseModal ->            ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     IncreaseRaise amount ->       handleIncreaseRaise model amount
     DecreaseRaise amount ->       handleDecreaseRaise model amount

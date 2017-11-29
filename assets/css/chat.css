@@ -1,0 +1,21 @@
+.message-container {
+	display: flex;
+	justify-content: baseline;
+	align-items: center;
+	font-size: 1.25rem;
+}
+
+.chat-container {
+	height: 30vh;
+	overflow-y: scroll;
+}
+
+.chat-player-name {
+	flex: 1;
+	font-weight: 600;
+}
+
+.chat-message-item {
+	text-align: left;
+	flex: 6;
+}
