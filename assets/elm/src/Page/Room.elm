@@ -6,9 +6,11 @@ import Data.Room as Room exposing (Room)
 import Data.Card as Card exposing (Card)
 import Data.WinningHand as WinningHand exposing (WinningHand)
 import Data.AuthToken as AuthToken
+import Data.Chat
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Dom.Scroll
 import Dict exposing (Dict)
 import Mouse
 import Time exposing (Time)
@@ -51,6 +53,7 @@ type Msg
   | WinnerMessage Value
   | Clear Value
   | PresentWinningHand Value
+  | NewChatMsg Value
   | LeaveRoom Player
   | SocketOpened
   | SocketClosed
@@ -137,6 +140,7 @@ room model =
     |> Channel.on "present_winning_hand" (\payload -> PresentWinningHand payload)
     |> Channel.on "clear_ui" Clear
     |> Channel.on "bank_info" (\payload -> SetBankInfo payload)
+    |> Channel.on "new_chat_msg" (\payload -> NewChatMsg payload)
     |> Channel.withDebug
 
 
@@ -156,7 +160,8 @@ initialModel player roomTitle roomType =
   , raiseInterval = 5
   , chipsAvailable = player.chips
   , addAmount = 0
-  , chat = [("Bob", "Some messages"), ("Jan", "some other messages")]
+  , chat = [{ playerName = "Bob", message = "Some messages"}, 
+            { playerName = "Jan", message = "some other messages"}]
   }
 
 -- VIEW --
@@ -412,6 +417,7 @@ update msg model =
     Clear _ ->                    handleClear model
     ActionPressed ->              ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     ActionMsg action val ->       handleActionMsg model action val
+    NewChatMsg value ->           handleNewChatMsg model value
     BankPressed ->                handleBankPressed model
     AccountPressed ->             handleAccountPressed model
     ChatPressed ->                ( ( { model | modalRendered = BottomModalOpen Chat }, Cmd.none), NoOp )
@@ -623,6 +629,14 @@ handleSetBankInfo model payload =
           
       ( ( { model | chipsAvailable = chipsAvailable, player = newPlayer }, Cmd.none), NoOp )
     _ -> ( ( model, Cmd.none), NoOp )
+
+handleNewChatMsg : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleNewChatMsg model payload =
+  case Decode.decodeValue Data.Chat.decoder payload of
+    Ok res ->
+      Debug.log "OKAY!!!"
+      ( ( model, Cmd.none), NoOp )
+    _ -> Debug.log "NOT OKAY :( " ( ( model, Cmd.none ), NoOp )
 
 handleBankPressed : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleBankPressed model =

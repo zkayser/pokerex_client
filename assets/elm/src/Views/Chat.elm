@@ -6,7 +6,10 @@ import Html.Events as Events
 
 type alias PlayerName = String
 type alias Message = String
-type alias ChatMessage = (PlayerName, Message)
+type alias ChatMessage = 
+  { playerName : String
+  , message : String
+  }
 
 type alias Chat = 
   List ChatMessage
@@ -20,10 +23,10 @@ view chat =
     ]
 
 viewMessage : ChatMessage -> Html msg
-viewMessage (player, message) =
+viewMessage message =
   li [ class "collection-item message-container" ] 
     [ span [ class "chat-player-name red-text" ]
-      [ text <| player ++ " says: "]
+      [ text <| message.playerName ++ " says: "]
     , span [ class "chat-message-item" ]
-      [ text message ]
+      [ text message.message ]
     ]
