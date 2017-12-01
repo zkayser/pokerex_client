@@ -48,3 +48,9 @@
 	bottom: 0;
 	margin: 0 1rem 1rem 0;
 }
+
+.close-mobile-menu {
+	position: absolute;
+	top: 0.25rem;
+	left: 1rem;
+}

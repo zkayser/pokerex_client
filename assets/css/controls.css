@@ -78,3 +78,7 @@
 		left: 4rem;
 	}
 }
+
+.mobile-menu-item a {
+	cursor: pointer;
+}

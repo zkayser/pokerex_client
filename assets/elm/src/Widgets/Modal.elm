@@ -6,22 +6,36 @@ import Html.Events exposing (onClick)
 import Data.Player as Player exposing (Player)
 
 type alias Config msg =
-  { backgroundColor : String
+  { classes : List String
   , contentHtml : List (Html msg)
   , styles : Maybe (List (String, String))
   }
 
 view : Config msg -> Html msg
 view config =
+  let
+    classes =
+      List.map (\str -> str ++ " ") config.classes 
+      |> String.concat
+      |> (++) "modal-content card-panel "
+      |> String.trim
+  in    
   div [ class "modal-backdrop" ]
-    [ div [ class ("modal-content card-panel " ++ config.backgroundColor), styles config ]   
+    [ div [ class classes, styles config ]   
       config.contentHtml
     ]
     
 bottomModalView : Config msg -> Html msg
 bottomModalView config =
+  let
+    classes =
+      List.map (\str -> str ++ " ") config.classes
+      |> String.concat
+      |> (++) "bottom-modal "
+      |> String.trim
+  in   
   div [ class "modal-backdrop" ]
-    [ div [ class ("bottom-modal " ++ config.backgroundColor), styles config ] 
+    [ div [ class classes, styles config ] 
       config.contentHtml
     ]
 

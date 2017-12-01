@@ -42,6 +42,7 @@ type Msg
   | AccountPressed
   | ChatPressed
   | OpenRaisePressed
+  | MobileToolbarPressed
   | CloseRaiseModal
   | CloseModal
   | IncreaseRaise Int
@@ -83,6 +84,7 @@ type BottomModalType
   = Actions
   | Account
   | Chat
+  | MobileMenu
   
 type MessageType
   = RoomMessage String
@@ -173,11 +175,17 @@ initialModel player roomTitle roomType =
 
 view : Session -> Model -> Html Msg
 view session model =
+  let
+    mobileToolbarView =
+      case model.modalRendered of
+        BottomModalOpen _ -> text ""
+        _ -> PlayerToolbar.viewMobile (toolbarConfig model)
+  in   
   div [ class "room-container" ] 
     [ div [ class "table-container" ]
       ((viewTableCenter model.roomModel) :: (viewTableCards model.roomModel) :: viewPlayers session model)
     , PlayerToolbar.view (toolbarConfig model)
-    , PlayerToolbar.viewMobile (toolbarConfig model)
+    , mobileToolbarView
     , maybeViewModal model
     , viewMessages model
     ]
@@ -262,6 +270,7 @@ maybeViewModal model =
     BottomModalOpen Actions -> Modal.bottomModalView (actionsModalConfig model)
     BottomModalOpen Account -> Modal.bottomModalView (accountModalConfig model)
     BottomModalOpen Chat -> Modal.bottomModalView (chatModalConfig model)
+    BottomModalOpen MobileMenu -> Modal.bottomModalView (mobileMenuConfig model)
     BankModalOpen -> Modal.view (bankModalConfig model)
     WinningHandModal winningHand -> Modal.view (winningHandConfig winningHand model)
     Closed -> text ""
@@ -330,18 +339,20 @@ toolbarConfig model =
   , bankPressedMsg = BankPressed
   , accountPressedMsg = AccountPressed
   , chatPressedMsg = ChatPressed
+  , mobileToolbarPressed = MobileToolbarPressed
+  , closeModalMsg = CloseModal
   }
 
 joinModalConfig : Model -> Modal.Config Msg
 joinModalConfig model =
-  { backgroundColor = "white"
+  { classes = ["white"]
   , contentHtml = [ joinView model, viewJoinActions model ]
   , styles = Nothing
   }
   
 raiseModalConfig : Model -> Modal.Config Msg
 raiseModalConfig model =
-  { backgroundColor = "white"
+  { classes = ["white"]
   , contentHtml = [ Actions.raiseContent (actionsViewConfig model) ]
   , styles = Nothing
   }
@@ -373,35 +384,42 @@ actionsViewConfig model =
   
 actionsModalConfig : Model -> Modal.Config Msg
 actionsModalConfig model =
-  { backgroundColor = "white"
+  { classes = ["white"]
   , contentHtml = [ Actions.view (actionsViewConfig model) ]
   , styles = Nothing  
   }
 
 bankModalConfig : Model -> Modal.Config Msg
 bankModalConfig model =
-  { backgroundColor = "white"
+  { classes = ["white"]
   , contentHtml = [ Bank.view model (SetAddAmount, ActionMsg, CloseModal) ]
   , styles = Nothing
   }
 
 accountModalConfig : Model -> Modal.Config Msg
 accountModalConfig model =
-  { backgroundColor = "white"
+  { classes = ["white"]
   , contentHtml = [ Account.view model.player ]
   , styles = Nothing
   }
 
 chatModalConfig : Model -> Modal.Config Msg
 chatModalConfig model =
-  { backgroundColor = "white"
+  { classes = ["white"]
   , contentHtml = [ Chat.view model.chat model.currentChatMsg SetChatMsg SubmitChat CloseModal ]
   , styles = Just [ ("height", "40vh") ]
+  }
+
+mobileMenuConfig : Model -> Modal.Config Msg
+mobileMenuConfig model =
+  { classes = ["white"]
+  , contentHtml = [ PlayerToolbar.viewMobileMenu <| toolbarConfig model ]
+  , styles = Nothing
   }
   
 winningHandConfig : WinningHand -> Model -> Modal.Config Msg
 winningHandConfig winningHand model =
-  { backgroundColor = "white"
+  { classes = ["white"]
   , contentHtml = [ viewWinningHandContent winningHand ] 
   , styles = Nothing 
   }
@@ -426,6 +444,7 @@ update msg model =
     NewChatMsg value ->           handleNewChatMsg model value
     BankPressed ->                handleBankPressed model
     AccountPressed ->             handleAccountPressed model
+    MobileToolbarPressed ->       ( ( { model | modalRendered = BottomModalOpen MobileMenu }, Cmd.none), NoOp)
     ChatPressed ->                ( ( { model | modalRendered = BottomModalOpen Chat }, Cmd.none), NoOp )
     CloseRaiseModal ->            ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     IncreaseRaise amount ->       handleIncreaseRaise model amount
@@ -722,7 +741,7 @@ subscriptions model session =
         Closed -> Sub.none
         RaiseModalOpen -> Sub.none
         BankModalOpen -> Sub.none
-        BottomModalOpen Chat -> Sub.none
+        BottomModalOpen _ -> Sub.none
         WinningHandModal _ -> Time.every 5000 ClearWinningHandModal
         _ -> Mouse.clicks (always Blur)
     withClearError =
