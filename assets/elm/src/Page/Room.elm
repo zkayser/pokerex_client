@@ -177,6 +177,7 @@ view session model =
     [ div [ class "table-container" ]
       ((viewTableCenter model.roomModel) :: (viewTableCards model.roomModel) :: viewPlayers session model)
     , PlayerToolbar.view (toolbarConfig model)
+    , PlayerToolbar.viewMobile (toolbarConfig model)
     , maybeViewModal model
     , viewMessages model
     ]

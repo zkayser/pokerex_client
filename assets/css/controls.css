@@ -17,6 +17,7 @@
 	.controls-container {
 		position: absolute;
 		right: 0;
+		display: none;
 	}
 }
 
@@ -63,4 +64,17 @@
 .control-active {
 	-webkit-animation: 2s linear 0s infinite alternate highlight-active;
 	        animation: 2s linear 0s infinite alternate highlight-active;
+}
+
+.mobile-controls-container {
+	display: none;
+}
+
+@media (max-width: 600px) {
+	.mobile-controls-container {
+		display: inline;
+		position: fixed;
+		bottom: 4rem;
+		left: 4rem;
+	}
 }

@@ -1,6 +1,6 @@
-module Widgets.PlayerToolbar exposing (Config, view)
+module Widgets.PlayerToolbar exposing (Config, view, viewMobile)
 
-import Html exposing (Html, li, a, text, div)
+import Html exposing (..)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 
@@ -35,3 +35,8 @@ viewActionBtn config =
     a [ onClick config.actionPressedMsg, class "control-active" ] [ text "Actions" ]
   else
     a [] [ text "" ]
+
+viewMobile : Config msg -> Html msg
+viewMobile config =
+  div [ class "mobile-controls-container btn-floating btn-large white-text red waves-effect" ]
+    [ i [ class "material-icons"] [ text "add"] ]
