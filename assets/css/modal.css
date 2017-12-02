@@ -55,6 +55,10 @@
 	left: 1rem;
 }
 
+.join-modal {
+	text-align: center;
+}
+
 .winning-hand-modal {
 	animation: fade-in-winning-hand 1s ease-in;
 }

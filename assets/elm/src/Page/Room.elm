@@ -9,7 +9,7 @@ import Data.AuthToken as AuthToken
 import Data.Chat
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onSubmit, onInput)
 import Dom.Scroll
 import Dict exposing (Dict)
 import Mouse
@@ -36,6 +36,7 @@ type Msg
   | JoinedChannel
   | JoinRoom Player
   | JoinFailed Value
+  | SetJoinValue String
   | ActionPressed
   | ActionMsg String Encode.Value
   | BankPressed
@@ -97,6 +98,7 @@ type alias Model =
   , roomMessages : List String
   , players : List Player
   , player : Player
+  , joinValue : String
   , joined : Bool
   , channelSubscriptions : List (Channel Msg)
   , modalRendered : ModalState
@@ -136,7 +138,7 @@ socket session =
 room : Model -> Channel Msg
 room model =
   Channel.init ("rooms:" ++ model.room)
-    |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public"), ("amount", Encode.int 200) ] )
+    |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public"), ("amount", Encode.int <| joinValToInt model.joinValue) ] )
     |> Channel.onJoin (\_ -> JoinedChannel)
     |> Channel.onJoinError (\json -> JoinFailed json)
     |> Channel.onRejoin (\json -> Rejoined json)
@@ -159,6 +161,7 @@ initialModel player roomTitle roomType =
   , players = []
   , player = player
   , joined = False
+  , joinValue = "0"
   , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
   , modalRendered = Closed
   , errorMessages = []
@@ -251,17 +254,26 @@ viewSeat (seating, maybeChipRoll, cards) =
 
 joinView : Model -> Html Msg
 joinView model =
-  div [ class "card-content" ]
-    [ span [ class "card-title" ] [ text "Join the Game" ]
-    , p [] [ text "Enter the amount of chips you would like to bring to the table."]
-    , p [] [ text "You must enter with a minimum of 100 chips."]
-    , p [] [ text ("Current Chip Amount: " ++ (toString model.player.chips )) ]
+  div [ class "join-modal" ]
+    [ h3 [ class "join-title red-text text-center" ] [ text "Join the Game" ]
+    , Html.form 
+      [ class "join-form"
+      , onSubmit Join
+      ]
+      [ input 
+        [ type_ "number"
+        , placeholder "Enter the number of chips you'd like to bring to the table"
+        , onInput SetJoinValue
+        ]
+        []
+      , button 
+        [ type_ "submit"
+        , class <| "btn white-text " ++ (if (joinValToInt model.joinValue) >= 100 then "green" else "gray")
+        , disabled <| (joinValToInt model.joinValue) < 100
+        , onClick Join 
+        ] [ text "Join" ]
+      ] 
     ]
-
-viewJoinActions : Model -> Html Msg
-viewJoinActions model =
-  div [ class "card-action" ]
-    [ a [ class "btn green", onClick Join ] [ text "Join" ] ] -- Needs editing later on
 
 maybeViewModal : Model -> Html Msg
 maybeViewModal model =
@@ -347,7 +359,7 @@ toolbarConfig model =
 joinModalConfig : Model -> Modal.Config Msg
 joinModalConfig model =
   { classes = ["white"]
-  , contentHtml = [ joinView model, viewJoinActions model ]
+  , contentHtml = [ joinView model ]
   , styles = Nothing
   }
   
@@ -434,6 +446,7 @@ update msg model =
     JoinedChannel ->              handleJoinedChannel model
     Join ->                       handleJoin model
     JoinFailed value ->           handleJoinFailed model value
+    SetJoinValue amount ->        handleSetJoinValue model amount
     Update payload ->             handleUpdate model payload
     GameStarted payload ->        handleUpdate model payload
     WinnerMessage payload ->      handleWinnerMessage model payload
@@ -489,6 +502,11 @@ handleJoin model =
       (room model) :: model.channelSubscriptions
   in
   ( ( { model | channelSubscriptions = newSubscriptions}, Cmd.none), NoOp )
+
+handleSetJoinValue : Model -> String -> ( ( Model, Cmd Msg),  ExternalMsg)
+handleSetJoinValue model stringAmount =
+  ( ( { model | joinValue = toString <| joinValToInt stringAmount }, Cmd.none), NoOp)
+      
 
 handleJoinedChannel : Model -> ( (Model, Cmd Msg), ExternalMsg )
 handleJoinedChannel model =
@@ -737,14 +755,6 @@ subscriptions model session =
   let
     phoenixSubscriptions =
       [ Phoenix.connect (socket session) model.channelSubscriptions ]
-    withBlur =
-      case model.modalRendered of
-        Closed -> Sub.none
-        RaiseModalOpen -> Sub.none
-        BankModalOpen -> Sub.none
-        BottomModalOpen _ -> Sub.none
-        WinningHandModal _ -> Time.every 5000 ClearWinningHandModal
-        _ -> Mouse.clicks (always Blur)
     withClearError =
       case model.errorMessages of
         [] -> Sub.none
@@ -754,7 +764,7 @@ subscriptions model session =
         [] -> Sub.none
         _ -> Time.every 3000 ClearRoomMessage
   in
-  Sub.batch (phoenixSubscriptions ++ [ withBlur, withClearError, withClearRoomMessage ])
+  Sub.batch (phoenixSubscriptions ++ [ withClearError, withClearRoomMessage ])
   
 -- INTERNAL HELPER FUNCTIONS
 handWhereIs : Player.Username -> List Room.PlayerHand -> Player -> List Card
@@ -791,3 +801,9 @@ getIsActive model =
 possibleActions : List String
 possibleActions =
   [ "action_raise", "action_check", "action_call", "action_fold", "action_add_chips" ]
+
+joinValToInt : String -> Int
+joinValToInt stringAmount =
+  case String.toInt stringAmount of
+    Ok value -> value
+    Err _ -> 0
