@@ -39,6 +39,8 @@ type Msg
   | SetJoinValue String
   | ActionPressed
   | ActionMsg String Encode.Value
+  | ConnectedToPlayerChannel
+  | ChipInfo Encode.Value
   | BankPressed
   | AccountPressed
   | ChatPressed
@@ -106,6 +108,7 @@ type alias Model =
   , raiseAmount : Int
   , raiseInterval : Int
   , chipsAvailable : Int
+  , chipsAvailableForJoin : Int
   , addAmount : Int
   , chat : Chat
   , currentChatMsg : String
@@ -151,10 +154,15 @@ room model =
     |> Channel.on "new_chat_msg" (\payload -> NewChatMsg payload)
     |> Channel.withDebug
 
+playerInfoChannel : Player -> Channel Msg
+playerInfoChannel player =
+  Channel.init ("players:" ++ (Player.usernameToString player.username))
+    |> Channel.onJoin (\_ -> ConnectedToPlayerChannel)
+    |> Channel.on "chip_info" (\payload -> ChipInfo payload)
 
 initialModel : Player -> String -> String -> Model
 initialModel player roomTitle roomType =
-  { room =  roomTitle -- Should be updated to take dynamic values on load
+  { room =  roomTitle
   , roomModel = Room.defaultRoom
   , roomType = roomType
   , roomMessages = []
@@ -162,15 +170,15 @@ initialModel player roomTitle roomType =
   , player = player
   , joined = False
   , joinValue = "0"
-  , channelSubscriptions = [ ] -- should be initialized to players:#{room_number}
+  , channelSubscriptions = [ playerInfoChannel player ]
   , modalRendered = Closed
   , errorMessages = []
   , raiseAmount = 0
   , raiseInterval = 5
   , chipsAvailable = player.chips
+  , chipsAvailableForJoin = player.chips
   , addAmount = 0
-  , chat = [{ playerName = "Bob", message = "Some messages"}, 
-            { playerName = "Jan", message = "some other messages"}]
+  , chat = []
   , currentChatMsg = ""
   }
 
@@ -256,6 +264,7 @@ joinView : Model -> Html Msg
 joinView model =
   div [ class "join-modal" ]
     [ h3 [ class "join-title red-text text-center" ] [ text "Join the Game" ]
+    , h6 [ class "teal-text"] [ text <| "You currently have " ++ (toString model.chipsAvailableForJoin) ++ " chips." ]
     , Html.form 
       [ class "join-form"
       , onSubmit Join
@@ -269,7 +278,7 @@ joinView model =
       , button 
         [ type_ "submit"
         , class <| "btn white-text " ++ (if (joinValToInt model.joinValue) >= 100 then "green" else "gray")
-        , disabled <| (joinValToInt model.joinValue) < 100
+        , disabled <| (joinValToInt model.joinValue) < 100 || (joinValToInt model.joinValue) > model.chipsAvailableForJoin
         , onClick Join 
         ] [ text "Join" ]
       ] 
@@ -453,6 +462,8 @@ update msg model =
     PresentWinningHand payload -> handlePresentWinningHand model payload
     SetBankInfo payload ->        handleSetBankInfo model payload
     Clear _ ->                    handleClear model
+    ConnectedToPlayerChannel ->   ( ( model, Cmd.none), NoOp )
+    ChipInfo payload ->           handleChipInfo model payload
     ActionPressed ->              ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     ActionMsg action val ->       handleActionMsg model action val
     NewChatMsg value ->           handleNewChatMsg model value
@@ -471,7 +482,7 @@ update msg model =
     SocketClosed ->               ( ( model, Cmd.none), NoOp )
     SocketClosedAbnormally ->     ( ( model, Cmd.none), NoOp )
     Rejoined _ ->                 handleRejoin model
-    JoinRoom player ->            ( ( { model | modalRendered = JoinModalOpen, joined = True }, Cmd.none), NoOp)
+    JoinRoom player ->            handleJoinRoom model player
     Blur ->                       ( ( { model | modalRendered = Closed }, Cmd.none), NoOp)
     OpenRaisePressed ->           ( ( { model | modalRendered = RaiseModalOpen }, Cmd.none), NoOp)
     ClearErrorMessage _ ->        clearErrorMessage model
@@ -503,11 +514,18 @@ handleJoin model =
   in
   ( ( { model | channelSubscriptions = newSubscriptions}, Cmd.none), NoOp )
 
+handleJoinRoom : Model -> Player -> ( ( Model, Cmd Msg), ExternalMsg)
+handleJoinRoom model player =
+  let
+    cmd =
+      playerInfoPush (Player.usernameToString player.username) "get_chip_count"
+  in
+  ( ( { model | modalRendered = JoinModalOpen, joined = True }, cmd), NoOp)
+
 handleSetJoinValue : Model -> String -> ( ( Model, Cmd Msg),  ExternalMsg)
 handleSetJoinValue model stringAmount =
   ( ( { model | joinValue = toString <| joinValToInt stringAmount }, Cmd.none), NoOp)
       
-
 handleJoinedChannel : Model -> ( (Model, Cmd Msg), ExternalMsg )
 handleJoinedChannel model =
   let
@@ -676,6 +694,12 @@ handleSetBankInfo model payload =
       ( ( { model | chipsAvailable = chipsAvailable, player = newPlayer }, Cmd.none), NoOp )
     _ -> ( ( model, Cmd.none), NoOp )
 
+handleChipInfo : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleChipInfo model payload =
+  case Decode.decodeValue (Decode.at ["chips"] Decode.int) payload of
+    Ok chipAmount -> ( ( { model | chipsAvailableForJoin = chipAmount }, Cmd.none), NoOp)
+    Err _ -> ( ( model, Cmd.none), NoOp )
+
 handleNewChatMsg : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleNewChatMsg model payload =
   case Decode.decodeValue Data.Chat.decoder payload of
@@ -745,6 +769,15 @@ actionPush room actionString value =
     push =
       Push.init ("rooms:" ++ room) actionString
         |> Push.withPayload value
+  in
+  Phoenix.push socketUrl push
+
+playerInfoPush : String -> String -> Cmd Msg
+playerInfoPush username msgToChannel =
+  let
+    push =
+      Push.init ("players:" ++ username) msgToChannel
+        |> Push.withPayload (Encode.object [("player", Encode.string username)])
   in
   Phoenix.push socketUrl push
   
