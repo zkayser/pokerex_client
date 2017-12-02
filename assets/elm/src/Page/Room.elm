@@ -186,6 +186,7 @@ view session model =
       ((viewTableCenter model.roomModel) :: (viewTableCards model.roomModel) :: viewPlayers session model)
     , PlayerToolbar.view (toolbarConfig model)
     , mobileToolbarView
+    , Actions.viewMobile (actionsViewConfig model)
     , maybeViewModal model
     , viewMessages model
     ]

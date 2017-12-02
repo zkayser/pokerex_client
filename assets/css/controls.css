@@ -74,11 +74,37 @@
 	.mobile-controls-container {
 		display: inline;
 		position: fixed;
-		bottom: 4rem;
-		left: 4rem;
+		bottom: 10%;
+		left: 10%;
 	}
 }
 
 .mobile-menu-item a {
 	cursor: pointer;
+}
+
+.actions-container-mobile {
+	display: none;
+}
+
+@media (max-width: 600px) {
+	.actions-container-mobile {
+		display: flex;
+		justify-content: space-evenly;
+		position: fixed;
+		bottom: 10%;
+		right: 10%;
+	}
+
+	.actions-container-mobile > a {
+		flex: 1;
+		margin: 0 1rem 0 1rem;
+		-webkit-animation: fade-controls-in 0.5s ease-in;
+		animation: fade-controls-in 0.5s ease-in;
+	}
+}
+
+@keyframes fade-controls-in {
+	0% { -webkit-transform: scale(0, 0); transform: scale(0, 0); }
+	100% { -webkit-transform: scale(1, 1); transform: scale(1, 1); }
 }

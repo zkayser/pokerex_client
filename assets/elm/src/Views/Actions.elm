@@ -12,6 +12,10 @@ type Action
   | Fold
   | Check
   | Call
+
+type Platform
+  = Mobile
+  | Desktop
   
 type alias ActionsModel msg =
   { isActive : Bool
@@ -38,18 +42,27 @@ view actionsModel =
     [ span [ class "modal-header red-text"] [ text "Actions" ]
     , div [ class "row" ]
       [ div [ class "col s6"] 
-        [ viewActionBtn actionsModel Call ]
+        [ viewActionBtn actionsModel Call Desktop ]
       , div [ class "col s6" ]
-        [ viewActionBtn actionsModel Raise ]
+        [ viewActionBtn actionsModel Raise Desktop ]
       ]
     , div [ class "row" ]
       [ div [ class "col s6"] 
-        [ viewActionBtn actionsModel Check ]
+        [ viewActionBtn actionsModel Check Desktop ]
       , div [ class "col s6" ]
-        [ viewActionBtn actionsModel Fold ]
+        [ viewActionBtn actionsModel Fold Desktop ]
       , i [ class "material-icons close-modal", onClick actionsModel.closeModalMsg ]
         [ text "close" ]
       ]
+    ]
+
+viewMobile : ActionsModel msg -> Html msg
+viewMobile actionsModel =
+  div [ class "actions-container-mobile" ]
+    [ viewActionBtn actionsModel Call Mobile
+    , viewActionBtn actionsModel Raise Mobile
+    , viewActionBtn actionsModel Check Mobile
+    , viewActionBtn actionsModel Fold Mobile
     ]
     
 encodeUsernamePayload : Username -> Value
@@ -57,23 +70,40 @@ encodeUsernamePayload username =
   Encode.object 
     [ ("player", Player.encodeUsername username) ]
     
-actionBtnClass : String -> String
-actionBtnClass color =
-  "waves-effect waves-effect-light btn white-text " ++ color
+actionBtnClass : String -> Platform -> String
+actionBtnClass color platform =
+  let
+    extraClasses =
+      case platform of
+        Desktop -> ""
+        Mobile -> "btn-floating"
+  in   
+  "waves-effect waves-effect-light btn white-text " ++ color ++ " " ++ extraClasses
   
-viewActionBtn : ActionsModel msg -> Action -> Html msg
-viewActionBtn actionsModel action =
+viewActionBtn : ActionsModel msg -> Action -> Platform -> Html msg
+viewActionBtn actionsModel action platform =
   let
     (color, message, btnText) =
-      case action of
-        Call -> ("blue darken-3", actionMsgWith actionsModel "action_call", "Call")
-        Raise -> ("red darken-3", actionsModel.openRaiseMsg, "Raise")
-        Check -> ("green accent-3", actionMsgWith actionsModel "action_check", "Check")
-        Fold -> ("teal darken-4", actionMsgWith actionsModel "action_fold", "Fold")
+      getAttributesFor actionsModel action
   in
   case canCallAction actionsModel action of
-    True -> a [ class (actionBtnClass color), onClick message] [ text btnText ]
+    True -> a [ class (actionBtnClass color platform), onClick message] [ childrenForBtn btnText platform ]
     False -> text ""
+
+childrenForBtn : String -> Platform -> Html msg
+childrenForBtn btnText platform =
+  case platform of
+    Desktop -> text btnText
+    Mobile -> getIconForMobileBtn btnText
+
+getIconForMobileBtn : String -> Html msg
+getIconForMobileBtn btnText =
+  case btnText of
+    "Call" -> i [ class "material-icons" ] [ text "phone" ]
+    "Raise" -> i [ class "material-icons" ] [ text "arrow_upward" ]
+    "Check" -> i [  class "material-icons" ] [ text "check" ]
+    "Fold" -> i [  class "material-icons" ] [ text "block" ]
+    _ -> text ""
     
 raiseContent : ActionsModel msg -> Html msg
 raiseContent actionsModel =
@@ -128,3 +158,11 @@ canCallAction actionsModel action =
 onRangeChange : (String -> msg) -> Attribute msg
 onRangeChange msg =
   on "change" <| Decode.map msg targetValue
+
+getAttributesFor : ActionsModel msg -> Action -> (String, msg, String)
+getAttributesFor actionsModel action =
+  case action of
+    Call -> ("blue darken-3", actionMsgWith actionsModel "action_call", "Call")
+    Raise -> ("red darken-3", actionsModel.openRaiseMsg, "Raise")
+    Check -> ("green accent-3", actionMsgWith actionsModel "action_check", "Check")
+    Fold -> ("teal darken-4", actionMsgWith actionsModel "action_fold", "Fold")
