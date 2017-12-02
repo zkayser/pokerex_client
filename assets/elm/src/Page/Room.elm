@@ -420,7 +420,7 @@ mobileMenuConfig model =
   
 winningHandConfig : WinningHand -> Model -> Modal.Config Msg
 winningHandConfig winningHand model =
-  { classes = ["white"]
+  { classes = ["white", "winning-hand-modal"]
   , contentHtml = [ viewWinningHandContent winningHand ] 
   , styles = Nothing 
   }

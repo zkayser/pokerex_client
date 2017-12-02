@@ -187,18 +187,33 @@
 @media (max-width: 600px) {
 	#seat-1 {
 		right: calc(20vh - 3rem);
+		transform: translate(50%, -2.5rem);
+	}
+
+	#seat-2 {
+		transform: translate(1rem, -2.5rem);
 	}
 
 	#seat-3 {
 		bottom: calc(20vh - 3rem);
+		transform: translateX(1rem);
+	}
+
+	#seat-4 {
+		transform: translateX(1rem);
 	}
 
 	#seat-5 {
 		right: calc(20vh - 3rem);
 	}
 
+	#seat-6 {
+		transform: translateX(-1rem);
+	}
+
 	#seat-7 {
 		bottom: calc(20vh - 3rem);
+		transform: translateX(-1rem);
 	}
 }
 
@@ -314,9 +329,9 @@
 	
 	#seat-1 {
 		left: 50%;
-		-webkit-transform: translateX(-50%);
-		    -ms-transform: translateX(-50%);
-		        transform: translateX(-50%);
+		-webkit-transform: translate(-50%, -2.5rem);
+		    -ms-transform: translate(-50%, -2.5rem);
+		        transform: translate(-50%, -2.5rem);
 	}
 	
 	.player-emblem-name {
