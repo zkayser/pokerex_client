@@ -6,8 +6,6 @@ import Data.Room as Room exposing (Room)
 import Data.RoomPage as RoomPage exposing (RoomPage)
 import Data.Card as Card exposing (Card)
 import Data.WinningHand as WinningHand exposing (WinningHand)
-import Data.AuthToken as AuthToken
-import Data.Chat
 import Page.Room.SocketConfig as SocketConfig exposing (..)
 import Page.Room.UpdateHelpers as Updaters exposing (..)
 import Page.Room.Helpers as Helpers exposing (..)
@@ -16,13 +14,9 @@ import Types.Room.Messages as Messages exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onSubmit, onInput)
-import Dom.Scroll
 import Dict exposing (Dict)
 import Mouse
 import Time exposing (Time)
-import Json.Decode as Decode exposing (Value)
-import Json.Encode as Encode
-import Ports exposing (scrollChatToTop)
 import Widgets.PlayerToolbar as PlayerToolbar
 import Widgets.Modal as Modal
 import Views.Actions as Actions
@@ -30,20 +24,15 @@ import Views.Bank as Bank
 import Views.Account as Account
 import Views.Chat as Chat exposing (Chat)
 import Phoenix
-import Phoenix.Socket as Socket exposing (Socket)
-import Phoenix.Channel as Channel exposing (Channel)
-import Phoenix.Push as Push exposing (Push)
 
--- Boiler Plate
-
+-- Types
 type alias Msg = RoomMsg 
 type alias ExternalMsg = RoomExternalMsg
+type alias Model = RoomPage
       
 type MessageType
   = RoomMessage String
   | ErrorMessage String
-
-type alias Model = RoomPage
 
 -- INITIALIZATION --
 initialModel : Player -> String -> String -> RoomPage
@@ -238,7 +227,6 @@ viewWinningCard card =
   img [ src (Card.sourceUrlForCardImage card) ] []
 
 -- WIDGET CONFIGURATIONS --
-
 toolbarConfig : Model -> PlayerToolbar.Config Msg
 toolbarConfig model =
   let
@@ -341,7 +329,6 @@ winningHandConfig winningHand model =
   }
 
 -- UPDATE --
-
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
@@ -384,31 +371,8 @@ update msg model =
     CloseWinningHandModal ->      clearWinningHandModal model
     CloseModal ->                 ( ( { model | modalRendered = Closed }, Cmd.none), NoOp )
     LeaveRoom player ->           handleLeaveRoom player model
-
--- UPDATE HELPERS --
-
-
--- PUSH MESSAGES --
-actionPush : String -> String -> Value -> Cmd Msg
-actionPush room actionString value =
-  let
-    push =
-      Push.init ("rooms:" ++ room) actionString
-        |> Push.withPayload value
-  in
-  Phoenix.push socketUrl push
-
-playerInfoPush : String -> String -> Cmd Msg
-playerInfoPush username msgToChannel =
-  let
-    push =
-      Push.init ("players:" ++ username) msgToChannel
-        |> Push.withPayload (Encode.object [("player", Encode.string username)])
-  in
-  Phoenix.push socketUrl push
   
 -- SUBSCRIPTIONS --    
-
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
   let
