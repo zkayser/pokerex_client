@@ -205,12 +205,16 @@ view session model =
 viewPlayers : Session -> Model -> List (Html Msg)
 viewPlayers session model =
   let
-    (seating, chipRoll, playerHands) =
-      (model.roomModel.seating, model.roomModel.chipRoll, model.roomModel.playerHands)
+    (seating, chipRoll, playerHands, isActive) =
+      (model.roomModel, model.roomModel.chipRoll, model.roomModel.playerHands, getIsActive model)
     seatingWithChipRoll =
       List.map (\seating -> 
-        (seating, Dict.get (Player.usernameToString seating.name) chipRoll, handWhereIs seating.name playerHands model.player))
-        seating
+        ( seating
+        , model.player
+        , Dict.get (Player.usernameToString seating.name) chipRoll
+        , handWhereIs seating.name playerHands model.player
+        , isActive))
+        model.roomModel.seating
   in
   List.map (viewSeat) seatingWithChipRoll
   
@@ -245,8 +249,8 @@ viewTableCard index card =
   div [ class ("table-card table-card-" ++ (toString index)) ]
     [ Card.tableCardImageFor card ]
 
-viewSeat : (Room.Seating, Maybe Int, List Card) -> Html Msg
-viewSeat (seating, maybeChipRoll, cards) =
+viewSeat : (Room.Seating, Player, Maybe Int, List Card, Bool) -> Html Msg
+viewSeat (seating, player, maybeChipRoll, cards, isActive) =
   let 
     chipsToHtml =
       case maybeChipRoll of
@@ -255,7 +259,12 @@ viewSeat (seating, maybeChipRoll, cards) =
     cardImages =
       List.indexedMap Card.playerHandCardImageFor cards
   in
-  div [ id ("seat-" ++ (toString (seating.position + 1))), class "player-seat", style [("text-align", "center")] ]
+  div [ 
+        id ("seat-" ++ (toString (seating.position + 1)))
+      , class "player-seat"
+      , style [ ("text-align", "center") ] 
+      , classList [("active-seat-" ++ (toString <| seating.position + 1), isActive && (seating.name == player.username))]
+      ]
     ([ p [ class "player-emblem-name" ] [ Player.usernameToHtml seating.name ]
     , p [ class "player-chip-count" ] [ chipsToHtml ]
     ] ++ cardImages)

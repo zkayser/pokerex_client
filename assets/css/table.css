@@ -289,6 +289,67 @@
 	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
 }
 
+@keyframes flashing-seat {
+	0% { background-color: #009688; color: white;}
+	100% { background-color: #fafafa; color: #009688;}
+}
+
+.active-seat-1 {
+	animation-name: flashing-seat;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+}
+
+.active-seat-2 {
+	animation-name: flashing-seat;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+}
+
+.active-seat-3 {
+	animation-name: flashing-seat;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+}
+
+.active-seat-4 {
+	animation-name: flashing-seat;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+}
+
+.active-seat-5 {
+	animation-name: flashing-seat;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+}
+
+.active-seat-6 {
+	animation-name: flashing-seat;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+}
+
+.active-seat-7 {
+	animation-name: flashing-seat;
+	animation-duration: 1s;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	animation-timing-function: ease-in-out;
+}
+
 @media (max-width: 600px) {
 	.table-container {
 		width: 100vw;
