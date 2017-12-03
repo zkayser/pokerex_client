@@ -3,10 +3,13 @@ module Page.Room exposing (..)
 import Data.Player as Player exposing (Player)
 import Data.Session as Session exposing (Session)
 import Data.Room as Room exposing (Room)
+import Data.RoomPage as RoomPage exposing (RoomPage)
 import Data.Card as Card exposing (Card)
 import Data.WinningHand as WinningHand exposing (WinningHand)
 import Data.AuthToken as AuthToken
 import Data.Chat
+import Types.Room.ModalState as ModalState exposing (..)
+import Types.Room.Messages as Messages exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onSubmit, onInput)
@@ -30,89 +33,17 @@ import Phoenix.Push as Push exposing (Push)
 
 -- Boiler Plate
 
-type Msg
-  = NewMsg String
-  | Join
-  | JoinedChannel
-  | JoinRoom Player
-  | JoinFailed Value
-  | SetJoinValue String
-  | ActionPressed
-  | ActionMsg String Encode.Value
-  | ConnectedToPlayerChannel
-  | ChipInfo Encode.Value
-  | BankPressed
-  | AccountPressed
-  | ChatPressed
-  | OpenRaisePressed
-  | MobileToolbarPressed
-  | CloseRaiseModal
-  | CloseModal
-  | IncreaseRaise Int
-  | DecreaseRaise Int
-  | SetRaise String
-  | SetBankInfo Value
-  | SetAddAmount String
-  | Update Value
-  | GameStarted Value
-  | WinnerMessage Value
-  | Clear Value
-  | PresentWinningHand Value
-  | NewChatMsg Value
-  | SetChatMsg String
-  | SubmitChat
-  | LeaveRoom Player
-  | SocketOpened
-  | SocketClosed
-  | SocketClosedAbnormally
-  | Rejoined Value
-  | Blur
-  | ClearErrorMessage Time
-  | ClearRoomMessage Time
-  | ClearWinningHandModal Time
-  | CloseWinningHandModal
+type alias Msg = RoomMsg 
+  
 
 type ExternalMsg
   = NoOp
-  
-type ModalState
-  = Closed
-  | JoinModalOpen
-  | BankModalOpen
-  | BottomModalOpen BottomModalType
-  | RaiseModalOpen
-  | WinningHandModal WinningHand
-  
-type BottomModalType
-  = Actions
-  | Account
-  | Chat
-  | MobileMenu
-  
+      
 type MessageType
   = RoomMessage String
   | ErrorMessage String
 
-type alias Model =
-  { room : String
-  , roomModel : Room
-  , roomType : String
-  , roomMessages : List String
-  , players : List Player
-  , player : Player
-  , joinValue : String
-  , joined : Bool
-  , channelSubscriptions : List (Channel Msg)
-  , modalRendered : ModalState
-  , errorMessages : List String
-  , raiseAmount : Int
-  , raiseInterval : Int
-  , chipsAvailable : Int
-  , chipsAvailableForJoin : Int
-  , addAmount : Int
-  , chat : Chat
-  , currentChatMsg : String
-  }
+type alias Model = RoomPage
 
 -- SOCKET & CHANNEL CONFIG --
 
@@ -300,7 +231,7 @@ maybeViewModal model =
     RaiseModalOpen -> Modal.view (raiseModalConfig model)
     BottomModalOpen Actions -> Modal.bottomModalView (actionsModalConfig model)
     BottomModalOpen Account -> Modal.bottomModalView (accountModalConfig model)
-    BottomModalOpen Chat -> Modal.bottomModalView (chatModalConfig model)
+    BottomModalOpen ModalState.Chat -> Modal.bottomModalView (chatModalConfig model)
     BottomModalOpen MobileMenu -> Modal.bottomModalView (mobileMenuConfig model)
     BankModalOpen -> Modal.view (bankModalConfig model)
     WinningHandModal winningHand -> Modal.view (winningHandConfig winningHand model)
@@ -460,7 +391,6 @@ winningHandConfig winningHand model =
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
-    NewMsg message ->             ( ( model, Cmd.none), NoOp )
     JoinedChannel ->              handleJoinedChannel model
     Join ->                       handleJoin model
     JoinFailed value ->           handleJoinFailed model value
@@ -479,7 +409,7 @@ update msg model =
     BankPressed ->                handleBankPressed model
     AccountPressed ->             handleAccountPressed model
     MobileToolbarPressed ->       ( ( { model | modalRendered = BottomModalOpen MobileMenu }, Cmd.none), NoOp)
-    ChatPressed ->                ( ( { model | modalRendered = BottomModalOpen Chat }, Cmd.none), NoOp )
+    ChatPressed ->                ( ( { model | modalRendered = BottomModalOpen ModalState.Chat }, Cmd.none), NoOp )
     CloseRaiseModal ->            ( ( { model | modalRendered = BottomModalOpen Actions }, Cmd.none), NoOp )
     IncreaseRaise amount ->       handleIncreaseRaise model amount
     DecreaseRaise amount ->       handleDecreaseRaise model amount
