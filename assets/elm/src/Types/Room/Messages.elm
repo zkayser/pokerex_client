@@ -1,4 +1,4 @@
-module Types.Room.Messages exposing ( RoomMsg(..), RoomExternalMsg(..))
+module Types.Room.Messages exposing ( RoomMsg(..), RoomExternalMsg(..), RoomMessageType(..))
 
 import Data.Player as Player exposing (Player)
 import Json.Decode as Decode exposing (Value)
@@ -48,3 +48,7 @@ type RoomMsg
 
 type RoomExternalMsg
   = NoOp
+
+type RoomMessageType
+  = RoomMessage String
+  | ErrorMessage String
