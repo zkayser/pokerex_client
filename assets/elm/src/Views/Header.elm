@@ -24,6 +24,8 @@ viewNavBarLinks msg session page =
   case session.player of
     Just player ->
       [ li [] [ a [ onClick msg ] [ text "Signout" ] ]
+      , navBarLink (page == Helpers.Profile) (Route.Profile <| Player.usernameToString player.username)
+        [ text "Profile" ]
       , navBarLink (page == Helpers.Room) (Route.Room "public" "room_1") [ text "Rooms" ]
       ]
     Nothing ->

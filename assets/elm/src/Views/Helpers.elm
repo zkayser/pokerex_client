@@ -10,3 +10,4 @@ type ActivePage
   | Registration
   | Home
   | Room
+  | Profile
