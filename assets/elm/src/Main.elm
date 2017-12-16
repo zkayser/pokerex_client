@@ -21,6 +21,7 @@ import Page.Errored as Errored exposing (PageLoadError)
 import Page.Login as Login
 import Page.Register as Register
 import Page.Room as Room
+import Page.Profile as Profile
 import Page.NotFound as NotFound
 import Widgets.Dropdown as Dropdown
 import Mouse
@@ -34,6 +35,7 @@ type Msg
  | Logout
  | RegisterMsg Register.Msg
  | RoomMsg Room.Msg
+ | ProfileMsg Profile.Msg
  | SetPlayer (Maybe Player)
 
 type PageState
@@ -61,7 +63,15 @@ setRoute maybeRoute model =
         let
           page =
             case model.session.player of
-              Just player -> Page.Room (Room.initialModel player roomTitle roomType) -- TODO: Make this dynamic
+              Just player -> Page.Room (Room.initialModel player roomTitle roomType)
+              Nothing -> Page.NotFound
+        in
+        ( { model | pageState = Loaded (page)}, Cmd.none )
+      Just (Route.Profile user) ->
+        let
+          page =
+            case model.session.player of
+              Just player -> Page.Profile (Profile.initialModel player)
               Nothing -> Page.NotFound
         in
         ( { model | pageState = Loaded (page)}, Cmd.none )
@@ -145,6 +155,9 @@ viewPage session isLoading page =
     Page.Room subModel ->
       Room.view session subModel
         |> Html.map RoomMsg
+    Page.Profile subModel ->
+      Profile.view session subModel
+        |> Html.map ProfileMsg
     Page.NotFound ->
       NotFound.view session
 
@@ -308,6 +321,8 @@ pageSubscriptions page session =
       Sub.none
     Page.Room subModel ->
       Sub.map RoomMsg <| Room.subscriptions subModel session
+    Page.Profile subModel ->
+      Sub.map ProfileMsg <| Profile.subscriptions subModel session
 
 main : Program Value Model Msg
 main =

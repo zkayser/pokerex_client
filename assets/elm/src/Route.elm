@@ -11,6 +11,7 @@ type Route
   | Logout
   | Register
   | Room String String
+  | Profile String
 
 route : Parser (Route -> a) a
 route =
@@ -20,6 +21,7 @@ route =
         , Url.map Logout (s "logout")
         , Url.map Register (s "register")
         , Url.map Room (s "rooms" </> Url.string </> Url.string)
+        , Url.map Profile (s "profile" </> Url.string)
         ]
 
 fromLocation : Location -> Maybe Route
@@ -47,5 +49,6 @@ routeToString page =
         Logout -> [ "logout" ]
         Register -> [ "register" ]
         Room roomType roomTitle -> [ "rooms", roomType, roomTitle ]
+        Profile user -> [ "profile", user ]
   in
   "#/" ++ String.join "/" pieces
