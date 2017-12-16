@@ -1,6 +1,7 @@
 module Views.Header exposing (..)
 
 import Data.Player as Player exposing (Player)
+import Data.Session as Session exposing (Session)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, Options)
@@ -18,12 +19,18 @@ type alias NavDropdownInfo r =
   , selectedItem : DropdownItem
   }
 
-viewNavBarLinks : ActivePage -> List (Html msg)
-viewNavBarLinks page =
-  [ navBarLink (page == Helpers.Login) Route.Login [ text "Login" ]
-  , navBarLink (page == Helpers.Registration) Route.Register [ text "Signup" ]
-  , navBarLink (page == Helpers.Room) (Route.Room "public" "room_1") [ text "Room" ]
-  ]
+viewNavBarLinks : msg -> Session -> ActivePage -> List (Html msg)
+viewNavBarLinks msg session page =
+  case session.player of
+    Just player ->
+      [ li [] [ a [ onClick msg ] [ text "Signout" ] ]
+      , navBarLink (page == Helpers.Room) (Route.Room "public" "room_1") [ text "Rooms" ]
+      ]
+    Nothing ->
+      [ navBarLink (page == Helpers.Login) Route.Login [ text "Login" ]
+      , navBarLink (page == Helpers.Registration) Route.Register [ text "Signup" ]
+      , navBarLink (page == Helpers.Room) (Route.Room "public" "room_1") [ text "Room" ]
+      ]
 
 navBarLink : Bool -> Route -> List (Html msg) -> Html msg
 navBarLink isActive route linkContent =
@@ -42,7 +49,7 @@ activePageFrom page =
 -- NavDropdown --
 navDropdownConfig : Dropdown.Config DropdownMsg
 navDropdownConfig =
-  { topLevelHtml = i 
+  { topLevelHtml = i
     [  class "material-icons nav-dropdown-btn hide-on-large-only"
     , onClick (DropdownType.Toggle DropdownType.NavBarDropdown)
     ] [ text "reorder" ]

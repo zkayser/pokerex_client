@@ -26,7 +26,12 @@ elmApp.ports.storeSession.subscribe((session) => {
 elmApp.ports.scrollChatToTop.subscribe(() => {
 	let chat = document.getElementById('chat');
 	chat ? chat.scrollTo(0, 0) : null;
-})
+});
+
+elmApp.ports.logout.subscribe(() => {
+	console.log("Logout port called. Logging out...");
+	localStorage.removeItem('session');
+});
 
 window.addEventListener("storage", (event) => {
   if (event.storageArea === localStorage && event.key === "session") {

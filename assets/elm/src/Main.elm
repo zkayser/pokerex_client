@@ -30,7 +30,8 @@ type Msg
  | HomeLoaded (Result PageLoadError Home.Model)
  | HeaderMsg DropdownMsg
  | HomeMsg Home.Msg
- | LoginMsg Login.Msg 
+ | LoginMsg Login.Msg
+ | Logout
  | RegisterMsg Register.Msg
  | RoomMsg Room.Msg
  | SetPlayer (Maybe Player)
@@ -108,21 +109,21 @@ frame model isLoading page children =
   let
     player =
       model.session.player
-    activePage = 
+    activePage =
       activePageFrom page
-  in  
+  in
   div [ class "page-frame"]
-    [ header [] 
+    [ header []
       [ nav [ class "teal darken-4 nav-container" ]
-          [ div [ class "filler"] [] 
+          [ div [ class "filler"] []
             , div [ class "logo-container" ]
               [ a [ Route.href Route.Home, class "logo" ] [ text "PokerEx"] ]
             , ul [ class "nav-links", class "hide-on-med-and-down" ]
-              (viewNavBarLinks activePage)
+              (viewNavBarLinks Logout model.session activePage)
             , div [ class "filler hide-on-large-only" ] [ Html.map HeaderMsg navDropdownConfig.topLevelHtml ]
         ]
       ]
-      , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) navLinks) 
+      , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) navLinks)
       , children
       , if activePage == Helpers.Home then Footer.view else text ""
     ]
@@ -207,7 +208,7 @@ updatePage page msg model =
           Room.update subMsg subModel
       in
       ( { model | pageState = Loaded (Page.Room roomModel) }, Cmd.map RoomMsg cmd)
-            
+
     ( SetPlayer player, _ ) ->
       let
         session =
@@ -219,6 +220,14 @@ updatePage page msg model =
             Cmd.none
       in
       ( { model | session = { session | player = player }}, cmd)
+    ( Logout, _ ) ->
+      let
+        session =
+          model.session
+        cmds =
+          Cmd.batch [ Ports.logout (), Route.modifyUrl Route.Home ]
+      in
+      ( { model | session = { session | player = Nothing }}, cmds)
     ( HeaderMsg (DropdownType.Toggle DropdownType.NavBarDropdown), _) ->
       let
         newDropdown =
@@ -226,7 +235,7 @@ updatePage page msg model =
             DropdownType.NavBarDropdown
           else
             DropdownType.AllClosed
-      in 
+      in
       ( { model | openDropdown = newDropdown }, Cmd.none )
     ( HeaderMsg (DropdownType.Blur), _ ) ->
       ( { model | openDropdown = DropdownType.AllClosed }, Cmd.none )
@@ -244,20 +253,20 @@ updatePage page msg model =
 -- SUBSCRIPTIONS --
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  let 
+  let
     subs =
       [ pageSubscriptions (getPage model.pageState) model.session
       , Sub.map SetPlayer sessionChange
       ]
-    withBlur = 
+    withBlur =
       case model.openDropdown of
         DropdownType.AllClosed -> []
         _ -> [ Sub.map HeaderMsg (Mouse.clicks (always DropdownType.Blur)) ]
-    subsWithBlur = 
-      subs ++ withBlur    
+    subsWithBlur =
+      subs ++ withBlur
   in
   Sub.batch subsWithBlur
-    
+
 getPage : PageState -> Page
 getPage pageState =
   case pageState of
@@ -278,7 +287,7 @@ urlFromString string =
     "login" -> prefix ++ formatted
     "signup" -> prefix ++ "register"
     "room" -> prefix ++ "rooms/public/room_1" -- TODO: Restore to "rooms" after implementing room list view
-    _ -> prefix   
+    _ -> prefix
 
 sessionChange : Sub (Maybe Player)
 sessionChange =
