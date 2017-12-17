@@ -11,7 +11,7 @@ import Task
 import Navigation exposing (Location)
 import Ports
 import Route exposing (Route)
-import Types.Dropdowns as DropdownType exposing (OpenDropdown, DropdownMsg, DropdownItem)
+import Types.Dropdowns as DropdownType exposing (OpenDropdown, DropdownMsg, DropdownItem, DropdownNavbarLink)
 import Types.Page as Page exposing (Page)
 import Views.Header as Header exposing (activePageFrom, viewNavBarLinks, navDropdownConfig, navDropdownContext, navLinks)
 import Views.Helpers as Helpers exposing (ActivePage(..))
@@ -254,10 +254,20 @@ updatePage page msg model =
       ( { model | openDropdown = DropdownType.AllClosed }, Cmd.none )
     ( HeaderMsg (DropdownType.NavItemPicked item), _ ) ->
       let
+        session =
+          model.session
         route =
           urlFromString item model
+        actionCmd =
+          case item of
+            DropdownType.Logout -> Cmd.batch [ Ports.logout (), Route.modifyUrl Route.Home ]
+            _ -> Navigation.modifyUrl route
+        newSession =
+          case item of
+            DropdownType.Logout -> { session | player = Nothing }
+            _ -> session
       in
-      ( { model | openDropdown = DropdownType.AllClosed}, Navigation.modifyUrl route)
+      ( { model | session = newSession, openDropdown = DropdownType.AllClosed}, actionCmd)
     ( _, Page.NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->
@@ -288,25 +298,26 @@ getPage pageState =
     TransitioningFrom page ->
       page
 
-urlFromString : String -> Model -> String
-urlFromString string model =
+urlFromString : DropdownNavbarLink -> Model -> String
+urlFromString navbarLink model =
   let
-    formatted =
-      String.toLower string
+    urlSuffix =
+      case navbarLink of
+        DropdownType.Logout -> ""
+        DropdownType.Login -> "login"
+        DropdownType.Register -> "register"
+        DropdownType.Room -> "rooms/public/room_1"
+        DropdownType.Profile -> "profile"
     prefix =
       "#/"
     player =
       case model.session.player of
-        Just player -> Player.usernameToString player.username
+        Just player -> "/" ++ (Player.usernameToString player.username)
         Nothing -> ""
   in
-  case formatted of
-    "login" -> prefix ++ formatted
-    "signup" -> prefix ++ "register"
-    "room" -> prefix ++ "rooms/public/room_1" -- TODO: Restore to "rooms" after implementing room list view
-    "profile" ->
-      if player == "" then prefix else "profile/" ++ player
-    _ -> prefix
+  case urlSuffix of
+    "profile" -> if player == "" then prefix else prefix ++ urlSuffix ++ player
+    _ -> prefix ++ urlSuffix
 
 sessionChange : Sub (Maybe Player)
 sessionChange =

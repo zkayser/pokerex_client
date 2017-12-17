@@ -3,7 +3,7 @@ module Widgets.Dropdown exposing (Context, Config, view)
 import Html exposing (..)
 import Html.Attributes exposing (style, class, classList)
 import Html.Events exposing (onWithOptions)
-import Types.Dropdowns as DropdownType exposing (DropdownItem)
+import Types.Dropdowns as DropdownType exposing (DropdownItem, DropdownNavbarLink)
 import Json.Decode as Decode
 
 type alias Context =
@@ -14,10 +14,10 @@ type alias Context =
 type alias Config msg =
   { topLevelHtml : Html msg
   , clickedMsg : msg
-  , itemPickedMsg : String -> msg
+  , itemPickedMsg : DropdownNavbarLink -> msg
   }
 
-view : Config msg -> Context -> List String -> Html msg
+view : Config msg -> Context -> List DropdownNavbarLink -> Html msg
 view config context data =
   let
     length = (List.length data) * 3
@@ -45,10 +45,10 @@ view config context data =
     ]
     (List.map (viewItem config) data)
 
-viewItem : Config msg -> String -> Html msg
-viewItem config item = -- If `item` is a String, what happens when the itemPickedMsg is sent??
+viewItem : Config msg -> DropdownNavbarLink -> Html msg
+viewItem config item =
   li [ onClick (config.itemPickedMsg item), class "collection-item nav-dropdown-item" ]
-    [ span [ class "cursor-pointer" ] [ text item ] ]
+    [ span [ class "cursor-pointer" ] [ text <| toString item ] ]
 
 -- Helper to cancel click anywhere --
 onClick : msg -> Attribute msg

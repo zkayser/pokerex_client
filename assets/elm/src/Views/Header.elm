@@ -10,7 +10,7 @@ import Util exposing (onClickStopPropagation)
 import Route exposing (Route)
 import Views.Helpers as Helpers exposing (ActivePage)
 import Types.Page as Page exposing (Page)
-import Types.Dropdowns as DropdownType exposing (OpenDropdown, DropdownMsg, DropdownItem)
+import Types.Dropdowns as DropdownType exposing (OpenDropdown, DropdownMsg, DropdownItem, DropdownNavbarLink)
 import Widgets.Dropdown as Dropdown
 
 type alias NavDropdownInfo r =
@@ -65,11 +65,11 @@ navDropdownContext model =
   , isOpen = model.openDropdown == DropdownType.NavBarDropdown
   }
 
-navLinks : Session -> List String
+navLinks : Session -> List DropdownNavbarLink
 navLinks session =
   case session.player of
-    Just player -> [ "Signout", "Profile", "Room"]
-    Nothing -> [ "Login", "Signup", "Room" ]
+    Just player -> [ DropdownType.Logout, DropdownType.Profile, DropdownType.Room ]
+    Nothing -> [ DropdownType.Login, DropdownType.Register ]
   --This id should come from index.Html
 
   --You can use it to scroll to the top of the page (by ID)

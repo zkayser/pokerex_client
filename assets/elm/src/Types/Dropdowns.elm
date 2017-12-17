@@ -6,9 +6,16 @@ type OpenDropdown
 
 type DropdownMsg
   = Toggle OpenDropdown
-  | NavItemPicked String
+  | NavItemPicked DropdownNavbarLink
   | Blur
 
 type DropdownItem
   = None
   | AnyItem String
+
+type DropdownNavbarLink
+  = Logout
+  | Login
+  | Register
+  | Room -- TODO: Change this back to `Rooms` when the route is ready to go.
+  | Profile
