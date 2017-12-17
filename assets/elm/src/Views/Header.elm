@@ -65,9 +65,11 @@ navDropdownContext model =
   , isOpen = model.openDropdown == DropdownType.NavBarDropdown
   }
 
-navLinks : List String
-navLinks =
-  [ "Login", "Signup", "Room" ]
+navLinks : Session -> List String
+navLinks session =
+  case session.player of
+    Just player -> [ "Signout", "Profile", "Room"]
+    Nothing -> [ "Login", "Signup", "Room" ]
   --This id should come from index.Html
 
   --You can use it to scroll to the top of the page (by ID)

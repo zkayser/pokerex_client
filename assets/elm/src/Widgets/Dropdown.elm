@@ -3,11 +3,11 @@ module Widgets.Dropdown exposing (Context, Config, view)
 import Html exposing (..)
 import Html.Attributes exposing (style, class, classList)
 import Html.Events exposing (onWithOptions)
-import Types.Dropdowns as DropdownType exposing (DropdownItem) 
+import Types.Dropdowns as DropdownType exposing (DropdownItem)
 import Json.Decode as Decode
 
 type alias Context =
-  { selectedItem : DropdownItem 
+  { selectedItem : DropdownItem
   , isOpen : Bool
   }
 
@@ -25,7 +25,7 @@ view config context data =
       if context.isOpen then
         [ ("transform", "scaleY(1)")
         , ("transform-origin", "top")
-        , ("transition", "transform 1s ease-in-out") 
+        , ("transition", "transform 1s ease-in-out")
         , ("max-height", (toString length ) ++ "em")
         , ("transition", "max-height 0.5s ease-in-out")
         ]
@@ -37,18 +37,18 @@ view config context data =
         , ("transition", "max-height 0.5s ease-in-out")
         ]
   in
-  ul 
-    [ 
-      style displayStyles 
+  ul
+    [
+      style displayStyles
       , classList [ ("dropdown-menu", context.isOpen), ("collection", True) ]
       , class "nav-dropdown"
     ]
     (List.map (viewItem config) data)
 
 viewItem : Config msg -> String -> Html msg
-viewItem config item =
-  li [ onClick (config.itemPickedMsg item), class "collection-item nav-dropdown-item" ] 
-    [ span [ class "cursor-pointer" ] [ text item ] ]   
+viewItem config item = -- If `item` is a String, what happens when the itemPickedMsg is sent??
+  li [ onClick (config.itemPickedMsg item), class "collection-item nav-dropdown-item" ]
+    [ span [ class "cursor-pointer" ] [ text item ] ]
 
 -- Helper to cancel click anywhere --
 onClick : msg -> Attribute msg

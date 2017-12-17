@@ -133,7 +133,7 @@ frame model isLoading page children =
             , div [ class "filler hide-on-large-only" ] [ Html.map HeaderMsg navDropdownConfig.topLevelHtml ]
         ]
       ]
-      , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) navLinks)
+      , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) (navLinks model.session))
       , children
       , if activePage == Helpers.Home then Footer.view else text ""
     ]
@@ -255,7 +255,7 @@ updatePage page msg model =
     ( HeaderMsg (DropdownType.NavItemPicked item), _ ) ->
       let
         route =
-          urlFromString item
+          urlFromString item model
       in
       ( { model | openDropdown = DropdownType.AllClosed}, Navigation.modifyUrl route)
     ( _, Page.NotFound ) ->
@@ -288,18 +288,24 @@ getPage pageState =
     TransitioningFrom page ->
       page
 
-urlFromString : String -> String
-urlFromString string =
+urlFromString : String -> Model -> String
+urlFromString string model =
   let
     formatted =
       String.toLower string
     prefix =
       "#/"
+    player =
+      case model.session.player of
+        Just player -> Player.usernameToString player.username
+        Nothing -> ""
   in
   case formatted of
     "login" -> prefix ++ formatted
     "signup" -> prefix ++ "register"
     "room" -> prefix ++ "rooms/public/room_1" -- TODO: Restore to "rooms" after implementing room list view
+    "profile" ->
+      if player == "" then prefix else "profile/" ++ player
     _ -> prefix
 
 sessionChange : Sub (Maybe Player)
