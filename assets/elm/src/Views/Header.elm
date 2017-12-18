@@ -26,7 +26,8 @@ viewNavBarLinks msg session page =
       [ li [] [ a [ onClick msg ] [ text "Signout" ] ]
       , navBarLink (page == Helpers.Profile) (Route.Profile <| Player.usernameToString player.username)
         [ text "Profile" ]
-      , navBarLink (page == Helpers.Room) (Route.Room "public" "room_1") [ text "Rooms" ]
+      , navBarLink (page == Helpers.Room) (Route.Room "public" "room_1") [ text "Room" ]
+      , navBarLink (page == Helpers.Rooms) Route.Rooms [ text "Rooms" ]
       ]
     Nothing ->
       [ navBarLink (page == Helpers.Login) Route.Login [ text "Login" ]
@@ -46,6 +47,8 @@ activePageFrom page =
     Page.Register _ -> Helpers.Registration
     Page.Home _ -> Helpers.Home
     Page.Room _ -> Helpers.Room
+    Page.Rooms _ -> Helpers.Rooms
+    Page.Profile _ -> Helpers.Profile
     _ -> Helpers.Other
 
 -- NavDropdown --
@@ -68,7 +71,7 @@ navDropdownContext model =
 navLinks : Session -> List DropdownNavbarLink
 navLinks session =
   case session.player of
-    Just player -> [ DropdownType.Logout, DropdownType.Profile, DropdownType.Room ]
+    Just player -> [ DropdownType.Logout, DropdownType.Profile, DropdownType.Room, DropdownType.Rooms ]
     Nothing -> [ DropdownType.Login, DropdownType.Register ]
   --This id should come from index.Html
 

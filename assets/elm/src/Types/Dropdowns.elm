@@ -18,4 +18,5 @@ type DropdownNavbarLink
   | Login
   | Register
   | Room -- TODO: Change this back to `Rooms` when the route is ready to go.
+  | Rooms
   | Profile

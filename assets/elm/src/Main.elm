@@ -21,6 +21,7 @@ import Page.Errored as Errored exposing (PageLoadError)
 import Page.Login as Login
 import Page.Register as Register
 import Page.Room as Room
+import Page.Rooms as Rooms
 import Page.Profile as Profile
 import Page.NotFound as NotFound
 import Widgets.Dropdown as Dropdown
@@ -34,6 +35,7 @@ type Msg
  | LoginMsg Login.Msg
  | Logout
  | RegisterMsg Register.Msg
+ | RoomsMsg Rooms.Msg
  | RoomMsg Room.Msg
  | ProfileMsg Profile.Msg
  | SetPlayer (Maybe Player)
@@ -59,6 +61,8 @@ setRoute maybeRoute model =
         ( { model | pageState = Loaded (Page.Register Register.initialModel )}, Cmd.none )
       Just Route.Home ->
         ( { model | pageState = Loaded (Page.Home Home.initialModel)}, Cmd.none )
+      Just Route.Rooms ->
+        ( { model | pageState = Loaded (Page.Rooms Rooms.initialModel)}, Cmd.none )
       Just (Route.Room roomType roomTitle) ->
         let
           page =
@@ -152,6 +156,9 @@ viewPage session isLoading page =
     Page.Register subModel ->
       Register.view session subModel
         |> Html.map RegisterMsg
+    Page.Rooms subModel ->
+      Rooms.view session subModel
+        |> Html.map RoomsMsg
     Page.Room subModel ->
       Room.view session subModel
         |> Html.map RoomMsg
@@ -257,7 +264,7 @@ updatePage page msg model =
         session =
           model.session
         route =
-          urlFromString item model
+          urlFromString item model -- TODO: Rename urlFromString to reflect new implementation
         actionCmd =
           case item of
             DropdownType.Logout -> Cmd.batch [ Ports.logout (), Route.modifyUrl Route.Home ]
@@ -307,6 +314,7 @@ urlFromString navbarLink model =
         DropdownType.Login -> "login"
         DropdownType.Register -> "register"
         DropdownType.Room -> "rooms/public/room_1"
+        DropdownType.Rooms -> "rooms"
         DropdownType.Profile -> "profile"
     prefix =
       "#/"
@@ -336,6 +344,8 @@ pageSubscriptions page session =
       Sub.none
     Page.Home _ ->
       Sub.none
+    Page.Rooms subModel ->
+      Sub.map RoomsMsg <| Rooms.subscriptions subModel session
     Page.Room subModel ->
       Sub.map RoomMsg <| Room.subscriptions subModel session
     Page.Profile subModel ->

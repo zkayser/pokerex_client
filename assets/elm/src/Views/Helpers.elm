@@ -10,4 +10,5 @@ type ActivePage
   | Registration
   | Home
   | Room
+  | Rooms
   | Profile
