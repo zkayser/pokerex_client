@@ -35,6 +35,7 @@ type Msg
   | JoinFailed Decode.Value
   | UpdatePlayerCount Decode.Value
   | UpdateRooms Decode.Value
+  | PaginationItemClicked String
   | SocketOpened
   | SocketClosed
   | SocketClosedAbnormally
@@ -54,23 +55,67 @@ initialModel =
 -- View
 view : Session -> Model -> Html Msg
 view session model =
-  h1 [ class "teal-text" ] [ text "Lobby" ]
+  div [ class "lobby-container" ]
+    [ div [ class "lobby-title" ]
+      [ h1 [ class "text-center teal-text" ] [ text "Lobby" ] ]
+    , ul [ class "pagination-list" ]
+      (viewPagination model.totalPages)
+    , ul [ class "rooms-list collection" ]
+      (List.map viewRoom model.rooms)
+    ]
+
+viewRoom : RoomInfo -> Html Msg
+viewRoom roomInfo =
+  li [ class <| "collection-item " ++ (toString roomInfo.status) ++ " room-info-item" ]
+    [ div [ class "room-list-title" ]
+      [ span [ class "teal-text" ] [ text roomInfo.room ] ]
+    , div [ class "room-list-status" ]
+      [ span
+        [ class "room-list-player-count"]
+        [ text <| "Active Players: " ++ (toString roomInfo.playerCount) ]
+      , span
+        [ class <| "status " ++ (toString roomInfo.status)]
+        [text <| "Status: " ++ (statusToString roomInfo.status)]
+      ]
+    ]
+
+viewPagination : Int -> List (Html Msg)
+viewPagination pageCount =
+  List.map (\text -> viewPaginationItem text) (paginationText pageCount)
+
+viewPaginationItem : String -> Html Msg
+viewPaginationItem paginationText =
+  li [ class "pagination-list-item teal-text" ]
+    [ a [ onClick (PaginationItemClicked paginationText) ] (viewItemText paginationText) ]
+
+viewItemText : String -> List (Html Msg)
+viewItemText paginationText =
+  if List.member paginationText ["keyboard_arrow_left", "keyboard_arrow_right"] then
+    [ i [ class "material-icons" ] [ text paginationText ] ]
+  else
+    [ text paginationText ]
+
+paginationText : Int -> List String
+paginationText pageCount =
+  [ "keyboard_arrow_left" ]
+  ++ (List.map (\num -> toString num) (List.range 1 pageCount))
+  ++ [ "keyboard_arrow_right" ]
 
 -- Update
 update : Msg -> Model -> ( ( Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
-    JoinedLobby ->               ( ( model, Cmd.none ), NoOp )
-    JoinFailed payload ->        handleJoinFailed model payload
-    UpdatePlayerCount payload -> handleUpdatePlayerCount model payload
-    UpdateRooms payload ->       handleUpdateRooms model payload
-    SocketOpened ->              ( ( model, Cmd.none ), NoOp )
-    SocketClosed ->              ( ( model, Cmd.none ), NoOp )
-    SocketClosedAbnormally ->    ( ( model, Cmd.none ), NoOp )
+    JoinedLobby ->                ( ( model, Cmd.none ), NoOp )
+    JoinFailed payload ->         ( ( model, Cmd.none ), NoOp )
+    UpdatePlayerCount payload ->  handleUpdatePlayerCount model payload
+    UpdateRooms payload ->        handleUpdateRooms model payload
+    PaginationItemClicked text -> handlePaginationItemClicked model text
+    SocketOpened ->               ( ( model, Cmd.none ), NoOp )
+    SocketClosed ->               ( ( model, Cmd.none ), NoOp )
+    SocketClosedAbnormally ->     ( ( model, Cmd.none ), NoOp )
 
 handleJoinFailed : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleJoinFailed model payload =
-  Debug.log ("Failed to join lobby channel with payload: " ++ (toString payload))
   ( ( model, Cmd.none), NoOp )
 
 handleUpdatePlayerCount : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
@@ -82,7 +127,6 @@ handleUpdatePlayerCount model payload =
           List.map (\info -> if info.room == newRoomInfo.room then newRoomInfo else info) model.rooms
         Err _ -> model.rooms
   in
-  Debug.log "UPDATING ROOMS...."
   ( ( { model | rooms = newRooms }, Cmd.none), NoOp )
 
 handleUpdateRooms : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
@@ -94,6 +138,11 @@ handleUpdateRooms model payload =
         (Err _) -> model
   in
   ( ( newModel, Cmd.none ), NoOp )
+
+handlePaginationItemClicked : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handlePaginationItemClicked model text =
+  Debug.log "TODO: Implement handlePaginationItemClicked; Now performing a NoOp"
+  ( ( model, Cmd.none), NoOp )
 
 
 -- Socket config
@@ -158,3 +207,10 @@ subscriptions model session =
       [ Phoenix.connect (socket session) model.channelSubscriptions ]
   in
   Sub.batch phoenixSubscriptions
+
+-- Helpers
+statusToString : RoomStatus -> String
+statusToString status =
+  case status of
+    WaitingForPlayers -> "Waiting for Players"
+    _ -> toString status

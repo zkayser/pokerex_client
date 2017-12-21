@@ -1,0 +1,64 @@
+.lobby-container {
+	padding: 4rem;
+}
+
+.lobby-title {
+	text-align: center;
+}
+
+.pagination-list {
+	display: flex;
+	justify-content: space-evenly;
+}
+
+.pagination-list > * {
+	padding-right: 1rem;
+	padding-bottom: 1rem;
+	font-size: 1.5rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.room-list-title {
+	font-size: 2rem;
+	text-transform: capitalize;
+	font-weight: 400;
+	flex: 1.5;
+	margin: 0.75rem;
+}
+
+.room-list-status {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	flex-wrap: true;
+	font-size: 1.25rem;
+	margin: 0.75rem;
+	flex: 1.5;
+}
+
+.room-list-player-count {
+	flex: 1.75;
+}
+
+.status {
+	flex: 1.25;
+}
+
+.room-list-status:nth-child {
+	padding: 0.75rem;
+}
+
+.room-info-item {
+	display: flex;
+	justify-content: space-between;
+	margin: 0.75rem 2rem 0.75rem 2rem;
+}
+
+.room-info-item .room-list-title {
+	margin: 0.75rem 0 0.75rem 2rem;
+}
+
+.room-info-item .status {
+	margin: 0.75rem 2rem 0.75rem 0;
+}
