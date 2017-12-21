@@ -228,6 +228,12 @@ updatePage page msg model =
           Room.update subMsg subModel
       in
       ( { model | pageState = Loaded (Page.Room roomModel) }, Cmd.map RoomMsg cmd)
+    ( RoomsMsg subMsg, Page.Rooms subModel ) ->
+      let
+        ( (roomsModel, cmd), msgFromPage ) =
+          Rooms.update subMsg subModel
+      in
+      ( { model | pageState = Loaded (Page.Rooms roomsModel) }, Cmd.map RoomsMsg cmd)
 
     ( SetPlayer player, _ ) ->
       let
