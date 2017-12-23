@@ -62,6 +62,8 @@ view session model =
       (viewPagination model.totalPages)
     , ul [ class "rooms-list collection" ]
       (List.map viewRoom model.rooms)
+    , ul [ class "pagination-list" ]
+      (viewPagination model.totalPages)
     ]
 
 viewRoom : RoomInfo -> Html Msg
@@ -70,10 +72,10 @@ viewRoom roomInfo =
     [ div [ class "room-list-title" ]
       [ span [ class "teal-text" ] [ text roomInfo.room ] ]
     , div [ class "room-list-status" ]
-      [ span
+      [ p
         [ class "room-list-player-count"]
         [ text <| "Active Players: " ++ (toString roomInfo.playerCount) ]
-      , span
+      , p
         [ class <| "status " ++ (toString roomInfo.status)]
         [text <| "Status: " ++ (statusToString roomInfo.status)]
       ]

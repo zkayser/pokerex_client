@@ -2,8 +2,18 @@
 	padding: 4rem;
 }
 
+@media (max-width: 600px) {
+	.lobby-container {
+		padding: 0;
+	}
+}
+
 .lobby-title {
 	text-align: center;
+}
+
+.rooms-list {
+	width: 100%;
 }
 
 .pagination-list {
@@ -25,28 +35,34 @@
 	font-weight: 400;
 	flex: 1.5;
 	margin: 0.75rem;
+	display: flex;
+	align-items: center;
+	padding-left: 2rem;
+}
+
+@media (max-width: 600px) {
+	.room-list-title {
+		font-size: 1.25rem;
+		font-weight: 600;
+		margin: 0 0.75rem 0 0;
+		padding-left: 0.75rem;
+	}
 }
 
 .room-list-status {
-	display: flex;
-	justify-content: flex-end;
-	align-items: center;
-	flex-wrap: true;
 	font-size: 1.25rem;
 	margin: 0.75rem;
 	flex: 1.5;
 }
 
-.room-list-player-count {
-	flex: 1.75;
-}
-
-.status {
-	flex: 1.25;
-}
-
 .room-list-status:nth-child {
 	padding: 0.75rem;
+}
+
+@media (max-width: 600px) {
+	.room-list-status {
+		font-size: 1rem;
+	}
 }
 
 .room-info-item {

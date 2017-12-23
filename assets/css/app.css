@@ -3,11 +3,12 @@
 	--teal: #009688;
 	--bright-red: rgb(244, 67, 54);
 	--green-accent: #00c853;
+	--mobile: 600px;
 }
 
 body {
 	min-height: 100vh;
-	font-family: Helvetica, Arial, sans-serif; 
+	font-family: Helvetica, Arial, sans-serif;
 }
 
 @media (max-width: 600px) {
