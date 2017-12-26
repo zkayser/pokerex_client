@@ -1,0 +1,24 @@
+.pagination-list {
+	display: flex;
+	justify-content: space-evenly;
+}
+
+.pagination-list > * {
+	padding: 1rem;
+	font-size: 1.5rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.pagination-list-item {
+	color: var(--teal);
+}
+
+.active-page {
+	background-color: var(--light-blue);
+	color: white;
+}
+
+.disabled-page-icon {
+	display: none;
+}

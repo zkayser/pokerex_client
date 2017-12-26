@@ -2,6 +2,7 @@ module Page.Rooms exposing (..)
 
 import Data.Session as Session exposing (Session)
 import Data.AuthToken as AuthToken
+import Widgets.Pagination as Pagination exposing (paginate)
 import Html as Html exposing (..)
 import Html.Attributes exposing (class)
 import Html.Events as Events exposing (onClick)
@@ -59,11 +60,11 @@ view session model =
     [ div [ class "lobby-title" ]
       [ h1 [ class "text-center teal-text" ] [ text "Lobby" ] ]
     , ul [ class "pagination-list" ]
-      (viewPagination model.totalPages)
+      (paginate model { onClickMsg = PaginationItemClicked } )
     , ul [ class "rooms-list collection" ]
       (List.map viewRoom model.rooms)
     , ul [ class "pagination-list" ]
-      (viewPagination model.totalPages)
+      (paginate model { onClickMsg = PaginationItemClicked } )
     ]
 
 viewRoom : RoomInfo -> Html Msg
@@ -80,28 +81,6 @@ viewRoom roomInfo =
         [text <| "Status: " ++ (statusToString roomInfo.status)]
       ]
     ]
-
-viewPagination : Int -> List (Html Msg)
-viewPagination pageCount =
-  List.map (\text -> viewPaginationItem text) (paginationText pageCount)
-
-viewPaginationItem : String -> Html Msg
-viewPaginationItem paginationText =
-  li [ class "pagination-list-item teal-text" ]
-    [ a [ onClick (PaginationItemClicked paginationText) ] (viewItemText paginationText) ]
-
-viewItemText : String -> List (Html Msg)
-viewItemText paginationText =
-  if List.member paginationText ["keyboard_arrow_left", "keyboard_arrow_right"] then
-    [ i [ class "material-icons" ] [ text paginationText ] ]
-  else
-    [ text paginationText ]
-
-paginationText : Int -> List String
-paginationText pageCount =
-  [ "keyboard_arrow_left" ]
-  ++ (List.map (\num -> toString num) (List.range 1 pageCount))
-  ++ [ "keyboard_arrow_right" ]
 
 -- Update
 update : Msg -> Model -> ( ( Model, Cmd Msg), ExternalMsg )
@@ -143,9 +122,16 @@ handleUpdateRooms model payload =
 
 handlePaginationItemClicked : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handlePaginationItemClicked model text =
-  Debug.log "TODO: Implement handlePaginationItemClicked; Now performing a NoOp"
-  ( ( model, Cmd.none), NoOp )
-
+  let
+    pushMessage =
+      case text of
+        "keyboard_arrow_right" ->
+          if onLastPage model then Cmd.none else getPage (toString <| model.page + 1)
+        "keyboard_arrow_left" ->
+          if onFirstPage model then Cmd.none else getPage (toString <| model.page - 1)
+        _ -> getPage text
+  in
+  ( ( model, pushMessage), NoOp )
 
 -- Socket config
 socket : Session -> Socket Msg
@@ -176,6 +162,16 @@ lobbyChannel =
     |> Channel.on "update_player_count" (\payload -> UpdatePlayerCount payload)
     |> Channel.on "rooms" (\payload -> UpdateRooms payload)
     |> Channel.withDebug
+
+-- Push messages
+getPage : String -> Cmd Msg
+getPage page_num =
+  let
+    push =
+      Push.init ("lobby:lobby") "get_page"
+        |> Push.withPayload ( Encode.object [ ( "page_num", (Encode.string page_num) ) ] )
+  in
+  Phoenix.push socketUrl push
 
 -- Decoders
 decoder : Model -> Decoder Model
@@ -216,3 +212,11 @@ statusToString status =
   case status of
     WaitingForPlayers -> "Waiting for Players"
     _ -> toString status
+
+onLastPage : Model -> Bool
+onLastPage model =
+  model.page == model.totalPages
+
+onFirstPage : Model -> Bool
+onFirstPage model =
+  model.page == 1
