@@ -3,6 +3,7 @@ module Page.Rooms exposing (..)
 import Data.Session as Session exposing (Session)
 import Data.AuthToken as AuthToken
 import Widgets.Pagination as Pagination exposing (paginate)
+import Route
 import Html as Html exposing (..)
 import Html.Attributes exposing (class)
 import Html.Events as Events exposing (onClick)
@@ -71,7 +72,9 @@ viewRoom : RoomInfo -> Html Msg
 viewRoom roomInfo =
   li [ class <| "collection-item " ++ (toString roomInfo.status) ++ " room-info-item" ]
     [ div [ class "room-list-title" ]
-      [ span [ class "teal-text" ] [ text roomInfo.room ] ]
+      [ span [ class "teal-text" ]
+        [ a [ Route.href (Route.Room "public" roomInfo.room)] [ text roomInfo.room ] ]
+      ]
     , div [ class "room-list-status" ]
       [ p
         [ class "room-list-player-count"]

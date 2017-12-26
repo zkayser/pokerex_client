@@ -16,19 +16,6 @@
 	width: 100%;
 }
 
-.pagination-list {
-	display: flex;
-	justify-content: space-evenly;
-}
-
-.pagination-list > * {
-	padding-right: 1rem;
-	padding-bottom: 1rem;
-	font-size: 1.5rem;
-	font-weight: 600;
-	cursor: pointer;
-}
-
 .room-list-title {
 	font-size: 2rem;
 	text-transform: capitalize;
