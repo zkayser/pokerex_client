@@ -234,7 +234,12 @@ updatePage page msg model =
           Rooms.update subMsg subModel
       in
       ( { model | pageState = Loaded (Page.Rooms roomsModel) }, Cmd.map RoomsMsg cmd)
-
+    ( ProfileMsg subMsg, Page.Profile subModel) ->
+      let
+        ( ( profileModel, cmd), msgsFromPage ) =
+          Profile.update subMsg subModel
+      in
+      ( { model | pageState = Loaded (Page.Profile profileModel) }, Cmd.map ProfileMsg cmd)
     ( SetPlayer player, _ ) ->
       let
         session =

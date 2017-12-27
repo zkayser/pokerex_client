@@ -1,0 +1,14 @@
+.profile-pane-container {
+	display: flex;
+}
+
+.profile-pane-container > * {
+	flex: 1;
+	border: 1px solid black;
+	min-height: 74.5vh;
+	padding: 1rem;
+}
+
+.profile-greeting {
+	text-align: center;
+}

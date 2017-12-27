@@ -44,7 +44,7 @@ view session model =
   div [ class "auth-page", style [ ( "text-align", "center" ) ]]
     [ div [ class "auth-form card-panel z-depth-4 rounded" ]
       [ Form.viewErrors model.errors
-      , viewForm 
+      , viewForm
       ]
     ]
 
