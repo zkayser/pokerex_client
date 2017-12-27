@@ -128,10 +128,10 @@ handleHeaderClicked model attribute =
     activeAttribute =
       if model.activeAttribute == attribute then Nothing else attribute
     -- The `Chips` field should not be editable unless the player has 100 chips or fewer
-    --newActiveAttribute =
-    --  if activeAttribute == Chips && model.player.chips > 100 then Nothing else activeAttribute
+    newActiveAttribute =
+      if activeAttribute == Chips && model.player.chips > 100 then Nothing else activeAttribute
   in
-  ( ( { model | activeAttribute = activeAttribute }, Cmd.none), NoOp )
+  ( ( { model | activeAttribute = newActiveAttribute }, Cmd.none), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
