@@ -65,38 +65,36 @@ viewProfileForm model =
       [ text "Username: "
       , text model.profile.username
       ]
-    , li [ classList [ ("active", model.activeAttribute == Email) ] ]
-      [ div
-        [ classList
-          [ ("collapsible-header", True)
-          , ("active", model.activeAttribute == Email)
-          ]
-          , onClick (HeaderClicked Email)
-
+    ]
+  , li [ classList [ ("active", model.activeAttribute == Email) ] ]
+    [ div
+      [ classList
+        [ ("collapsible-header", True)
+        , ("active", model.activeAttribute == Email)
         ]
-        [ text <| "Email: " ++ model.profile.email ]
-      , div [ class "collapsible-body", styleBodyFor model Email ]
-        [ form [ onSubmit (UpdateEmail model.profile.email) ]
-          [ div [ class "input-field" ]
-            [ input [ placeholder model.profile.email ] [] ]
-          ]
-        ]
+        , onClick (HeaderClicked Email)
       ]
-    , li [ classList [ ("active", model.activeAttribute == Chips)]]
-      [ div
-        [ classList
-          [ ( "collapsible-header", True)
-          , ( "active", model.activeAttribute == Chips )
-          ]
-        ,  onClick (HeaderClicked Chips)
-
-        ]
-        [ text <| "Chips: " ++ (toString model.profile.chips) ]
-      ]
-    , div [ class "collapsible-body", styleBodyFor model Chips ]
-      [ form [ onSubmit UpdateChips ]
+      [ text <| "Email: " ++ model.profile.email ]
+    , div [ class "collapsible-body", styleBodyFor model Email ]
+      [ form [ onSubmit (UpdateEmail model.profile.email) ]
         [ div [ class "input-field" ]
-          [ input [ placeholder <| toString model.profile.chips ] [] ]
+          [ input [ placeholder model.player.email ] [] ]
+        ]
+      ]
+    ]
+  , li [ classList [ ("active", model.activeAttribute == Chips)]]
+    [ div
+      [ classList
+        [ ( "collapsible-header", True)
+        , ( "active", model.activeAttribute == Chips )
+        ]
+      ,  onClick (HeaderClicked Chips)
+      ]
+      [ text <| "Chips: " ++ (toString model.profile.chips) ]
+    , div [ class "collapsible-body chip-restore", styleBodyFor model Chips ]
+      [ form [ onSubmit UpdateChips ]
+        [ button [ class "btn blue white-text", onClick UpdateChips ]
+          [ text "Restore chip count to 1000" ]
         ]
       ]
     ]
@@ -127,10 +125,13 @@ handleUpdateChips model =
 handleHeaderClicked : Model -> UpdatableAttribute -> ( ( Model, Cmd Msg), ExternalMsg )
 handleHeaderClicked model attribute =
   let
-    newActiveAttribute =
+    activeAttribute =
       if model.activeAttribute == attribute then Nothing else attribute
+    -- The `Chips` field should not be editable unless the player has 100 chips or fewer
+    --newActiveAttribute =
+    --  if activeAttribute == Chips && model.player.chips > 100 then Nothing else activeAttribute
   in
-  ( ( { model | activeAttribute = newActiveAttribute }, Cmd.none), NoOp )
+  ( ( { model | activeAttribute = activeAttribute }, Cmd.none), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
@@ -150,9 +151,6 @@ styleBodyFor : Model -> UpdatableAttribute -> Html.Attribute Msg
 styleBodyFor model attribute =
   let
     displayStyle =
-      case model.activeAttribute of
-        Email -> if attribute == Email then "block" else "none"
-        Chips -> if attribute == Chips then "block" else "none"
-        _ -> "none"
+      if model.activeAttribute == attribute then "block" else "none"
   in
   style [ ("display", displayStyle) ]
