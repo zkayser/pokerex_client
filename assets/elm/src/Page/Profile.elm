@@ -6,7 +6,7 @@ import Data.Profile as Profile exposing (Profile)
 import Data.AuthToken as AuthToken
 import Html as Html exposing (..)
 import Html.Attributes as Attributes exposing (class, placeholder, classList, style)
-import Html.Events exposing (onClick, onSubmit)
+import Html.Events exposing (onClick, onSubmit, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Phoenix.Socket as Socket exposing (Socket)
@@ -25,6 +25,8 @@ type Msg
   = UpdateEmail String
   | UpdateBlurb String
   | UpdateChips
+  | SubmitEmailUpdate
+  | SubmitBlurbUpdate
   | HeaderClicked UpdatableAttribute
   | UpdatePlayer Decode.Value
   | ConnectedToPlayerChannel
@@ -90,6 +92,22 @@ playerChannel player =
     |> Channel.onJoin (\_ -> ConnectedToPlayerChannel)
     |> Channel.on "player" (\payload -> UpdatePlayer payload)
 
+-- PUSH MESSAGES
+updatePlayerPush : Model -> UpdatableAttribute -> String -> Cmd Msg
+updatePlayerPush model attribute value =
+  let
+    stringAttr =
+      case attribute of
+        Email -> "email"
+        Blurb -> "blurb"
+        Chips -> "chips"
+        _ -> "error"
+    push =
+      Push.init ("players:" ++ (Player.usernameToString model.player.username)) "update_player"
+        |> Push.withPayload (Encode.object [ (stringAttr, Encode.string value)])
+  in
+  Phoenix.push socketUrl push
+
 -- VIEW
 view : Session -> Model -> Html Msg
 view session model =
@@ -152,16 +170,16 @@ viewEditFieldFor attribute msg model =
   case attribute of
     Email ->
       div [ class "collapsible-body", styleBodyFor model attribute ]
-        [ form [ onSubmit msg ]
+        [ form [ onSubmit SubmitEmailUpdate ]
           [ div [ class "input-field" ]
-            [ input [ placeholder model.profile.email ] [] ]
+            [ input [ placeholder model.profile.email, onInput UpdateEmail ] [] ]
           ]
         ]
     Blurb ->
       div [ class "collapsible-body", styleBodyFor model attribute ]
-        [ form [ onSubmit msg ]
+        [ form [ onSubmit SubmitBlurbUpdate ]
           [ div [ class "input-field" ]
-            [ input [ placeholder model.profile.blurb ] [] ]
+            [ input [ placeholder model.profile.blurb, onInput UpdateBlurb ] [] ]
           ]
         ]
     Chips ->
@@ -193,6 +211,8 @@ update msg model =
     UpdateBlurb blurb ->        handleUpdateBlurb model blurb
     UpdateChips ->              handleUpdateChips model
     UpdatePlayer payload ->     handleUpdatePlayer model payload
+    SubmitEmailUpdate ->        handleSubmitUpdate model Email
+    SubmitBlurbUpdate ->        handleSubmitUpdate model Blurb
     HeaderClicked attribute ->  handleHeaderClicked model attribute
     ConnectedToPlayerChannel -> ( ( model, Cmd.none ), NoOp )
     SocketOpened ->             ( ( model, Cmd.none ), NoOp )
@@ -241,6 +261,18 @@ handleUpdatePlayer model payload =
       ( ( { model | profile = newProfile }, Cmd.none), NoOp )
     Err error ->
       ( ( model, Cmd.none), NoOp )
+
+handleSubmitUpdate : Model -> UpdatableAttribute -> ( ( Model, Cmd Msg), ExternalMsg )
+handleSubmitUpdate model attribute =
+  let
+    cmd =
+      case attribute of
+        Email -> updatePlayerPush model Email model.profile.email
+        Blurb -> updatePlayerPush model Blurb model.profile.blurb
+        _ -> Cmd.none
+  in
+  ( ( model, cmd ), NoOp )
+
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
