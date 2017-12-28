@@ -21,6 +21,7 @@ type alias Model =
   , activeAttribute : UpdatableAttribute
   , channelSubscriptions : List (Channel Msg)
   , updateMessages : List String
+  , errorMessages : List String
   }
 
 type Msg
@@ -32,7 +33,9 @@ type Msg
   | UpdatePlayer Decode.Value
   | HeaderClicked UpdatableAttribute
   | NewUpdateMessage Decode.Value
+  | NewErrorMessage Decode.Value
   | ClearUpdateMessage Time
+  | ClearErrorMessage Time
   | ConnectedToPlayerChannel
   | SocketOpened
   | SocketClosed
@@ -40,6 +43,10 @@ type Msg
 
 type ExternalMsg
   = NoOp
+
+type MessageType
+  = UpdateMessage String
+  | ErrorMessage String
 
 type UpdatableAttribute
   = Email
@@ -55,6 +62,7 @@ initialModel player =
   , activeAttribute = None
   , channelSubscriptions = [ playerChannel player ]
   , updateMessages = []
+  , errorMessages = []
   }
 
 profileFor : Player -> Profile
@@ -97,6 +105,7 @@ playerChannel player =
     |> Channel.onJoin (\_ -> ConnectedToPlayerChannel)
     |> Channel.on "player" (\payload -> UpdatePlayer payload)
     |> Channel.on "attr_updated" (\message -> NewUpdateMessage message)
+    |> Channel.on "error" (\error -> NewErrorMessage error)
 
 -- PUSH MESSAGES
 updatePlayerPush : Model -> UpdatableAttribute -> String -> Cmd Msg
@@ -111,6 +120,15 @@ updatePlayerPush model attribute value =
     push =
       Push.init ("players:" ++ (Player.usernameToString model.player.username)) "update_player"
         |> Push.withPayload (Encode.object [ (stringAttr, Encode.string value)])
+  in
+  Phoenix.push socketUrl push
+
+getPlayerPush : Model -> Cmd Msg
+getPlayerPush model =
+  let
+    push =
+      Push.init ("players:" ++ (Player.usernameToString model.player.username)) "get_player"
+        |> Push.withPayload (Encode.object [])
   in
   Phoenix.push socketUrl push
 
@@ -212,15 +230,34 @@ addEditIcon attribute model =
 
 viewUpdateMessages : Model -> Html Msg
 viewUpdateMessages model =
-  case model.updateMessages of
+  let
+    errorMessages =
+      case model.errorMessages of
+        [] -> []
+        _ -> List.map (\msg -> (ErrorMessage msg)) model.errorMessages
+    updateMessages =
+      case model.updateMessages of
+        [] -> []
+        _ -> List.map (\msg -> (UpdateMessage msg)) model.updateMessages
+    messagesToView =
+      errorMessages ++ updateMessages
+  in
+  case messagesToView of
     [] -> text ""
-    messages ->
-      div [ class "room-message-container" ]
-        (List.map viewMessage messages)
+    _ -> div [ class "room-message-container" ]
+          <| List.map viewMessage messagesToView
 
-viewMessage : String -> Html Msg
+-- TODO: Change `room-message` class to be `success-message`
+-- and move viewMessages/viewMessage functions into a common module that
+-- can be shared across modules. This same functionality is being used in
+-- the Room module (in `ViewHelpers.elm`).
+viewMessage : MessageType -> Html Msg
 viewMessage message =
-  div [ class "message room-message"] [ text message ]
+  case message of
+    UpdateMessage updateMessage ->
+      div [ class "message room-message" ] [ text updateMessage ]
+    ErrorMessage errorMessage ->
+      div [ class "message error-message" ] [ text errorMessage ]
 
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
@@ -234,7 +271,9 @@ update msg model =
     SubmitBlurbUpdate ->        handleSubmitUpdate model Blurb
     HeaderClicked attribute ->  handleHeaderClicked model attribute
     NewUpdateMessage message -> handleNewUpdateMessage model message
-    ClearUpdateMessage _ ->       handleClearUpdateMessage model
+    NewErrorMessage message ->  handleNewErrorMessage model message
+    ClearUpdateMessage _ ->     handleClearUpdateMessage model
+    ClearErrorMessage _ ->      handleClearErrorMessage model
     ConnectedToPlayerChannel -> ( ( model, Cmd.none ), NoOp )
     SocketOpened ->             ( ( model, Cmd.none ), NoOp )
     SocketClosed ->             ( ( model, Cmd.none ), NoOp )
@@ -303,11 +342,26 @@ handleNewUpdateMessage model payload =
         , Cmd.none), NoOp )
     Err error -> ( ( model, Cmd.none), NoOp)
 
+handleNewErrorMessage : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleNewErrorMessage model payload =
+  case Decode.decodeValue (Decode.at ["error"] Decode.string) payload of
+    Ok message ->
+      -- The `getPlayerPush` command is used to reset the player to its correct current state
+      -- on the server.
+      ( ( { model | errorMessages = model.errorMessages ++ [message]}, getPlayerPush model), NoOp )
+    Err error -> ( ( model, Cmd.none), NoOp)
+
 handleClearUpdateMessage : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleClearUpdateMessage model =
   case List.tail model.updateMessages of
     Just newList -> ( ( { model | updateMessages = newList}, Cmd.none), NoOp )
     Nothing -> ( ( { model | updateMessages = []}, Cmd.none), NoOp )
+
+handleClearErrorMessage : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleClearErrorMessage model =
+  case List.tail model.errorMessages of
+    Just newList -> ( ( { model | errorMessages = newList}, Cmd.none), NoOp )
+    Nothing -> ( ( { model | errorMessages = []}, Cmd.none), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
@@ -319,8 +373,12 @@ subscriptions model session =
       case model.updateMessages of
         [] -> Sub.none
         _ -> Time.every 3000 ClearUpdateMessage
+    clearErrors =
+      case model.errorMessages of
+        [] -> Sub.none
+        _ -> Time.every 3000 ClearErrorMessage
   in
-  Sub.batch (phoenixSubscriptions ++ [clearMessages])
+  Sub.batch (phoenixSubscriptions ++ [clearMessages, clearErrors])
 
 -- Helpers
 playerGreeting : Player -> String
