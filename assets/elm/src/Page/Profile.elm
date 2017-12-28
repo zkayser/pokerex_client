@@ -23,6 +23,7 @@ type alias Model =
 
 type Msg
   = UpdateEmail String
+  | UpdateBlurb String
   | UpdateChips
   | HeaderClicked UpdatableAttribute
   | UpdatePlayer Decode.Value
@@ -37,6 +38,7 @@ type ExternalMsg
 type UpdatableAttribute
   = Email
   | Chips
+  | Blurb
   | None
 
 -- INITIALIZATION
@@ -110,6 +112,10 @@ viewProfileForm model =
     [ viewEditHeaderFor Email model
     , viewEditFieldFor Email (UpdateEmail model.profile.email) model
     ]
+  , li [ classList [ ("active", model.activeAttribute == Blurb ) ] ]
+    [ viewEditHeaderFor Blurb model
+    , viewEditFieldFor Blurb (UpdateBlurb model.profile.blurb) model
+    ]
   , li [ classList [ ("active", model.activeAttribute == Chips)]]
     [ viewEditHeaderFor Chips model
     , viewEditFieldFor Chips UpdateChips model
@@ -131,6 +137,7 @@ viewEditHeaderFor attribute model =
     headerText =
       case attribute of
         Email -> "Email: " ++ model.profile.email
+        Blurb -> "Blurb: " ++ model.profile.blurb
         Chips -> "Chips: " ++ (toString model.profile.chips)
         _ -> ""
   in
@@ -147,7 +154,14 @@ viewEditFieldFor attribute msg model =
       div [ class "collapsible-body", styleBodyFor model attribute ]
         [ form [ onSubmit msg ]
           [ div [ class "input-field" ]
-            [ input [ placeholder model.player.email ] [] ]
+            [ input [ placeholder model.profile.email ] [] ]
+          ]
+        ]
+    Blurb ->
+      div [ class "collapsible-body", styleBodyFor model attribute ]
+        [ form [ onSubmit msg ]
+          [ div [ class "input-field" ]
+            [ input [ placeholder model.profile.blurb ] [] ]
           ]
         ]
     Chips ->
@@ -167,19 +181,20 @@ addEditIcon attribute model =
   in
   case attribute of
     Email -> editHtml
+    Blurb -> editHtml
     Chips -> if model.player.chips <= 100 then editHtml else (text "")
     _ -> text ""
-
 
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
     UpdateEmail email ->        handleUpdateEmail model email
+    UpdateBlurb blurb ->        handleUpdateBlurb model blurb
     UpdateChips ->              handleUpdateChips model
     UpdatePlayer payload ->     handleUpdatePlayer model payload
-    ConnectedToPlayerChannel -> handleConnectedToPlayerChannel model
     HeaderClicked attribute ->  handleHeaderClicked model attribute
+    ConnectedToPlayerChannel -> ( ( model, Cmd.none ), NoOp )
     SocketOpened ->             ( ( model, Cmd.none ), NoOp )
     SocketClosed ->             ( ( model, Cmd.none ), NoOp )
     SocketClosedAbnormally ->   ( ( model, Cmd.none ), NoOp )
@@ -192,7 +207,17 @@ handleUpdateEmail model email =
     newProfile =
       { profile | email = email }
   in
-  ( ( { model | profile = profile }, Cmd.none), NoOp )
+  ( ( { model | profile = newProfile }, Cmd.none), NoOp )
+
+handleUpdateBlurb : Model -> String -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleUpdateBlurb model blurb =
+  let
+    profile =
+      model.profile
+    newProfile =
+      { profile | blurb = blurb }
+  in
+  ( ( { model | profile = newProfile }, Cmd.none ), NoOp )
 
 handleUpdateChips : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleUpdateChips model =
@@ -215,13 +240,7 @@ handleUpdatePlayer model payload =
     Ok newProfile ->
       ( ( { model | profile = newProfile }, Cmd.none), NoOp )
     Err error ->
-      Debug.log ("Update player failed with: " ++ (toString error))
       ( ( model, Cmd.none), NoOp )
-
-handleConnectedToPlayerChannel : Model -> ( ( Model, Cmd Msg), ExternalMsg )
-handleConnectedToPlayerChannel model =
-  Debug.log "TODO: Implement handleConnectedToPlayerChannel; Currently falling back to NoOp"
-  ( ( model, Cmd.none), NoOp)
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg

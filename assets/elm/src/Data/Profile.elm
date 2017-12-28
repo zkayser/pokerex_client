@@ -43,4 +43,4 @@ decoder =
     |> required "email" Decode.string
     |> required "chips" Decode.int
     |> required "blurb" Decode.string
-    |> hardcoded True
+    |> hardcoded False
