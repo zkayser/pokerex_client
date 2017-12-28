@@ -85,8 +85,8 @@ viewEditHeaderFor attribute model =
   let
     headerText =
       case attribute of
-        Email -> model.profile.email
-        Chips -> toString model.profile.chips
+        Email -> "Email: " ++ model.profile.email
+        Chips -> "Chips: " ++ (toString model.profile.chips)
         _ -> ""
   in
   div
