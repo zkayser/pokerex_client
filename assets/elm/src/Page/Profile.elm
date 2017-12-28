@@ -60,45 +60,71 @@ view session model =
 
 viewProfileForm : Model -> List (Html Msg)
 viewProfileForm model =
-  [ li [ ]
+  [ (viewUsernameEditField model)
+  , li [ classList [ ("active", model.activeAttribute == Email) ] ]
+    [ viewEditHeaderFor Email model
+    , viewEditFieldFor Email (UpdateEmail model.profile.email) model
+    ]
+  , li [ classList [ ("active", model.activeAttribute == Chips)]]
+    [ viewEditHeaderFor Chips model
+    , viewEditFieldFor Chips UpdateChips model
+    ]
+  ]
+
+viewUsernameEditField : Model -> Html Msg
+viewUsernameEditField model =
+  li [ ]
     [ div [ class "collapsible-header" ]
       [ text "Username: "
       , text model.profile.username
       ]
     ]
-  , li [ classList [ ("active", model.activeAttribute == Email) ] ]
-    [ div
-      [ classList
-        [ ("collapsible-header", True)
-        , ("active", model.activeAttribute == Email)
-        ]
-        , onClick (HeaderClicked Email)
-      ]
-      [ text <| "Email: " ++ model.profile.email ]
-    , div [ class "collapsible-body", styleBodyFor model Email ]
-      [ form [ onSubmit (UpdateEmail model.profile.email) ]
-        [ div [ class "input-field" ]
-          [ input [ placeholder model.player.email ] [] ]
-        ]
-      ]
+
+viewEditHeaderFor : UpdatableAttribute -> Model -> Html Msg
+viewEditHeaderFor attribute model =
+  let
+    headerText =
+      case attribute of
+        Email -> model.profile.email
+        Chips -> toString model.profile.chips
+        _ -> ""
+  in
+  div
+    [ classList [ ("collapsible-header", True), ("active", model.activeAttribute == attribute )]
+    , onClick (HeaderClicked attribute)
     ]
-  , li [ classList [ ("active", model.activeAttribute == Chips)]]
-    [ div
-      [ classList
-        [ ( "collapsible-header", True)
-        , ( "active", model.activeAttribute == Chips )
+    [ (addEditIcon attribute model), text headerText ]
+
+viewEditFieldFor : UpdatableAttribute -> Msg -> Model -> Html Msg
+viewEditFieldFor attribute msg model =
+  case attribute of
+    Email ->
+      div [ class "collapsible-body", styleBodyFor model attribute ]
+        [ form [ onSubmit msg ]
+          [ div [ class "input-field" ]
+            [ input [ placeholder model.player.email ] [] ]
+          ]
         ]
-      ,  onClick (HeaderClicked Chips)
-      ]
-      [ text <| "Chips: " ++ (toString model.profile.chips) ]
-    , div [ class "collapsible-body chip-restore", styleBodyFor model Chips ]
-      [ form [ onSubmit UpdateChips ]
-        [ button [ class "btn blue white-text", onClick UpdateChips ]
+    Chips ->
+      div [ class "collapsible-body chip-restore", styleBodyFor model attribute ]
+      [ form [ onSubmit msg ]
+        [ button [ class "btn blue white-text", onClick msg ]
           [ text "Restore chip count to 1000" ]
         ]
       ]
-    ]
-  ]
+    _ -> text ""
+
+addEditIcon : UpdatableAttribute -> Model -> Html Msg
+addEditIcon attribute model =
+  let
+    editHtml =
+      i [ class "material-icons medium teal-text" ] [ text "edit" ]
+  in
+  case attribute of
+    Email -> editHtml
+    Chips -> if model.player.chips <= 100 then editHtml else (text "")
+    _ -> text ""
+
 
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
