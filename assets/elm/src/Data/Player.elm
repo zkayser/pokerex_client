@@ -1,6 +1,7 @@
 module Data.Player exposing (..)
 
 import Data.AuthToken as AuthToken exposing (AuthToken)
+import Data.Profile as Profile exposing (Profile)
 import Html exposing (Html)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
@@ -14,7 +15,7 @@ type alias Player =
   , username : Username
   , chips : Int
   }
-  
+
 type alias TablePlayer =
   { name : Username
   , chips : Int
@@ -37,7 +38,7 @@ encode player =
     , ("username", encodeUsername player.username)
     , ("chips", Encode.int player.chips)
     ]
-    
+
 tablePlayerDecoder : Decoder TablePlayer
 tablePlayerDecoder =
   decode TablePlayer
@@ -64,7 +65,7 @@ encodeUsername (Username username) =
 usernameToHtml : Username -> Html msg
 usernameToHtml (Username username) =
   Html.text username
-  
+
 equals : Username -> Username -> Bool
 equals usernameOne usernameTwo =
   usernameOne == usernameTwo

@@ -3,20 +3,33 @@ module Page.Profile exposing (..)
 import Data.Player as Player exposing (Player)
 import Data.Session as Session exposing (Session)
 import Data.Profile as Profile exposing (Profile)
+import Data.AuthToken as AuthToken
 import Html as Html exposing (..)
 import Html.Attributes as Attributes exposing (class, placeholder, classList, style)
 import Html.Events exposing (onClick, onSubmit)
+import Json.Decode as Decode
+import Json.Encode as Encode
+import Phoenix.Socket as Socket exposing (Socket)
+import Phoenix.Channel as Channel exposing (Channel)
+import Phoenix.Push as Push exposing (Push)
+import Phoenix
 
 type alias Model =
   { player : Player
   , profile : Profile
   , activeAttribute : UpdatableAttribute
+  , channelSubscriptions : List (Channel Msg)
   }
 
 type Msg
   = UpdateEmail String
   | UpdateChips
   | HeaderClicked UpdatableAttribute
+  | UpdatePlayer Decode.Value
+  | ConnectedToPlayerChannel
+  | SocketOpened
+  | SocketClosed
+  | SocketClosedAbnormally
 
 type ExternalMsg
   = NoOp
@@ -24,24 +37,56 @@ type ExternalMsg
 type UpdatableAttribute
   = Email
   | Chips
-  | Nothing
+  | None
 
 -- INITIALIZATION
 initialModel : Player -> Model
 initialModel player =
   { player = player
   , profile = profileFor player
-  , activeAttribute = Nothing
+  , activeAttribute = None
+  , channelSubscriptions = [ playerChannel player ]
   }
 
 profileFor : Player -> Profile
 profileFor player =
   { errors = []
   , username = Player.usernameToString player.username
+  , blurb = ""
+  , id = 0
   , email = player.email
   , chips = player.chips
   , isNewProfile = False
   }
+
+-- SOCKET CONFIG
+socketUrl : String
+socketUrl =
+  "ws://localhost:8080/socket/websocket"
+
+socket : Session -> Socket Msg
+socket session =
+  let
+    params =
+      case session.player of
+        Just player ->
+          let
+            token = AuthToken.authTokenToString player.token
+          in
+          [ ( "guardian_token", token )]
+        Nothing -> []
+  in
+  Socket.init socketUrl
+    |> Socket.withParams params
+    |> Socket.onOpen (SocketOpened)
+    |> Socket.onClose (\_ -> SocketClosed)
+    |> Socket.onAbnormalClose (\_ -> SocketClosedAbnormally)
+
+playerChannel : Player -> Channel Msg
+playerChannel player =
+  Channel.init ("players:" ++ (Player.usernameToString player.username))
+    |> Channel.onJoin (\_ -> ConnectedToPlayerChannel)
+    |> Channel.on "player" (\payload -> UpdatePlayer payload)
 
 -- VIEW
 view : Session -> Model -> Html Msg
@@ -132,7 +177,12 @@ update msg model =
   case msg of
     UpdateEmail email ->        handleUpdateEmail model email
     UpdateChips ->              handleUpdateChips model
+    UpdatePlayer payload ->     handleUpdatePlayer model payload
+    ConnectedToPlayerChannel -> handleConnectedToPlayerChannel model
     HeaderClicked attribute ->  handleHeaderClicked model attribute
+    SocketOpened ->             ( ( model, Cmd.none ), NoOp )
+    SocketClosed ->             ( ( model, Cmd.none ), NoOp )
+    SocketClosedAbnormally ->   ( ( model, Cmd.none ), NoOp )
 
 handleUpdateEmail : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleUpdateEmail model email =
@@ -152,17 +202,35 @@ handleHeaderClicked : Model -> UpdatableAttribute -> ( ( Model, Cmd Msg), Extern
 handleHeaderClicked model attribute =
   let
     activeAttribute =
-      if model.activeAttribute == attribute then Nothing else attribute
+      if model.activeAttribute == attribute then None else attribute
     -- The `Chips` field should not be editable unless the player has 100 chips or fewer
     newActiveAttribute =
-      if activeAttribute == Chips && model.player.chips > 100 then Nothing else activeAttribute
+      if activeAttribute == Chips && model.player.chips > 100 then None else activeAttribute
   in
   ( ( { model | activeAttribute = newActiveAttribute }, Cmd.none), NoOp )
+
+handleUpdatePlayer : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleUpdatePlayer model payload =
+  case Decode.decodeValue Profile.decoder payload of
+    Ok newProfile ->
+      ( ( { model | profile = newProfile }, Cmd.none), NoOp )
+    Err error ->
+      Debug.log ("Update player failed with: " ++ (toString error))
+      ( ( model, Cmd.none), NoOp )
+
+handleConnectedToPlayerChannel : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleConnectedToPlayerChannel model =
+  Debug.log "TODO: Implement handleConnectedToPlayerChannel; Currently falling back to NoOp"
+  ( ( model, Cmd.none), NoOp)
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
-  Sub.none
+  let
+    phoenixSubscriptions =
+      [ Phoenix.connect (socket session) model.channelSubscriptions]
+  in
+  Sub.batch phoenixSubscriptions
 
 -- Helpers
 playerGreeting : Player -> String
