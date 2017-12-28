@@ -9,6 +9,7 @@ import Html.Attributes as Attributes exposing (class, placeholder, classList, st
 import Html.Events exposing (onClick, onSubmit, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Time exposing (Time)
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
 import Phoenix.Push as Push exposing (Push)
@@ -19,6 +20,7 @@ type alias Model =
   , profile : Profile
   , activeAttribute : UpdatableAttribute
   , channelSubscriptions : List (Channel Msg)
+  , updateMessages : List String
   }
 
 type Msg
@@ -27,8 +29,10 @@ type Msg
   | UpdateChips
   | SubmitEmailUpdate
   | SubmitBlurbUpdate
-  | HeaderClicked UpdatableAttribute
   | UpdatePlayer Decode.Value
+  | HeaderClicked UpdatableAttribute
+  | NewUpdateMessage Decode.Value
+  | ClearUpdateMessage Time
   | ConnectedToPlayerChannel
   | SocketOpened
   | SocketClosed
@@ -50,6 +54,7 @@ initialModel player =
   , profile = profileFor player
   , activeAttribute = None
   , channelSubscriptions = [ playerChannel player ]
+  , updateMessages = []
   }
 
 profileFor : Player -> Profile
@@ -91,6 +96,7 @@ playerChannel player =
   Channel.init ("players:" ++ (Player.usernameToString player.username))
     |> Channel.onJoin (\_ -> ConnectedToPlayerChannel)
     |> Channel.on "player" (\payload -> UpdatePlayer payload)
+    |> Channel.on "attr_updated" (\message -> NewUpdateMessage message)
 
 -- PUSH MESSAGES
 updatePlayerPush : Model -> UpdatableAttribute -> String -> Cmd Msg
@@ -112,7 +118,8 @@ updatePlayerPush model attribute value =
 view : Session -> Model -> Html Msg
 view session model =
   div [ class "profile-container"]
-    [ h1 [ class "teal-text profile-greeting" ]
+    [ (viewUpdateMessages model)
+    , h1 [ class "teal-text profile-greeting" ]
       [ text <| (playerGreeting model.player) ]
     , div [ class "profile-pane-container"]
       [ div [ class "profile-pane" ]
@@ -203,6 +210,18 @@ addEditIcon attribute model =
     Chips -> if model.player.chips <= 100 then editHtml else (text "")
     _ -> text ""
 
+viewUpdateMessages : Model -> Html Msg
+viewUpdateMessages model =
+  case model.updateMessages of
+    [] -> text ""
+    messages ->
+      div [ class "room-message-container" ]
+        (List.map viewMessage messages)
+
+viewMessage : String -> Html Msg
+viewMessage message =
+  div [ class "message room-message"] [ text message ]
+
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
@@ -214,6 +233,8 @@ update msg model =
     SubmitEmailUpdate ->        handleSubmitUpdate model Email
     SubmitBlurbUpdate ->        handleSubmitUpdate model Blurb
     HeaderClicked attribute ->  handleHeaderClicked model attribute
+    NewUpdateMessage message -> handleNewUpdateMessage model message
+    ClearUpdateMessage _ ->       handleClearUpdateMessage model
     ConnectedToPlayerChannel -> ( ( model, Cmd.none ), NoOp )
     SocketOpened ->             ( ( model, Cmd.none ), NoOp )
     SocketClosed ->             ( ( model, Cmd.none ), NoOp )
@@ -273,6 +294,17 @@ handleSubmitUpdate model attribute =
   in
   ( ( model, cmd ), NoOp )
 
+handleNewUpdateMessage : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleNewUpdateMessage model payload =
+  case Decode.decodeValue (Decode.at ["message"] Decode.string) payload of
+    Ok message -> ( ( { model | updateMessages = model.updateMessages ++ [message]}, Cmd.none), NoOp )
+    Err error -> ( ( model, Cmd.none), NoOp)
+
+handleClearUpdateMessage : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleClearUpdateMessage model =
+  case List.tail model.updateMessages of
+    Just newList -> ( ( { model | updateMessages = newList}, Cmd.none), NoOp )
+    Nothing -> ( ( { model | updateMessages = []}, Cmd.none), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
@@ -280,8 +312,12 @@ subscriptions model session =
   let
     phoenixSubscriptions =
       [ Phoenix.connect (socket session) model.channelSubscriptions]
+    clearMessages =
+      case model.updateMessages of
+        [] -> Sub.none
+        _ -> Time.every 3000 ClearUpdateMessage
   in
-  Sub.batch phoenixSubscriptions
+  Sub.batch (phoenixSubscriptions ++ [clearMessages])
 
 -- Helpers
 playerGreeting : Player -> String

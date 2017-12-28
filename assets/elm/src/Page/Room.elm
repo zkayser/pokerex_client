@@ -19,11 +19,11 @@ import Views.Actions as Actions
 import Phoenix
 
 -- Types
-type alias Msg = RoomMsg 
+type alias Msg = RoomMsg
 type alias ExternalMsg = RoomExternalMsg
 type alias Model = RoomPage
 type alias MessageType = RoomMessageType
-      
+
 -- INITIALIZATION --
 initialModel : Player -> String -> String -> RoomPage
 initialModel player roomTitle roomType =
@@ -55,8 +55,8 @@ view session model =
       case model.modalRendered of
         BottomModalOpen _ -> text ""
         _ -> PlayerToolbar.viewMobile (toolbarConfig model)
-  in   
-  div [ class "room-container" ] 
+  in
+  div [ class "room-container" ]
     [ div [ class "table-container" ]
       ((viewTableCenter model.roomModel) :: (viewTableCards model.roomModel) :: viewPlayers session model)
     , PlayerToolbar.view (toolbarConfig model)
@@ -65,7 +65,7 @@ view session model =
     , maybeViewModal model
     , viewMessages model
     ]
-  
+
 -- UPDATE --
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
@@ -109,8 +109,8 @@ update msg model =
     CloseWinningHandModal ->      clearWinningHandModal model
     CloseModal ->                 ( ( { model | modalRendered = Closed }, Cmd.none), NoOp )
     LeaveRoom player ->           handleLeaveRoom player model
-  
--- SUBSCRIPTIONS --    
+
+-- SUBSCRIPTIONS --
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
   let
