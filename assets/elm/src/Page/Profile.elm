@@ -297,7 +297,10 @@ handleSubmitUpdate model attribute =
 handleNewUpdateMessage : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleNewUpdateMessage model payload =
   case Decode.decodeValue (Decode.at ["message"] Decode.string) payload of
-    Ok message -> ( ( { model | updateMessages = model.updateMessages ++ [message]}, Cmd.none), NoOp )
+    Ok message ->
+      ( ( { model | updateMessages = model.updateMessages ++ [message]
+                  , activeAttribute = None }
+        , Cmd.none), NoOp )
     Err error -> ( ( model, Cmd.none), NoOp)
 
 handleClearUpdateMessage : Model -> ( ( Model, Cmd Msg), ExternalMsg )
