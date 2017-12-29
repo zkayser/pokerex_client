@@ -35,7 +35,7 @@ viewNavBarLinks msg session page =
 
 navBarLink : Bool -> Route -> List (Html msg) -> Html msg
 navBarLink isActive route linkContent =
-  li [ classList [ ("active", isActive) ] ]
+  li [ classList [ ("active-link", isActive) ] ]
     [ a [ Route.href route ] linkContent ]
 
 activePageFrom : Page -> ActivePage
