@@ -6,7 +6,7 @@ import Data.Profile as Profile exposing (Profile)
 import Data.AuthToken as AuthToken
 import Ports exposing (triggerFBInviteRequest)
 import Html as Html exposing (..)
-import Html.Attributes as Attributes exposing (class, placeholder, classList, style)
+import Html.Attributes as Attributes exposing (class, placeholder, classList, style, href)
 import Html.Events exposing (onClick, onSubmit, onInput)
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -150,7 +150,8 @@ view session model =
             [ text "Invite your Facebook friends to PokerEx"]
           ]
         ]
-      , div [ class "profile-pane" ] []
+      , div [ class "profile-pane" ]
+        (viewTabs model)
       ]
     ]
 
@@ -264,6 +265,22 @@ viewMessage message =
       div [ class "message room-message" ] [ text updateMessage ]
     ErrorMessage errorMessage ->
       div [ class "message error-message" ] [ text errorMessage ]
+
+viewTabs : Model -> List (Html Msg)
+viewTabs model =
+  [ div [ class "row" ]
+    [ div [ class "col s12 tab-holder" ]
+      [ ul [ class "tabs" ]
+        [ li [ class "tab col s6" ]
+          [ a [ class "active"] [text "Current Games" ] ]
+        , li [ class "tab col s6" ]
+          [ a [ class "" ] [text "Start Private Game" ] ]
+        ]
+      ]
+    , div [ class "current-games" ] [ text "Current games go here"]
+    , div [ class "create-game-container"] [ text "Create game container goes here"]
+    ]
+  ]
 
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
