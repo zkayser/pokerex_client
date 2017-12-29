@@ -60,12 +60,10 @@ view session model =
   div [ class "lobby-container" ]
     [ div [ class "lobby-title" ]
       [ h1 [ class "text-center teal-text" ] [ text "Lobby" ] ]
-    , ul [ class "pagination-list" ]
-      (paginate model { onClickMsg = PaginationItemClicked } )
+    , (paginate model { onClickMsg = PaginationItemClicked } )
     , ul [ class "rooms-list collection" ]
       (List.map viewRoom model.rooms)
-    , ul [ class "pagination-list" ]
-      (paginate model { onClickMsg = PaginationItemClicked } )
+    , (paginate model { onClickMsg = PaginationItemClicked } )
     ]
 
 viewRoom : RoomInfo -> Html Msg

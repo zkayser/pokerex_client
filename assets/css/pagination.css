@@ -10,6 +10,10 @@
 	cursor: pointer;
 }
 
+.pagination li {
+	height: inherit;
+}
+
 .pagination-list-item {
 	color: var(--teal);
 }
@@ -19,6 +23,6 @@
 	color: white;
 }
 
-.disabled-page-icon {
+li.disabled-page-icon {
 	display: none;
 }

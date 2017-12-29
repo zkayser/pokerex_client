@@ -13,16 +13,17 @@ type alias Model r =
 type alias Config msg =
   { onClickMsg : String -> msg }
 
-paginate : Model r -> Config msg -> List (Html msg)
+paginate : Model r -> Config msg -> Html msg
 paginate model config =
-  List.map (\text -> viewPaginationItem model config text) (paginationText model.page model.totalPages)
+  ul [ class "pagination pagination-list"]
+    (List.map (\text -> viewPaginationItem model config text) (paginationText model.page model.totalPages))
 
 viewPaginationItem : Model r -> Config msg -> String -> Html msg
 viewPaginationItem model config paginationText =
   let
     active =
       case String.toInt paginationText of
-        Ok num -> if model.page == num then "active-page" else ""
+        Ok num -> if model.page == num then "active" else ""
         Err _ -> ""
     disabledStart =
       if model.page == 1 && paginationText == "keyboard_arrow_left" then "disabled-page-icon" else ""
@@ -34,13 +35,8 @@ viewPaginationItem model config paginationText =
     extraClasses =
       String.join " " [active, disabledStart, disabledEnd]
   in
-  li [ class (String.trim <| "pagination-list-item " ++ extraClasses) ]
-    [ a
-      [ class (String.trim <| "pagination-text " ++ extraClasses),
-         onClick (config.onClickMsg paginationText)
-      ]
-      (viewItemText paginationText)
-    ]
+  li [ class (String.trim extraClasses) ]
+    [ a [ onClick (config.onClickMsg paginationText) ] (viewItemText paginationText) ]
 
 viewItemText : String -> List (Html msg)
 viewItemText paginationText =
