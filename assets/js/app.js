@@ -33,6 +33,17 @@ elmApp.ports.logout.subscribe(() => {
 	localStorage.removeItem('session');
 });
 
+elmApp.ports.triggerFBInviteRequest.subscribe(() => {
+  console.log("Triggering Facebook invite request...");
+  if (window.FB) {
+    FB.ui({method: 'apprequests',
+      message: 'Join me for a game of Poker on PokerEX!'
+    }, (response) => {
+      console.log('Got response back from FB invite request: ', JSON.stringify(response));
+    });
+  }
+})
+
 window.addEventListener("storage", (event) => {
   if (event.storageArea === localStorage && event.key === "session") {
   	console.log("onSessionChange received with event: ", event.newValue);

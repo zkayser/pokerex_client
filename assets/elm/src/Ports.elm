@@ -6,6 +6,8 @@ port storeSession : Maybe String -> Cmd msg
 
 port logout : () -> Cmd msg
 
+port triggerFBInviteRequest : () -> Cmd msg
+
 port scrollChatToTop : () -> Cmd msg
 
 port onSessionChange : (Value -> msg) -> Sub msg

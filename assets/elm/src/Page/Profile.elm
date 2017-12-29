@@ -4,6 +4,7 @@ import Data.Player as Player exposing (Player)
 import Data.Session as Session exposing (Session)
 import Data.Profile as Profile exposing (Profile)
 import Data.AuthToken as AuthToken
+import Ports exposing (triggerFBInviteRequest)
 import Html as Html exposing (..)
 import Html.Attributes as Attributes exposing (class, placeholder, classList, style)
 import Html.Events exposing (onClick, onSubmit, onInput)
@@ -34,6 +35,7 @@ type Msg
   | HeaderClicked UpdatableAttribute
   | NewUpdateMessage Decode.Value
   | NewErrorMessage Decode.Value
+  | FBInviteBtnClicked
   | ClearUpdateMessage Time
   | ClearErrorMessage Time
   | ConnectedToPlayerChannel
@@ -141,9 +143,13 @@ view session model =
       [ text <| (playerGreeting model.player) ]
     , div [ class "profile-pane-container"]
       [ div [ class "profile-pane" ]
-       [ ul [ class "collapsible popout"]
-        (viewProfileForm model)
-       ]
+        [ ul [ class "collapsible popout"]
+          (viewProfileForm model)
+        , div [ class "fb-invite-container" ]
+          [ button [ onClick FBInviteBtnClicked, class "btn blue white-text" ]
+            [ text "Invite your Facebook friends to PokerEx"]
+          ]
+        ]
       , div [ class "profile-pane" ] []
       ]
     ]
@@ -272,6 +278,7 @@ update msg model =
     HeaderClicked attribute ->  handleHeaderClicked model attribute
     NewUpdateMessage message -> handleNewUpdateMessage model message
     NewErrorMessage message ->  handleNewErrorMessage model message
+    FBInviteBtnClicked ->       handleFBInviteBtnClicked model
     ClearUpdateMessage _ ->     handleClearUpdateMessage model
     ClearErrorMessage _ ->      handleClearErrorMessage model
     ConnectedToPlayerChannel -> ( ( model, Cmd.none ), NoOp )
@@ -362,6 +369,10 @@ handleClearErrorMessage model =
   case List.tail model.errorMessages of
     Just newList -> ( ( { model | errorMessages = newList}, Cmd.none), NoOp )
     Nothing -> ( ( { model | errorMessages = []}, Cmd.none), NoOp )
+
+handleFBInviteBtnClicked : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleFBInviteBtnClicked model =
+  ( ( model, triggerFBInviteRequest ()), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
