@@ -33,6 +33,7 @@ type Msg
   | SubmitEmailUpdate
   | SubmitBlurbUpdate
   | UpdatePlayer Decode.Value
+  | UpdateCurrentRooms Decode.Value
   | HeaderClicked UpdatableAttribute
   | NewUpdateMessage Decode.Value
   | NewErrorMessage Decode.Value
@@ -68,7 +69,7 @@ initialModel player =
   { player = player
   , profile = profileFor player
   , activeAttribute = None
-  , channelSubscriptions = [ playerChannel player ]
+  , channelSubscriptions = [ playerChannel player, privateRoomsChannel player ]
   , updateMessages = []
   , errorMessages = []
   , currentTab = CurrentGames
@@ -114,6 +115,12 @@ playerChannel player =
     |> Channel.onJoin (\_ -> ConnectedToPlayerChannel)
     |> Channel.on "player" (\payload -> UpdatePlayer payload)
     |> Channel.on "attr_updated" (\message -> NewUpdateMessage message)
+    |> Channel.on "error" (\error -> NewErrorMessage error)
+
+privateRoomsChannel : Player -> Channel Msg
+privateRoomsChannel player =
+  Channel.init ("private_rooms:" ++ (Player.usernameToString player.username))
+    |> Channel.on "current_rooms" (\payload -> UpdateCurrentRooms payload)
     |> Channel.on "error" (\error -> NewErrorMessage error)
 
 -- PUSH MESSAGES
@@ -322,23 +329,24 @@ viewStartPrivateGameTab model =
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
-    UpdateEmail email ->        handleUpdateEmail model email
-    UpdateBlurb blurb ->        handleUpdateBlurb model blurb
-    UpdateChips ->              handleUpdateChips model
-    UpdatePlayer payload ->     handleUpdatePlayer model payload
-    SubmitEmailUpdate ->        handleSubmitUpdate model Email
-    SubmitBlurbUpdate ->        handleSubmitUpdate model Blurb
-    HeaderClicked attribute ->  handleHeaderClicked model attribute
-    NewUpdateMessage message -> handleNewUpdateMessage model message
-    NewErrorMessage message ->  handleNewErrorMessage model message
-    FBInviteBtnClicked ->       handleFBInviteBtnClicked model
-    TabClicked tab ->           handleTabClicked model tab
-    ClearUpdateMessage _ ->     handleClearUpdateMessage model
-    ClearErrorMessage _ ->      handleClearErrorMessage model
-    ConnectedToPlayerChannel -> ( ( model, Cmd.none ), NoOp )
-    SocketOpened ->             ( ( model, Cmd.none ), NoOp )
-    SocketClosed ->             ( ( model, Cmd.none ), NoOp )
-    SocketClosedAbnormally ->   ( ( model, Cmd.none ), NoOp )
+    UpdateEmail email ->          handleUpdateEmail model email
+    UpdateBlurb blurb ->          handleUpdateBlurb model blurb
+    UpdateChips ->                handleUpdateChips model
+    UpdatePlayer payload ->       handleUpdatePlayer model payload
+    UpdateCurrentRooms payload -> handleUpdateCurrentRooms model payload
+    SubmitEmailUpdate ->          handleSubmitUpdate model Email
+    SubmitBlurbUpdate ->          handleSubmitUpdate model Blurb
+    HeaderClicked attribute ->    handleHeaderClicked model attribute
+    NewUpdateMessage message ->   handleNewUpdateMessage model message
+    NewErrorMessage message ->    handleNewErrorMessage model message
+    FBInviteBtnClicked ->         handleFBInviteBtnClicked model
+    TabClicked tab ->             handleTabClicked model tab
+    ClearUpdateMessage _ ->       handleClearUpdateMessage model
+    ClearErrorMessage _ ->        handleClearErrorMessage model
+    ConnectedToPlayerChannel ->   ( ( model, Cmd.none ), NoOp )
+    SocketOpened ->               ( ( model, Cmd.none ), NoOp )
+    SocketClosed ->               ( ( model, Cmd.none ), NoOp )
+    SocketClosedAbnormally ->     ( ( model, Cmd.none ), NoOp )
 
 handleUpdateEmail : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleUpdateEmail model email =
@@ -382,6 +390,11 @@ handleUpdatePlayer model payload =
       ( ( { model | profile = newProfile }, Cmd.none), NoOp )
     Err error ->
       ( ( model, Cmd.none), NoOp )
+
+handleUpdateCurrentRooms : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleUpdateCurrentRooms model payload =
+  Debug.log "TODO: Implement update current rooms"
+  ( ( model, Cmd.none), NoOp )
 
 handleSubmitUpdate : Model -> UpdatableAttribute -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSubmitUpdate model attribute =
