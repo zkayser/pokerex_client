@@ -26,6 +26,16 @@ type alias Model =
   , currentTab : Tab
   }
 
+type alias RoomInfo = { room : String, playerCount : Int, status : RoomStatus }
+
+type alias RoomInfoList = List RoomInfo
+
+type RoomStatus
+  = Full
+  | Empty
+  | WaitingForPlayers
+  | Active
+
 type Msg
   = UpdateEmail String
   | UpdateBlurb String
