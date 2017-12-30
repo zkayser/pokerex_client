@@ -25,9 +25,11 @@ type alias Model =
   , updateMessages : List String
   , errorMessages : List String
   , currentTab : Tab
-  , currentGames : RoomInfoList
-  , invitedGames : RoomInfoList
+  , currentGames : Rooms
+  , invitedGames : Rooms
   }
+
+type alias Rooms = { rooms : RoomInfoList, page : Int, totalPages : Int}
 
 type alias RoomInfo = { room : String, playerCount : Int, status : RoomStatus }
 
@@ -86,8 +88,8 @@ initialModel player =
   , updateMessages = []
   , errorMessages = []
   , currentTab = CurrentGames
-  , currentGames = []
-  , invitedGames = []
+  , currentGames = { rooms = [], page = 1, totalPages = 0}
+  , invitedGames = { rooms = [], page = 1, totalPages = 0}
   }
 
 profileFor : Player -> Profile
@@ -408,8 +410,7 @@ handleUpdatePlayer model payload =
 
 handleUpdateCurrentRooms : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleUpdateCurrentRooms model payload =
-  Debug.log "TODO: Implement update current rooms"
-  ( ( model, Cmd.none), NoOp )
+  ( ( model, Cmd.none), NoOp)
 
 handleSubmitUpdate : Model -> UpdatableAttribute -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSubmitUpdate model attribute =
@@ -478,6 +479,13 @@ subscriptions model session =
   Sub.batch (phoenixSubscriptions ++ [clearMessages, clearErrors])
 
 -- Decoders
+roomsDecoder : Decoder Rooms
+roomsDecoder =
+  decode Rooms
+    |> required "rooms" (Decode.list roomInfoDecoder)
+    |> required "page" Decode.int
+    |> required "total_pages" Decode.int
+
 roomInfoDecoder : Decoder RoomInfo
 roomInfoDecoder =
   decode RoomInfo
