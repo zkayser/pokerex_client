@@ -410,7 +410,17 @@ handleUpdatePlayer model payload =
 
 handleUpdateCurrentRooms : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleUpdateCurrentRooms model payload =
-  ( ( model, Cmd.none), NoOp)
+  let
+    newCurrentGames =
+      case Decode.decodeValue (Decode.at ["current_rooms"] roomsDecoder) payload of
+        Ok newGames -> newGames
+        Err _ -> model.currentGames
+    newInvitedGames =
+      case Decode.decodeValue (Decode.at ["invited_rooms"] roomsDecoder) payload of
+        Ok newGames -> newGames
+        Err _ -> model.invitedGames
+  in
+  ( ( { model | currentGames = newCurrentGames, invitedGames = newInvitedGames}, Cmd.none), NoOp )
 
 handleSubmitUpdate : Model -> UpdatableAttribute -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSubmitUpdate model attribute =
