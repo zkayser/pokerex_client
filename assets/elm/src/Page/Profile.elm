@@ -336,7 +336,31 @@ viewCurrentTab model tab =
 
 viewCurrentGameTab : Model -> Html Msg
 viewCurrentGameTab model =
-  div [ class "current-games-tab-container" ] [ text "Current games go here" ]
+  div [ class "current-games-tab-container" ]
+    [ div [ class "current-games" ]
+      (List.map viewRoom model.currentGames.rooms)
+    , hr [] []
+    , div [ class "invited-games" ]
+      (List.map viewRoom model.invitedGames.rooms)
+    ]
+
+viewRoom : RoomInfo -> Html Msg
+viewRoom roomInfo =
+  li [ class <| "collection-item " ++ (toString roomInfo.status) ++ " room-info-item" ]
+    [ div [ class "room-list-title" ]
+      [ span [ class "teal-text" ]
+        -- TODO: The anchor tag below should route to a `private room` route
+        [ a [ ] [ text roomInfo.room ] ]
+      ]
+    , div [ class "room-list-status" ]
+      [ p
+        [ class "room-list-player-count"]
+        [ text <| "Active Players: " ++ (toString roomInfo.playerCount) ]
+      , p
+        [ class <| "status " ++ (toString roomInfo.status)]
+        [text <| "Status: " ++ (statusToString roomInfo.status)]
+      ]
+    ]
 
 viewStartPrivateGameTab : Model -> Html Msg
 viewStartPrivateGameTab model =
@@ -527,3 +551,9 @@ styleBodyFor model attribute =
       if model.activeAttribute == attribute then "block" else "none"
   in
   style [ ("display", displayStyle) ]
+
+statusToString : RoomStatus -> String
+statusToString status =
+  case status of
+    WaitingForPlayers -> "Waiting for Players"
+    _ -> toString status
