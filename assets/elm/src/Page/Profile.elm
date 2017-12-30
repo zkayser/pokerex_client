@@ -23,6 +23,7 @@ type alias Model =
   , channelSubscriptions : List (Channel Msg)
   , updateMessages : List String
   , errorMessages : List String
+  , currentTab : Tab
   }
 
 type Msg
@@ -35,6 +36,7 @@ type Msg
   | HeaderClicked UpdatableAttribute
   | NewUpdateMessage Decode.Value
   | NewErrorMessage Decode.Value
+  | TabClicked Tab
   | FBInviteBtnClicked
   | ClearUpdateMessage Time
   | ClearErrorMessage Time
@@ -56,6 +58,10 @@ type UpdatableAttribute
   | Blurb
   | None
 
+type Tab
+  = CurrentGames
+  | StartPrivateGame
+
 -- INITIALIZATION
 initialModel : Player -> Model
 initialModel player =
@@ -65,6 +71,7 @@ initialModel player =
   , channelSubscriptions = [ playerChannel player ]
   , updateMessages = []
   , errorMessages = []
+  , currentTab = CurrentGames
   }
 
 profileFor : Player -> Profile
@@ -272,15 +279,44 @@ viewTabs model =
     [ div [ class "col s12 tab-holder" ]
       [ ul [ class "tabs" ]
         [ li [ class "tab col s6" ]
-          [ a [ class "active"] [text "Current Games" ] ]
+          [ a
+            [ classList
+              [ ("active", model.currentTab == CurrentGames)
+              , ("active-tab", model.currentTab == CurrentGames)
+              ]
+            , onClick (TabClicked CurrentGames)
+            ]
+              [text "Current Games" ]
+          ]
         , li [ class "tab col s6" ]
-          [ a [ class "" ] [text "Start Private Game" ] ]
+          [ a
+            [ classList
+              [ ("active", model.currentTab == StartPrivateGame)
+              , ("active-tab", model.currentTab == StartPrivateGame)
+              ]
+            , onClick (TabClicked StartPrivateGame)
+            ]
+              [text "Start Private Game" ]
+          ]
         ]
       ]
-    , div [ class "current-games" ] [ text "Current games go here"]
-    , div [ class "create-game-container"] [ text "Create game container goes here"]
+    , (viewCurrentTab model model.currentTab)
     ]
   ]
+
+viewCurrentTab : Model -> Tab -> Html Msg
+viewCurrentTab model tab =
+  case tab of
+    CurrentGames -> viewCurrentGameTab model
+    StartPrivateGame -> viewStartPrivateGameTab model
+
+viewCurrentGameTab : Model -> Html Msg
+viewCurrentGameTab model =
+  div [ class "current-games-tab-container" ] [ text "Current games go here" ]
+
+viewStartPrivateGameTab : Model -> Html Msg
+viewStartPrivateGameTab model =
+  div [ class "create-game-tab-container" ] [ text "Create game container goes here" ]
 
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
@@ -296,6 +332,7 @@ update msg model =
     NewUpdateMessage message -> handleNewUpdateMessage model message
     NewErrorMessage message ->  handleNewErrorMessage model message
     FBInviteBtnClicked ->       handleFBInviteBtnClicked model
+    TabClicked tab ->           handleTabClicked model tab
     ClearUpdateMessage _ ->     handleClearUpdateMessage model
     ClearErrorMessage _ ->      handleClearErrorMessage model
     ConnectedToPlayerChannel -> ( ( model, Cmd.none ), NoOp )
@@ -390,6 +427,10 @@ handleClearErrorMessage model =
 handleFBInviteBtnClicked : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleFBInviteBtnClicked model =
   ( ( model, triggerFBInviteRequest ()), NoOp )
+
+handleTabClicked : Model -> Tab -> ( ( Model, Cmd Msg), ExternalMsg )
+handleTabClicked model tab =
+  ( ( { model | currentTab = tab }, Cmd.none), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
