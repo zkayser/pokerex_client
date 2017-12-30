@@ -8,7 +8,8 @@ import Ports exposing (triggerFBInviteRequest)
 import Html as Html exposing (..)
 import Html.Attributes as Attributes exposing (class, placeholder, classList, style, href)
 import Html.Events exposing (onClick, onSubmit, onInput)
-import Json.Decode as Decode
+import Json.Decode as Decode exposing (Decoder)
+import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 import Json.Encode as Encode
 import Time exposing (Time)
 import Phoenix.Socket as Socket exposing (Socket)
@@ -24,6 +25,8 @@ type alias Model =
   , updateMessages : List String
   , errorMessages : List String
   , currentTab : Tab
+  , currentGames : RoomInfoList
+  , invitedGames : RoomInfoList
   }
 
 type alias RoomInfo = { room : String, playerCount : Int, status : RoomStatus }
@@ -83,6 +86,8 @@ initialModel player =
   , updateMessages = []
   , errorMessages = []
   , currentTab = CurrentGames
+  , currentGames = []
+  , invitedGames = []
   }
 
 profileFor : Player -> Profile
@@ -471,6 +476,22 @@ subscriptions model session =
         _ -> Time.every 3000 ClearErrorMessage
   in
   Sub.batch (phoenixSubscriptions ++ [clearMessages, clearErrors])
+
+-- Decoders
+roomInfoDecoder : Decoder RoomInfo
+roomInfoDecoder =
+  decode RoomInfo
+    |> required "room" Decode.string
+    |> required "player_count" Decode.int
+    |> required "player_count" (Decode.int |> Decode.andThen (\int -> numToStatus int))
+
+numToStatus : Int -> Decoder RoomStatus
+numToStatus number =
+  case number of
+    0 -> Decode.succeed Empty
+    1 -> Decode.succeed WaitingForPlayers
+    7 -> Decode.succeed Full
+    _ -> Decode.succeed Active
 
 -- Helpers
 playerGreeting : Player -> String
