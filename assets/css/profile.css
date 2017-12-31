@@ -36,3 +36,8 @@
 	text-align: center;
 }
 
+.current-games-tab-container {
+	box-shadow: 0rem 0.01rem 0.01rem 0.01rem black;
+	z-index: 100;
+}
+

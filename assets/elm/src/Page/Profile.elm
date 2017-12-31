@@ -299,7 +299,7 @@ viewMessage message =
 
 viewTabs : Model -> List (Html Msg)
 viewTabs model =
-  [ div [ class "row" ]
+  [ div [ class "row tab-holder-row" ]
     [ div [ class "col s12 tab-holder" ]
       [ ul [ class "tabs" ]
         [ li [ class "tab col s6" ]
@@ -336,12 +336,14 @@ viewCurrentTab model tab =
 
 viewCurrentGameTab : Model -> Html Msg
 viewCurrentGameTab model =
-  div [ class "current-games-tab-container" ]
-    [ div [ class "current-games" ]
-      (viewCurrentGames model)
-    , hr [] []
-    , div [ class "invited-games" ]
-      (viewInvitedGames model)
+  div [ class "row"]
+    [ div [ class "current-games-tab-container col s12" ]
+      [ div [ class "current-games" ]
+        (viewCurrentGames model)
+      , hr [] []
+      , div [ class "invited-games" ]
+        (viewInvitedGames model)
+      ]
     ]
 
 viewCurrentGames : Model -> List (Html Msg)

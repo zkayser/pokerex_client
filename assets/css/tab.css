@@ -13,3 +13,7 @@ a.active.active-tab {
 .tabs .tab a {
 	cursor: pointer;
 }
+
+.row.tab-holder-row {
+	margin-bottom: 0;
+}
