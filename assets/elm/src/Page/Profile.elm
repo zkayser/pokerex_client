@@ -41,6 +41,10 @@ type RoomStatus
   | WaitingForPlayers
   | Active
 
+type RoomListing
+  = Invite
+  | Ongoing
+
 type Msg
   = UpdateEmail String
   | UpdateBlurb String
@@ -356,11 +360,11 @@ viewCurrentGames model =
               [ class "game-info-text btn blue white-text waves-effect col s6 offset-s3"
               , onClick (TabClicked StartPrivateGame)
               ]
-              [ text "Create your own"]
+              [ text "Start a Game"]
             ]
           ]
     _ -> [ h5 [ class "game-info-header red-text"] [ text "Your Current Games"] ] ++
-         (List.map viewRoom model.currentGames.rooms)
+         (List.map (viewRoom Ongoing) model.currentGames.rooms)
 
 viewInvitedGames : Model -> List (Html Msg)
 viewInvitedGames model =
@@ -370,26 +374,48 @@ viewInvitedGames model =
           ]
     _ ->
       [ h5 [ class "game-info-header purple-text"] [ text "Your Invites"] ] ++
-      (List.map viewRoom model.invitedGames.rooms)
+      (List.map (viewRoom Invite) model.invitedGames.rooms)
 
 
-viewRoom : RoomInfo -> Html Msg
-viewRoom roomInfo =
+viewRoom : RoomListing -> RoomInfo -> Html Msg
+viewRoom listingType roomInfo =
   li [ class <| "collection-item " ++ (toString roomInfo.status) ++ " room-info-item" ]
     [ div [ class "room-list-title" ]
       [ span [ class "teal-text" ]
         -- TODO: The anchor tag below should route to a `private room` route
+        -- if `listingType` == `Ongoing`
         [ a [ ] [ text roomInfo.room ] ]
       ]
     , div [ class "room-list-status" ]
-      [ p
+      ([ p
         [ class "room-list-player-count"]
         [ text <| "Active Players: " ++ (toString roomInfo.playerCount) ]
       , p
         [ class <| "status " ++ (toString roomInfo.status)]
         [text <| "Status: " ++ (statusToString roomInfo.status)]
-      ]
+
+      ] ++ (maybeViewJoinDeclineBtns listingType roomInfo))
+    , hr [] []
     ]
+
+maybeViewJoinDeclineBtns : RoomListing -> RoomInfo -> List (Html Msg)
+maybeViewJoinDeclineBtns listingType roomInfo =
+  case listingType of
+    Ongoing -> [ text "" ]
+    Invite ->
+      [ p [ class "room-btn-container" ]
+        [ a [ class "btn green white-text waves-effect waves-light invite-btn" ]
+          [ i [ class "material-icons" ] [ text "check" ]
+          , text "Join"
+          ]
+        ]
+      , p [ class "room-btn-container" ]
+        [ a [ class "btn red white-text waves-effect waves-light invite-btn"]
+          [ i [ class "material-icons" ] [ text "close" ]
+          , text "Decline"
+          ]
+        ]
+      ]
 
 viewStartPrivateGameTab : Model -> Html Msg
 viewStartPrivateGameTab model =

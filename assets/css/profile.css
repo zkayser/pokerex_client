@@ -50,3 +50,11 @@
 	text-align: center;
 	text-decoration: underline;
 }
+
+.invite-btn {
+	width: 11rem;
+}
+
+.invite-btn i {
+	margin-right: 1rem;
+}
