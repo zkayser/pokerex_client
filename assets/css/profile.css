@@ -53,6 +53,8 @@
 
 .invite-btn {
 	width: 11rem;
+	display: flex;
+	align-items: center;
 }
 
 .invite-btn i {
