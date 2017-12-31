@@ -393,7 +393,11 @@ viewRoom roomInfo =
 
 viewStartPrivateGameTab : Model -> Html Msg
 viewStartPrivateGameTab model =
-  div [ class "create-game-tab-container" ] [ text "Create game container goes here" ]
+  div [ class "row"]
+    [ div [ class "create-game-tab-container col s12" ]
+      [ h5 [ class "game-form-header green-text"] [ text "Create a Game"] ]
+    ]
+
 
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
