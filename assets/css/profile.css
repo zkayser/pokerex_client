@@ -20,3 +20,19 @@
 	margin-top: 2rem;
 	text-align: center;
 }
+
+.game-info-header {
+	text-align: center;
+	text-decoration: underline;
+}
+
+.game-info-text {
+	text-align: center;
+	font-size: 1.25rem;
+	font-weight: 400;
+}
+
+.current-games a .game-info-text {
+	text-align: center;
+}
+

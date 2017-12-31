@@ -324,8 +324,8 @@ viewTabs model =
           ]
         ]
       ]
-    , (viewCurrentTab model model.currentTab)
     ]
+  , (viewCurrentTab model model.currentTab)
   ]
 
 viewCurrentTab : Model -> Tab -> Html Msg
@@ -338,11 +338,38 @@ viewCurrentGameTab : Model -> Html Msg
 viewCurrentGameTab model =
   div [ class "current-games-tab-container" ]
     [ div [ class "current-games" ]
-      (List.map viewRoom model.currentGames.rooms)
+      (viewCurrentGames model)
     , hr [] []
     , div [ class "invited-games" ]
-      (List.map viewRoom model.invitedGames.rooms)
+      (viewInvitedGames model)
     ]
+
+viewCurrentGames : Model -> List (Html Msg)
+viewCurrentGames model =
+  case model.currentGames.rooms of
+    [] -> [ h5 [ class "game-info-header red-text"] [ text "Your Current Games"]
+          , p [ class "game-info-text" ] [ text "You have no ongoing games"]
+          , div [ class "row"]
+            [ a
+              [ class "game-info-text btn blue white-text waves-effect col s6 offset-s3"
+              , onClick (TabClicked StartPrivateGame)
+              ]
+              [ text "Create your own"]
+            ]
+          ]
+    _ -> [ h5 [ class "game-info-header red-text"] [ text "Your Current Games"] ] ++
+         (List.map viewRoom model.currentGames.rooms)
+
+viewInvitedGames : Model -> List (Html Msg)
+viewInvitedGames model =
+  case model.invitedGames.rooms of
+    [] -> [ h5 [ class "game-info-header purple-text" ] [ text "Your Invites"]
+          , p [ class "game-info-text"] [ text "You currently have no invites"]
+          ]
+    _ ->
+      [ h5 [ class "game-info-header purple-text"] [ text "Your Invites"] ] ++
+      (List.map viewRoom model.invitedGames.rooms)
+
 
 viewRoom : RoomInfo -> Html Msg
 viewRoom roomInfo =
