@@ -53,6 +53,7 @@ type Msg
   | SubmitBlurbUpdate
   | UpdatePlayer Decode.Value
   | UpdateCurrentRooms Decode.Value
+  | AcceptInvitation String
   | HeaderClicked UpdatableAttribute
   | NewUpdateMessage Decode.Value
   | NewErrorMessage Decode.Value
@@ -166,6 +167,20 @@ getPlayerPush model =
     push =
       Push.init ("players:" ++ (Player.usernameToString model.player.username)) "get_player"
         |> Push.withPayload (Encode.object [])
+  in
+  Phoenix.push socketUrl push
+
+acceptInvitationPush : Model -> String -> Cmd Msg
+acceptInvitationPush model room =
+  let
+    playerName =
+      Player.usernameToString model.player.username
+    push =
+      Push.init ("private_rooms:" ++ playerName) "accept_invitation"
+        |> Push.withPayload (Encode.object
+            [ ("player", Encode.string playerName )
+            , ("room", Encode.string room)
+            ] )
   in
   Phoenix.push socketUrl push
 
@@ -404,7 +419,10 @@ maybeViewJoinDeclineBtns listingType roomInfo =
     Ongoing -> [ text "" ]
     Invite ->
       [ p [ class "room-btn-container" ]
-        [ a [ class "btn green white-text waves-effect waves-light invite-btn" ]
+        [ a
+          [ class "btn green white-text waves-effect waves-light invite-btn"
+          , onClick <| AcceptInvitation roomInfo.room
+          ]
           [ i [ class "material-icons" ] [ text "check" ]
           , text "Join"
           ]
@@ -434,6 +452,7 @@ update msg model =
     UpdateChips ->                handleUpdateChips model
     UpdatePlayer payload ->       handleUpdatePlayer model payload
     UpdateCurrentRooms payload -> handleUpdateCurrentRooms model payload
+    AcceptInvitation toRoom ->    handleAcceptInvitation model toRoom
     SubmitEmailUpdate ->          handleSubmitUpdate model Email
     SubmitBlurbUpdate ->          handleSubmitUpdate model Blurb
     HeaderClicked attribute ->    handleHeaderClicked model attribute
@@ -553,6 +572,10 @@ handleFBInviteBtnClicked model =
 handleTabClicked : Model -> Tab -> ( ( Model, Cmd Msg), ExternalMsg )
 handleTabClicked model tab =
   ( ( { model | currentTab = tab }, Cmd.none), NoOp )
+
+handleAcceptInvitation : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handleAcceptInvitation model room =
+  ( (model, acceptInvitationPush model room), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
