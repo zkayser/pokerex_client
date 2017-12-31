@@ -24,7 +24,7 @@ type alias ExternalMsg = RoomExternalMsg
 handleLeaveRoom : Player -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 handleLeaveRoom player model =
   let
-    payload = 
+    payload =
       Actions.encodeUsernamePayload model.player.username
     actionMsg =
       "action_leave"
@@ -52,7 +52,7 @@ handleJoinRoom model player =
 handleSetJoinValue : Model -> String -> ( ( Model, Cmd Msg),  ExternalMsg)
 handleSetJoinValue model stringAmount =
   ( ( { model | joinValue = toString <| joinValToInt stringAmount }, Cmd.none), NoOp)
-      
+
 handleJoinedChannel : Model -> ( (Model, Cmd Msg), ExternalMsg )
 handleJoinedChannel model =
   let
@@ -74,7 +74,7 @@ handleJoinFailed model json =
       { model | errorMessages = message :: model.errorMessages }
   in
   ( (newModel, Cmd.none), NoOp )
-  
+
 handleUpdate : Model -> Value -> ( (Model, Cmd Msg), ExternalMsg )
 handleUpdate model payload =
   let
@@ -96,7 +96,7 @@ handleUpdate model payload =
       { model | roomModel = newRoom, modalRendered = modalRendered, raiseAmount = initRaiseAmount }
   in
   ( (newModel, Cmd.none), NoOp)
-  
+
 clearErrorMessage : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 clearErrorMessage model =
   let
@@ -124,11 +124,11 @@ clearRoomMessage model =
       { model | roomMessages = newRoomMessages }
   in
   ( (newModel, Cmd.none), NoOp )
-  
+
 clearWinningHandModal : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 clearWinningHandModal model =
   ( ( { model | modalRendered = Closed }, Cmd.none), NoOp )
-  
+
 handleActionMsg : Model -> String -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleActionMsg model actionString value =
   let
@@ -140,7 +140,7 @@ handleActionMsg model actionString value =
   case List.member actionString possibleActions of
     False -> ( ( model, Cmd.none), NoOp )
     True -> ( ( newModel, actionPush model.room actionString value), NoOp)
-    
+
 handleRejoin : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleRejoin model =
   let
@@ -148,20 +148,20 @@ handleRejoin model =
       { model | roomMessages = model.roomMessages ++ [ "Your connection has been re-established."] }
   in
   ( (newModel, Cmd.none), NoOp)
-  
+
 handleSetRaise : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSetRaise model stringAmount =
   case String.toInt stringAmount of
-    Ok amount -> 
+    Ok amount ->
       let
-        chips = 
+        chips =
           getChips model model.roomModel.chipRoll
         paidInRound =
           getChips model model.roomModel.round
       in
       case amount >= (paidInRound + chips) of
         True -> ( ( { model | raiseAmount = chips }, Cmd.none), NoOp )
-        False -> 
+        False ->
           case amount < model.roomModel.toCall of
             True -> ( ( model, Cmd.none), NoOp )
             False -> ( ( { model | raiseAmount = abs amount }, Cmd.none), NoOp )
@@ -170,12 +170,12 @@ handleSetRaise model stringAmount =
 handleSetAddAmount : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSetAddAmount model stringAmount =
     case String.toInt stringAmount of
-      Ok amount -> 
+      Ok amount ->
         case amount >= 0 && amount <= model.chipsAvailable of
           True -> ( ( { model | addAmount = amount }, Cmd.none), NoOp )
           False -> ( ( model, Cmd.none), NoOp )
       Err _ -> ( ( { model | addAmount = 0 }, Cmd.none), NoOp )
-    
+
 handleIncreaseRaise : Model -> Int -> ( ( Model, Cmd Msg), ExternalMsg )
 handleIncreaseRaise model amount =
   let
@@ -187,20 +187,20 @@ handleIncreaseRaise model amount =
   case (( model.raiseAmount + amount ) >= (paidInRound + chips))  of
     True -> ( ( { model | raiseAmount = chips }, Cmd.none), NoOp )
     False -> ( ( { model | raiseAmount = model.raiseAmount + amount }, Cmd.none), NoOp )
-    
+
 handleDecreaseRaise : Model -> Int -> ( ( Model, Cmd Msg), ExternalMsg )
 handleDecreaseRaise model amount =
-  case (model.raiseAmount - amount) <= model.roomModel.toCall of 
+  case (model.raiseAmount - amount) <= model.roomModel.toCall of
     True -> ( ( model, Cmd.none ), NoOp )
     False -> ( ( { model | raiseAmount = model.raiseAmount - amount }, Cmd.none), NoOp )
-    
+
 handleWinnerMessage : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handleWinnerMessage model payload =
   case Decode.decodeValue (Decode.at ["message"] Decode.string) payload of
-    Ok message -> 
+    Ok message ->
       ( ( { model | roomMessages = message :: model.roomMessages }, Cmd.none), NoOp )
     _ -> ( ( model, Cmd.none), NoOp )
-    
+
 handlePresentWinningHand : Model -> Value -> ( ( Model, Cmd Msg), ExternalMsg )
 handlePresentWinningHand model payload =
   case Decode.decodeValue WinningHand.decoder payload of
@@ -217,7 +217,7 @@ handleSetBankInfo model payload =
         newPlayer =
           { player | chips = chipsAvailable }
       in
-          
+
       ( ( { model | chipsAvailable = chipsAvailable, player = newPlayer }, Cmd.none), NoOp )
     _ -> ( ( model, Cmd.none), NoOp )
 
@@ -244,7 +244,7 @@ handleBankPressed model =
     payload =
       Encode.object [("player", Player.encodeUsername model.player.username) ]
     cmd =
-      actionPush model.room "get_bank" payload 
+      actionPush model.room "get_bank" payload
    in
    ( ( { model | modalRendered = BankModalOpen }, cmd), NoOp)
 
