@@ -5,6 +5,7 @@ import Data.Session as Session exposing (Session)
 import Data.Profile as Profile exposing (Profile)
 import Data.AuthToken as AuthToken
 import Ports exposing (triggerFBInviteRequest)
+import Widgets.Pagination as Pagination exposing (paginate)
 import Html as Html exposing (..)
 import Html.Attributes as Attributes exposing (class, placeholder, classList, style, href)
 import Html.Events exposing (onClick, onSubmit, onInput)
@@ -55,6 +56,7 @@ type Msg
   | UpdateCurrentRooms Decode.Value
   | AcceptInvitation String
   | HeaderClicked UpdatableAttribute
+  | Paginate String String
   | NewUpdateMessage Decode.Value
   | NewErrorMessage Decode.Value
   | TabClicked Tab
@@ -379,7 +381,8 @@ viewCurrentGames model =
             ]
           ]
     _ -> [ h5 [ class "game-info-header red-text"] [ text "Your Current Games"] ] ++
-         (List.map (viewRoom Ongoing) model.currentGames.rooms)
+         [ paginate model.currentGames (paginationConfig Ongoing) ]++
+          (List.map (viewRoom Ongoing) model.currentGames.rooms)
 
 viewInvitedGames : Model -> List (Html Msg)
 viewInvitedGames model =
@@ -389,6 +392,7 @@ viewInvitedGames model =
           ]
     _ ->
       [ h5 [ class "game-info-header purple-text"] [ text "Your Invites"] ] ++
+      [ paginate model.invitedGames (paginationConfig Invite) ] ++
       (List.map (viewRoom Invite) model.invitedGames.rooms)
 
 
@@ -456,6 +460,7 @@ update msg model =
     SubmitEmailUpdate ->          handleSubmitUpdate model Email
     SubmitBlurbUpdate ->          handleSubmitUpdate model Blurb
     HeaderClicked attribute ->    handleHeaderClicked model attribute
+    Paginate type_ page_num ->    handlePaginate model type_ page_num
     NewUpdateMessage message ->   handleNewUpdateMessage model message
     NewErrorMessage message ->    handleNewErrorMessage model message
     FBInviteBtnClicked ->         handleFBInviteBtnClicked model
@@ -577,6 +582,11 @@ handleAcceptInvitation : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleAcceptInvitation model room =
   ( (model, acceptInvitationPush model room), NoOp )
 
+handlePaginate : Model -> String -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handlePaginate model type_ page_num =
+  Debug.log "TODO: Implement the handlePaginate function"
+  ( ( model, Cmd.none), NoOp )
+
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
@@ -639,3 +649,9 @@ statusToString status =
   case status of
     WaitingForPlayers -> "Waiting for Players"
     _ -> toString status
+
+paginationConfig : RoomListing -> Pagination.Config Msg
+paginationConfig roomListing =
+  case roomListing of
+    Ongoing -> { onClickMsg = Paginate "current_games" }
+    Invite -> { onClickMsg = Paginate "invites" }

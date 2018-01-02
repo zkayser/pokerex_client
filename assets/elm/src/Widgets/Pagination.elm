@@ -1,4 +1,4 @@
-module Widgets.Pagination exposing (paginate)
+module Widgets.Pagination exposing (paginate, Config)
 
 import Html as Html exposing (..)
 import Html.Attributes exposing (class)
