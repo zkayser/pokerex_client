@@ -389,6 +389,13 @@ viewInvitedGames model =
   case model.invitedGames.rooms of
     [] -> [ h5 [ class "game-info-header purple-text" ] [ text "Your Invites"]
           , p [ class "game-info-text"] [ text "You currently have no invites"]
+          , div [ class "row" ]
+            [ a
+              [ class "game-info-text btn blue white-text waves-effect col s6 offset-s3"
+              , onClick (TabClicked StartPrivateGame)
+              ]
+              [ text "Start a Game"]
+            ]
           ]
     _ ->
       [ h5 [ class "game-info-header purple-text"] [ text "Your Invites"] ] ++
