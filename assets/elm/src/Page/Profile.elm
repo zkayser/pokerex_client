@@ -1,6 +1,6 @@
 module Page.Profile exposing (..)
 
-import Data.Player as Player exposing (Player)
+import Data.Player as Player exposing (Player, Username)
 import Data.Session as Session exposing (Session)
 import Data.Profile as Profile exposing (Profile)
 import Data.AuthToken as AuthToken
@@ -28,6 +28,7 @@ type alias Model =
   , currentTab : Tab
   , currentGames : Rooms
   , invitedGames : Rooms
+  , newGame : NewGame
   }
 
 type alias Rooms = { rooms : RoomInfoList, page : Int, totalPages : Int}
@@ -35,6 +36,8 @@ type alias Rooms = { rooms : RoomInfoList, page : Int, totalPages : Int}
 type alias RoomInfo = { room : String, playerCount : Int, status : RoomStatus }
 
 type alias RoomInfoList = List RoomInfo
+
+type alias NewGame = { title : String, owner : String, invitees : List String }
 
 type RoomStatus
   = Full
@@ -56,6 +59,9 @@ type Msg
   | UpdateCurrentRooms Decode.Value
   | AcceptInvitation String
   | HeaderClicked UpdatableAttribute
+  | SubmitCreateGameForm
+  | SetGameTitle String
+  | RemoveInvitee String
   | Paginate String String
   | NewUpdateMessage Decode.Value
   | NewErrorMessage Decode.Value
@@ -97,6 +103,7 @@ initialModel player =
   , currentTab = CurrentGames
   , currentGames = { rooms = [], page = 1, totalPages = 0}
   , invitedGames = { rooms = [], page = 1, totalPages = 0}
+  , newGame = { title = "", owner = "", invitees = []}
   }
 
 profileFor : Player -> Profile
@@ -450,9 +457,51 @@ viewStartPrivateGameTab : Model -> Html Msg
 viewStartPrivateGameTab model =
   div [ class "row"]
     [ div [ class "create-game-tab-container col s12" ]
-      [ h5 [ class "game-form-header green-text"] [ text "Create a Game"] ]
+      [ h5 [ class "game-form-header green-text"] [ text "Create a Game"]
+      , hr [] []
+      , form [ onSubmit SubmitCreateGameForm ]
+        [ div [ class "input-field"]
+          [ input
+            [ onInput (\str -> SetGameTitle str)
+            , placeholder "Give your game a name!"
+            , Attributes.type_ "text"
+            , Attributes.value model.newGame.title
+            , Attributes.id "game-title"
+            ]
+            []
+          ]
+        ]
+      , div [ class "player-list-container col s12" ]
+        [ h6 [ class "purple-text" ] [ text "Invite up to 6 players" ]
+        , ul [ class "collection" ]
+          (List.map viewInvitedPlayer (zipNamesWithColors model.newGame.invitees))
+        ]
+      , div [ class "player-list-container col s12" ]
+        [ h6 [ class "teal-text" ] [ text "Choose other players to invite"]
+        , ul [ class "collection" ]
+          (List.map viewPlayer (zipNamesWithColors ["George"])) -- Should be a list of names sent from server.
+        ]
+      ]
     ]
 
+viewInvitedPlayer : (String, String) -> Html Msg
+viewInvitedPlayer (iconColor, player) =
+  li [ class "collection-item avatar" ]
+    [ i [ class <| "material-icons large circle " ++ iconColor ] [ text "person" ]
+    , span [ class "title" ] [ text player ]
+    , a [ class "secondary-content" ]
+      [ a [ class "btn btn-floating red white-text", onClick (RemoveInvitee player) ]
+        [ i [ class "material-icons"] [ text "close" ] ]
+      ]
+    ]
+
+viewPlayer : (String, String) -> Html Msg
+viewPlayer (iconColor, player) =
+  li [ class "collection-item avatar" ]
+    [ i [ class <| "material-icons large circle " ++ iconColor ] [ text "person" ]
+    , span [ class "title" ] [ text player ]
+    , a [ class "btn btn-floating green white-text" ] [ i [ class "material-icons"] [ text "check"]]
+    ]
 
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
@@ -468,6 +517,9 @@ update msg model =
     SubmitBlurbUpdate ->          handleSubmitUpdate model Blurb
     HeaderClicked attribute ->    handleHeaderClicked model attribute
     Paginate type_ page_num ->    handlePaginate model type_ page_num
+    SubmitCreateGameForm ->       handleSubmitCreateGameForm model
+    SetGameTitle title ->         handleSetGameTitle model title
+    RemoveInvitee invitee ->      handleRemoveInvitee model invitee
     NewUpdateMessage message ->   handleNewUpdateMessage model message
     NewErrorMessage message ->    handleNewErrorMessage model message
     FBInviteBtnClicked ->         handleFBInviteBtnClicked model
@@ -594,6 +646,35 @@ handlePaginate model type_ page_num =
   Debug.log "TODO: Implement the handlePaginate function"
   ( ( model, Cmd.none), NoOp )
 
+handleSubmitCreateGameForm : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleSubmitCreateGameForm model =
+  Debug.log "TODO: Implement the handleSubmitCreateGameForm function"
+  ( ( model, Cmd.none), NoOp)
+
+handleSetGameTitle : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handleSetGameTitle model title =
+  let
+    game =
+      model.newGame
+    newGame =
+      { game | title = title }
+  in
+  ( ( { model | newGame = newGame }, Cmd.none), NoOp )
+
+handleRemoveInvitee : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handleRemoveInvitee model invitee =
+  let
+    game =
+      model.newGame
+    invitees =
+      game.invitees
+    newInvitees =
+      List.filter (\name -> name /= invitee) invitees
+    newGame =
+      { game | invitees = newInvitees }
+  in
+  ( ( { model | newGame = newGame }, Cmd.none), NoOp )
+
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
@@ -662,3 +743,27 @@ paginationConfig roomListing =
   case roomListing of
     Ongoing -> { onClickMsg = Paginate "current_games" }
     Invite -> { onClickMsg = Paginate "invites" }
+
+zipNamesWithColors : List String -> List (String, String)
+zipNamesWithColors names =
+  let
+    size =
+      List.length names
+    overSizedColorList =
+      List.repeat size listColors |> List.concat
+    colorList =
+      List.take size overSizedColorList
+  in
+  zip colorList names
+
+zip : List a -> List b -> List (a,b)
+zip xs ys =
+  case (xs, ys) of
+    ( x :: xBack, y :: yBack ) ->
+        (x,y) :: zip xBack yBack
+    (_, _) ->
+        []
+
+listColors : List String
+listColors =
+  ["blue-text", "green-text", "purple-text", "red-text", "yellow-text", "teal-text"]
