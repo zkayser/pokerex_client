@@ -486,7 +486,7 @@ viewStartPrivateGameTab model =
       , div [ class "player-list-container col s12" ]
         [ h6 [ class "teal-text" ] [ text "Choose other players to invite"]
         , ul [ class "collection" ]
-          (List.map viewPlayer (zipNamesWithColors model.playerList.players))
+          (List.map viewPlayer (zipNamesWithColors <| syncInviteesAndPlayers model))
         ]
       ]
     ]
@@ -780,6 +780,16 @@ paginationConfig roomListing =
   case roomListing of
     Ongoing -> { onClickMsg = Paginate "current_games" }
     Invite -> { onClickMsg = Paginate "invites" }
+
+syncInviteesAndPlayers : Model -> List String
+syncInviteesAndPlayers model =
+  let
+    invitees =
+      model.newGame.invitees
+    players =
+      model.playerList.players
+  in
+  List.filter (\player -> not <| (List.member player invitees)) players
 
 zipNamesWithColors : List String -> List (String, String)
 zipNamesWithColors names =
