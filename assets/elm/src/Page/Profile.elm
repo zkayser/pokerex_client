@@ -699,11 +699,17 @@ handleAddInvitee model name =
     game =
       model.newGame
     newInvitees =
-      name :: game.invitees
+      case List.length game.invitees < 6 of
+        True -> name :: game.invitees
+        False -> game.invitees
     newGame =
       { game | invitees = newInvitees }
+    newErrorMessages =
+      case List.length game.invitees >= 6 of
+        True -> "You can only invite up to 6 players" :: model.errorMessages
+        False -> model.errorMessages
   in
-  ( ( { model | newGame = newGame}, Cmd.none), NoOp )
+  ( ( { model | newGame = newGame, errorMessages = newErrorMessages}, Cmd.none), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
