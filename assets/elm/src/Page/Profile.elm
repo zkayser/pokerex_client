@@ -504,7 +504,7 @@ viewInvitedPlayer (iconColor, player) =
 
 viewPlayer : (String, String) -> Html Msg
 viewPlayer (iconColor, player) =
-  li [ class "collection-item avatar" ]
+  li [ class "collection-item avatar player-list-elem" ]
     [ i [ class <| "material-icons large circle " ++ iconColor ] [ text "person" ]
     , span [ class "title" ] [ text player ]
     , a [ class "btn btn-floating green white-text", onClick (AddInvitee player) ]

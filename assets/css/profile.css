@@ -60,3 +60,9 @@
 .invite-btn i {
 	margin-right: 1rem;
 }
+
+.player-list-elem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
