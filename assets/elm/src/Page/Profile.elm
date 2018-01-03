@@ -29,6 +29,7 @@ type alias Model =
   , currentGames : Rooms
   , invitedGames : Rooms
   , newGame : NewGame
+  , playerList : PlayerPage
   }
 
 type alias Rooms = { rooms : RoomInfoList, page : Int, totalPages : Int}
@@ -36,6 +37,8 @@ type alias Rooms = { rooms : RoomInfoList, page : Int, totalPages : Int}
 type alias RoomInfo = { room : String, playerCount : Int, status : RoomStatus }
 
 type alias RoomInfoList = List RoomInfo
+
+type alias PlayerPage = { players : List String, page : Int, totalPages : Int}
 
 type alias NewGame = { title : String, owner : String, invitees : List String }
 
@@ -56,12 +59,14 @@ type Msg
   | SubmitEmailUpdate
   | SubmitBlurbUpdate
   | UpdatePlayer Decode.Value
+  | UpdatePlayerList Decode.Value
   | UpdateCurrentRooms Decode.Value
   | AcceptInvitation String
   | HeaderClicked UpdatableAttribute
   | SubmitCreateGameForm
   | SetGameTitle String
   | RemoveInvitee String
+  | AddInvitee String
   | Paginate String String
   | NewUpdateMessage Decode.Value
   | NewErrorMessage Decode.Value
@@ -104,6 +109,7 @@ initialModel player =
   , currentGames = { rooms = [], page = 1, totalPages = 0}
   , invitedGames = { rooms = [], page = 1, totalPages = 0}
   , newGame = { title = "", owner = "", invitees = []}
+  , playerList = { players = [], page = 1, totalPages = 0}
   }
 
 profileFor : Player -> Profile
@@ -152,6 +158,7 @@ privateRoomsChannel : Player -> Channel Msg
 privateRoomsChannel player =
   Channel.init ("private_rooms:" ++ (Player.usernameToString player.username))
     |> Channel.on "current_rooms" (\payload -> UpdateCurrentRooms payload)
+    |> Channel.on "player_list" (\list -> UpdatePlayerList list)
     |> Channel.on "error" (\error -> NewErrorMessage error)
 
 -- PUSH MESSAGES
@@ -479,7 +486,7 @@ viewStartPrivateGameTab model =
       , div [ class "player-list-container col s12" ]
         [ h6 [ class "teal-text" ] [ text "Choose other players to invite"]
         , ul [ class "collection" ]
-          (List.map viewPlayer (zipNamesWithColors ["George"])) -- Should be a list of names sent from server.
+          (List.map viewPlayer (zipNamesWithColors model.playerList.players))
         ]
       ]
     ]
@@ -500,7 +507,8 @@ viewPlayer (iconColor, player) =
   li [ class "collection-item avatar" ]
     [ i [ class <| "material-icons large circle " ++ iconColor ] [ text "person" ]
     , span [ class "title" ] [ text player ]
-    , a [ class "btn btn-floating green white-text" ] [ i [ class "material-icons"] [ text "check"]]
+    , a [ class "btn btn-floating green white-text", onClick (AddInvitee player) ]
+      [ i [ class "material-icons"] [ text "check"]]
     ]
 
 -- Update
@@ -511,6 +519,7 @@ update msg model =
     UpdateBlurb blurb ->          handleUpdateBlurb model blurb
     UpdateChips ->                handleUpdateChips model
     UpdatePlayer payload ->       handleUpdatePlayer model payload
+    UpdatePlayerList payload ->   handleUpdatePlayerList model payload
     UpdateCurrentRooms payload -> handleUpdateCurrentRooms model payload
     AcceptInvitation toRoom ->    handleAcceptInvitation model toRoom
     SubmitEmailUpdate ->          handleSubmitUpdate model Email
@@ -520,6 +529,7 @@ update msg model =
     SubmitCreateGameForm ->       handleSubmitCreateGameForm model
     SetGameTitle title ->         handleSetGameTitle model title
     RemoveInvitee invitee ->      handleRemoveInvitee model invitee
+    AddInvitee invitee ->         handleAddInvitee model invitee
     NewUpdateMessage message ->   handleNewUpdateMessage model message
     NewErrorMessage message ->    handleNewErrorMessage model message
     FBInviteBtnClicked ->         handleFBInviteBtnClicked model
@@ -571,6 +581,14 @@ handleUpdatePlayer model payload =
   case Decode.decodeValue Profile.decoder payload of
     Ok newProfile ->
       ( ( { model | profile = newProfile }, Cmd.none), NoOp )
+    Err error ->
+      ( ( model, Cmd.none), NoOp )
+
+handleUpdatePlayerList : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleUpdatePlayerList model payload =
+  case Decode.decodeValue playerListDecoder payload of
+    Ok newPlayerPage ->
+      ( ( { model | playerList = newPlayerPage }, Cmd.none), NoOp )
     Err error ->
       ( ( model, Cmd.none), NoOp )
 
@@ -675,6 +693,18 @@ handleRemoveInvitee model invitee =
   in
   ( ( { model | newGame = newGame }, Cmd.none), NoOp )
 
+handleAddInvitee : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handleAddInvitee model name =
+  let
+    game =
+      model.newGame
+    newInvitees =
+      name :: game.invitees
+    newGame =
+      { game | invitees = newInvitees }
+  in
+  ( ( { model | newGame = newGame}, Cmd.none), NoOp )
+
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
@@ -714,6 +744,13 @@ numToStatus number =
     1 -> Decode.succeed WaitingForPlayers
     7 -> Decode.succeed Full
     _ -> Decode.succeed Active
+
+playerListDecoder : Decoder PlayerPage
+playerListDecoder =
+  decode PlayerPage
+    |> required "players" (Decode.list Decode.string)
+    |> required "page" Decode.int
+    |> required "total_pages" Decode.int
 
 -- Helpers
 playerGreeting : Player -> String
