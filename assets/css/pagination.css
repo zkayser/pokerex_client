@@ -23,6 +23,6 @@
 	color: white;
 }
 
-li.disabled-page-icon {
-	display: none;
+.pagination li.disabled-page-icon a i {
+	color: lightgray;
 }

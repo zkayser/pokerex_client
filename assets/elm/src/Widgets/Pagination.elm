@@ -41,11 +41,22 @@ viewPaginationItem model config paginationText =
         "disabled-page-icon"
       else
         ""
+    firstPage =
+      if (paginationText == "First" && model.page == 1) then "active" else ""
+    lastPage =
+      if (paginationText == "Last" && model.page == model.totalPages) then "active" else ""
     extraClasses =
-      String.join " " [active, disabledStart, disabledEnd]
+      String.join " " [active, disabledStart, disabledEnd, firstPage, lastPage]
+    eventAttrs =
+      case paginationText of
+        "keyboard_arrow_left" ->
+          if disabledStart == "" then [ onClick (config.onClickMsg paginationText) ] else []
+        "keyboard_arrow_right" ->
+          if disabledEnd == "" then [ onClick (config.onClickMsg paginationText)] else []
+        _ -> [ onClick (config.onClickMsg paginationText) ]
   in
   li [ class (String.trim extraClasses) ]
-    [ a [ onClick (config.onClickMsg paginationText) ] (viewItemText paginationText) ]
+    [ a eventAttrs (viewItemText paginationText) ]
 
 viewItemText : String -> List (Html msg)
 viewItemText paginationText =
@@ -61,7 +72,9 @@ paginationText model config =
       getPaginationIntervalFor model.page model.totalPages config.linksToShow
   in
   [ "keyboard_arrow_left" ]
+  ++ [ if model.totalPages > config.linksToShow then "First" else "" ]
   ++ (List.map (\num -> toString num) currentInterval)
+  ++ [ if model.totalPages > config.linksToShow then "Last" else "" ]
   ++ [ "keyboard_arrow_right" ]
 
 getPaginationIntervalFor : Int -> Int -> Int -> List Int

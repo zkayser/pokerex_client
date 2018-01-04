@@ -130,6 +130,8 @@ handlePaginationItemClicked model text =
           if onLastPage model then Cmd.none else getPage (toString <| model.page + 1)
         "keyboard_arrow_left" ->
           if onFirstPage model then Cmd.none else getPage (toString <| model.page - 1)
+        "First" -> getPage "1"
+        "Last" -> getPage (toString model.totalPages)
         _ -> getPage text
   in
   ( ( model, pushMessage), NoOp )
