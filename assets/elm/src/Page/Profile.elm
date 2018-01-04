@@ -67,6 +67,8 @@ type Msg
   | SetGameTitle String
   | RemoveInvitee String
   | AddInvitee String
+  | RoomCreated
+  | CreateRoomFailed Decode.Value
   | Paginate String String
   | NewUpdateMessage Decode.Value
   | NewErrorMessage Decode.Value
@@ -197,6 +199,19 @@ acceptInvitationPush model room =
             [ ("player", Encode.string playerName )
             , ("room", Encode.string room)
             ] )
+  in
+  Phoenix.push socketUrl push
+
+createGamePush : Model -> Cmd Msg
+createGamePush model =
+  let
+    playerName =
+      Player.usernameToString model.player.username
+    push =
+      Push.init ("private_rooms:" ++ playerName) "create_room"
+        |> Push.withPayload (encodeNewGame model.newGame)
+        |> Push.onOk (\_ -> RoomCreated)
+        |> Push.onError (\payload -> CreateRoomFailed payload)
   in
   Phoenix.push socketUrl push
 
@@ -527,6 +542,8 @@ update msg model =
     HeaderClicked attribute ->    handleHeaderClicked model attribute
     Paginate type_ page_num ->    handlePaginate model type_ page_num
     SubmitCreateGameForm ->       handleSubmitCreateGameForm model
+    RoomCreated ->                handleRoomCreated model
+    CreateRoomFailed payload ->   handleCreateRoomFailed model payload
     SetGameTitle title ->         handleSetGameTitle model title
     RemoveInvitee invitee ->      handleRemoveInvitee model invitee
     AddInvitee invitee ->         handleAddInvitee model invitee
@@ -666,8 +683,35 @@ handlePaginate model type_ page_num =
 
 handleSubmitCreateGameForm : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSubmitCreateGameForm model =
-  Debug.log "TODO: Implement the handleSubmitCreateGameForm function"
-  ( ( model, Cmd.none), NoOp)
+  let
+    owner =
+      String.trim (Player.usernameToString model.player.username)
+    game =
+      model.newGame
+    newGame =
+      { game | owner = owner }
+    isInvalid =
+      ((String.isEmpty newGame.title), (List.isEmpty newGame.invitees))
+    errorMsgs =
+      case isInvalid of
+        (True, True) -> [emptyTitleErrorMsg, noInviteesErrorMsg]
+        (True, _) -> [emptyTitleErrorMsg]
+        (_, True) -> [noInviteesErrorMsg]
+        _ -> []
+    newModel =
+      case isInvalid of
+        (True, True) -> { model | errorMessages = errorMsgs ++ model.errorMessages }
+        (True, _) -> { model | errorMessages = errorMsgs ++ model.errorMessages }
+        (_, True) -> { model | errorMessages = errorMsgs ++ model.errorMessages }
+        (False, False) -> { model | newGame = newGame}
+    cmd =
+      case isInvalid of
+        (True, True) -> Cmd.none
+        (_, True) -> Cmd.none
+        (True, _) -> Cmd.none
+        (False, False) -> createGamePush newModel
+  in
+  ( ( newModel, cmd ), NoOp)
 
 handleSetGameTitle : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSetGameTitle model title =
@@ -709,7 +753,25 @@ handleAddInvitee model name =
         True -> "You can only invite up to 6 players" :: model.errorMessages
         False -> model.errorMessages
   in
-  ( ( { model | newGame = newGame, errorMessages = newErrorMessages}, Cmd.none), NoOp )
+  ( ( { model | newGame = newGame, errorMessages = newErrorMessages }, Cmd.none), NoOp )
+
+handleRoomCreated : Model -> ( ( Model, Cmd Msg), ExternalMsg)
+handleRoomCreated model =
+  let
+    newMessages =
+      "Room successfully created" :: model.updateMessages
+    newGame =
+      { title = "", owner = Player.usernameToString model.player.username, invitees = []}
+  in
+  ( ({ model | newGame = newGame, updateMessages = newMessages}, Cmd.none), NoOp )
+
+handleCreateRoomFailed : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg)
+handleCreateRoomFailed model payload =
+  let
+    newMessages =
+      "An error occurred" :: model.errorMessages
+  in
+  ( ( { model | errorMessages = newMessages }, Cmd.none), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
@@ -757,6 +819,14 @@ playerListDecoder =
     |> required "players" (Decode.list Decode.string)
     |> required "page" Decode.int
     |> required "total_pages" Decode.int
+
+-- Encoders
+encodeNewGame : NewGame -> Encode.Value
+encodeNewGame newGame =
+  Encode.object [ ("title", Encode.string newGame.title)
+                , ("owner", Encode.string newGame.owner)
+                , ("invitees", Encode.list (List.map Encode.string newGame.invitees))
+                ]
 
 -- Helpers
 playerGreeting : Player -> String
@@ -820,3 +890,11 @@ zip xs ys =
 listColors : List String
 listColors =
   ["blue-text", "green-text", "purple-text", "red-text", "yellow-text", "teal-text"]
+
+emptyTitleErrorMsg : String
+emptyTitleErrorMsg =
+  "You must enter a title"
+
+noInviteesErrorMsg : String
+noInviteesErrorMsg =
+  "You must invite at least one player"
