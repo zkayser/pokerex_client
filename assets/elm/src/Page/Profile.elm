@@ -864,8 +864,8 @@ statusToString status =
 paginationConfig : RoomListing -> Pagination.Config Msg
 paginationConfig roomListing =
   case roomListing of
-    Ongoing -> { onClickMsg = Paginate "current_games" }
-    Invite -> { onClickMsg = Paginate "invites" }
+    Ongoing -> { onClickMsg = Paginate "current_games", linksToShow = 5 }
+    Invite -> { onClickMsg = Paginate "invites", linksToShow = 5 }
 
 syncInviteesAndPlayers : Model -> List String
 syncInviteesAndPlayers model =

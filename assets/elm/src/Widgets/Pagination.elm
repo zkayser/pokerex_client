@@ -11,7 +11,9 @@ type alias Model r =
   }
 
 type alias Config msg =
-  { onClickMsg : String -> msg }
+  { onClickMsg : String -> msg
+  , linksToShow : Int
+  }
 
 paginate : Model r -> Config msg -> Html msg
 paginate model config =
@@ -21,7 +23,7 @@ paginate model config =
         1 -> text ""
         _ ->
           ul [ class "pagination pagination-list"]
-            (List.map (\text -> viewPaginationItem model config text) (paginationText model.page model.totalPages))
+            (List.map (\text -> viewPaginationItem model config text) (paginationText model.page model.totalPages config))
   in
   paginationHtml
 
@@ -52,8 +54,8 @@ viewItemText paginationText =
   else
     [ text paginationText ]
 
-paginationText : Int -> Int -> List String
-paginationText currentPage pageCount =
+paginationText : Int -> Int -> Config msg -> List String
+paginationText currentPage pageCount config =
   let
     currentInterval =
       getPaginationIntervalFor currentPage

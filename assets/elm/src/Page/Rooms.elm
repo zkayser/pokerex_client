@@ -60,10 +60,10 @@ view session model =
   div [ class "lobby-container" ]
     [ div [ class "lobby-title" ]
       [ h1 [ class "text-center teal-text" ] [ text "Lobby" ] ]
-    , (paginate model { onClickMsg = PaginationItemClicked } )
+    , (paginate model paginationConfig )
     , ul [ class "rooms-list collection" ]
       (List.map viewRoom model.rooms)
-    , (paginate model { onClickMsg = PaginationItemClicked } )
+    , (paginate model paginationConfig )
     ]
 
 viewRoom : RoomInfo -> Html Msg
@@ -206,6 +206,11 @@ subscriptions model session =
       [ Phoenix.connect (socket session) model.channelSubscriptions ]
   in
   Sub.batch phoenixSubscriptions
+
+-- Widget Config
+paginationConfig : Pagination.Config Msg
+paginationConfig =
+  { onClickMsg = PaginationItemClicked, linksToShow = 5 }
 
 -- Helpers
 statusToString : RoomStatus -> String
