@@ -23,7 +23,7 @@ paginate model config =
         1 -> text ""
         _ ->
           ul [ class "pagination pagination-list"]
-            (List.map (\text -> viewPaginationItem model config text) (paginationText model.page model.totalPages config))
+            (List.map (\text -> viewPaginationItem model config text) (paginationText model config))
   in
   paginationHtml
 
@@ -54,29 +54,20 @@ viewItemText paginationText =
   else
     [ text paginationText ]
 
-paginationText : Int -> Int -> Config msg -> List String
-paginationText currentPage pageCount config =
+paginationText : Model r -> Config msg -> List String
+paginationText model config =
   let
     currentInterval =
-      getPaginationIntervalFor currentPage
+      getPaginationIntervalFor model.page model.totalPages config.linksToShow
   in
   [ "keyboard_arrow_left" ]
   ++ (List.map (\num -> toString num) currentInterval)
   ++ [ "keyboard_arrow_right" ]
 
-getPaginationIntervalFor : Int -> List Int
-getPaginationIntervalFor currentPage =
-  case currentPage <= 5 of
-    True -> List.range 1 5
-    False -> case currentPage % 5 == 0 of
-      True -> List.range (currentPage - 4) currentPage
-      False -> case currentPage % 5 == 1 of
-        True -> List.range currentPage (currentPage + 4)
-        False ->
-          let
-            distanceToStart =
-              (currentPage % 5) - 1
-            distanceToEnd =
-              (5 - (currentPage % 5))
-          in
-          List.range (currentPage - distanceToStart) (currentPage + distanceToEnd)
+getPaginationIntervalFor : Int -> Int -> Int -> List Int
+getPaginationIntervalFor currentPage totalPages numLinksToShow =
+  case (totalPages <= numLinksToShow, totalPages <= currentPage, (currentPage + numLinksToShow) >= totalPages) of
+    (True, _, _) -> List.range 1 totalPages
+    (_, True, _) -> List.range (currentPage - numLinksToShow) currentPage
+    (_, _, True) -> List.range (totalPages - numLinksToShow) totalPages
+    _ -> List.range currentPage (currentPage + numLinksToShow)
