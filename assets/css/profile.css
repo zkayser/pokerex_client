@@ -66,3 +66,11 @@
 	align-items: center;
 	justify-content: space-between;
 }
+
+
+.submit-game-btn-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-bottom: 1rem;
+}

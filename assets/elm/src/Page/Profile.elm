@@ -503,6 +503,11 @@ viewStartPrivateGameTab model =
         , ul [ class "collection" ]
           (List.map viewPlayer (zipNamesWithColors <| syncInviteesAndPlayers model))
         ]
+      , div [ class "submit-game-btn-container col s12"]
+        [
+          a [ class "submit-game-btn btn blue white-text", onClick SubmitCreateGameForm ]
+            [ text "Create Game" ]
+        ]
       ]
     ]
 
