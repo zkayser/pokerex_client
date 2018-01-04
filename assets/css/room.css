@@ -19,6 +19,7 @@
 
 .room-message-container {
 	position: fixed;
+	z-index: 100;
 	min-width: 25%;
 	right: 0%;
 	top: 15%;
