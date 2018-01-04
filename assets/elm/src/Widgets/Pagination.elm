@@ -15,8 +15,15 @@ type alias Config msg =
 
 paginate : Model r -> Config msg -> Html msg
 paginate model config =
-  ul [ class "pagination pagination-list"]
-    (List.map (\text -> viewPaginationItem model config text) (paginationText model.page model.totalPages))
+  let
+    paginationHtml =
+      case model.totalPages of
+        1 -> text ""
+        _ ->
+          ul [ class "pagination pagination-list"]
+            (List.map (\text -> viewPaginationItem model config text) (paginationText model.page model.totalPages))
+  in
+  paginationHtml
 
 viewPaginationItem : Model r -> Config msg -> String -> Html msg
 viewPaginationItem model config paginationText =

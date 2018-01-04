@@ -5,6 +5,7 @@ import Data.Session as Session exposing (Session)
 import Data.Profile as Profile exposing (Profile)
 import Data.AuthToken as AuthToken
 import Ports exposing (triggerFBInviteRequest)
+import Route
 import Widgets.Pagination as Pagination exposing (paginate)
 import Html as Html exposing (..)
 import Html.Attributes as Attributes exposing (class, placeholder, classList, style, href)
@@ -434,12 +435,16 @@ viewInvitedGames model =
 
 viewRoom : RoomListing -> RoomInfo -> Html Msg
 viewRoom listingType roomInfo =
+  let
+    linkAttrs =
+      case listingType of
+        Ongoing -> [ Route.href (Route.Room "private" roomInfo.room) ]
+        _ ->  []
+  in
   li [ class <| "collection-item " ++ (toString roomInfo.status) ++ " room-info-item" ]
     [ div [ class "room-list-title" ]
       [ span [ class "teal-text" ]
-        -- TODO: The anchor tag below should route to a `private room` route
-        -- if `listingType` == `Ongoing`
-        [ a [ ] [ text roomInfo.room ] ]
+        [ a linkAttrs [ text roomInfo.room ] ]
       ]
     , div [ class "room-list-status" ]
       ([ p
