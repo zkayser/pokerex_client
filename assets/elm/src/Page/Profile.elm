@@ -165,6 +165,9 @@ privateRoomsChannel player =
     |> Channel.on "current_rooms" (\payload -> UpdateCurrentRooms payload)
     |> Channel.on "player_list" (\list -> UpdatePlayerList list)
     |> Channel.on "error" (\error -> NewErrorMessage error)
+    |> Channel.on "new_current_rooms" (\payload -> UpdateCurrentRooms payload)
+    |> Channel.on "new_invited_rooms" (\payload -> UpdateCurrentRooms payload)
+    |> Channel.on "new_players" (\payload -> UpdatePlayerList payload)
 
 -- PUSH MESSAGES
 updatePlayerPush : Model -> UpdatableAttribute -> String -> Cmd Msg
@@ -464,7 +467,7 @@ viewRoom listingType roomInfo =
   li [ class <| "collection-item " ++ (toString roomInfo.status) ++ " room-info-item" ]
     [ div [ class "room-list-title" ]
       [ span [ class "teal-text" ]
-        [ a linkAttrs [ text roomInfo.room ] ]
+        [ a linkAttrs [ text <| viewRoomTitle roomInfo.room ] ]
       ]
     , div [ class "room-list-status" ]
       ([ p
@@ -477,6 +480,11 @@ viewRoom listingType roomInfo =
       ] ++ (maybeViewJoinDeclineBtns listingType roomInfo))
     , hr [] []
     ]
+
+viewRoomTitle : String -> String
+viewRoomTitle title =
+  String.split "_" title
+    |> String.join " "
 
 maybeViewJoinDeclineBtns : RoomListing -> RoomInfo -> List (Html Msg)
 maybeViewJoinDeclineBtns listingType roomInfo =
@@ -539,13 +547,11 @@ viewStartPrivateGameTab model =
 
 viewInvitedPlayer : (String, String) -> Html Msg
 viewInvitedPlayer (iconColor, player) =
-  li [ class "collection-item avatar" ]
+  li [ class "collection-item avatar player-list-elem" ]
     [ i [ class <| "material-icons large " ++ iconColor ] [ text "person" ]
     , span [ class "title" ] [ text player ]
-    , a [ class "secondary-content" ]
-      [ a [ class "btn btn-floating red white-text", onClick (RemoveInvitee player) ]
-        [ i [ class "material-icons"] [ text "close" ] ]
-      ]
+    , a [ class "btn btn-floating red white-text", onClick (RemoveInvitee player) ]
+      [ i [ class "material-icons"] [ text "close" ] ]
     ]
 
 viewPlayer : (String, String) -> Html Msg

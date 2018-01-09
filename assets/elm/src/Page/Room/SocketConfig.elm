@@ -38,7 +38,7 @@ socket session =
 room : Model -> Channel Msg
 room model =
   Channel.init ("rooms:" ++ model.room)
-    |> Channel.withPayload ( Encode.object [ ("type", Encode.string "public"), ("amount", Encode.int <| joinValToInt model.joinValue) ] )
+    |> Channel.withPayload ( Encode.object [ ("type", Encode.string model.roomType), ("amount", Encode.int <| joinValToInt model.joinValue) ] )
     |> Channel.onJoin (\_ -> JoinedChannel)
     |> Channel.onJoinError (\json -> JoinFailed json)
     |> Channel.onRejoin (\json -> Rejoined json)
