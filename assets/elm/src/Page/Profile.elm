@@ -53,6 +53,8 @@ type RoomListing
   = Invite
   | Ongoing
 
+type PageList = OngoingGames | Invites | Players
+
 type Msg
   = UpdateEmail String
   | UpdateBlurb String
@@ -184,7 +186,7 @@ getPlayerPush : Model -> Cmd Msg
 getPlayerPush model =
   let
     push =
-      Push.init ("players:" ++ (Player.usernameToString model.player.username)) "get_player"
+      Push.init ("players:" ++ (getPlayerName model)) "get_player"
         |> Push.withPayload (Encode.object [])
   in
   Phoenix.push socketUrl push
@@ -193,7 +195,7 @@ acceptInvitationPush : Model -> String -> Cmd Msg
 acceptInvitationPush model room =
   let
     playerName =
-      Player.usernameToString model.player.username
+      getPlayerName model
     push =
       Push.init ("private_rooms:" ++ playerName) "accept_invitation"
         |> Push.withPayload (Encode.object
@@ -207,12 +209,30 @@ createGamePush : Model -> Cmd Msg
 createGamePush model =
   let
     playerName =
-      Player.usernameToString model.player.username
+      getPlayerName model
     push =
       Push.init ("private_rooms:" ++ playerName) "create_room"
         |> Push.withPayload (encodeNewGame model.newGame)
         |> Push.onOk (\_ -> RoomCreated)
         |> Push.onError (\payload -> CreateRoomFailed payload)
+  in
+  Phoenix.push socketUrl push
+
+getPageForPush : Model -> PageList -> Int -> Cmd Msg
+getPageForPush model pageType pageNum =
+  let
+    playerName =
+      getPlayerName model
+    getPageTypeParam =
+      case pageType of
+        OngoingGames -> "current_rooms"
+        Invites -> "invited_rooms"
+        Players -> "players"
+    push =
+      Push.init ("private_rooms:" ++ playerName) "get_page"
+        |> Push.withPayload (Encode.object [  ("for", Encode.string getPageTypeParam ),
+                                              ("page_num", Encode.int pageNum )
+                                            ] )
   in
   Phoenix.push socketUrl push
 
@@ -411,7 +431,7 @@ viewCurrentGames model =
             ]
           ]
     _ -> [ h5 [ class "game-info-header red-text"] [ text "Your Current Games"] ] ++
-         [ paginate model.currentGames (paginationConfig Ongoing) ]++
+         [ paginate model.currentGames (paginationConfig OngoingGames) ]++
           (List.map (viewRoom Ongoing) model.currentGames.rooms)
 
 viewInvitedGames : Model -> List (Html Msg)
@@ -429,7 +449,7 @@ viewInvitedGames model =
           ]
     _ ->
       [ h5 [ class "game-info-header purple-text"] [ text "Your Invites"] ] ++
-      [ paginate model.invitedGames (paginationConfig Invite) ] ++
+      [ paginate model.invitedGames (paginationConfig Invites) ] ++
       (List.map (viewRoom Invite) model.invitedGames.rooms)
 
 
@@ -506,7 +526,8 @@ viewStartPrivateGameTab model =
       , div [ class "player-list-container col s12" ]
         [ h6 [ class "teal-text" ] [ text "Choose other players to invite"]
         , ul [ class "collection" ]
-          (List.map viewPlayer (zipNamesWithColors <| syncInviteesAndPlayers model))
+          ([ paginate model.playerList (paginationConfig Players) ] ++
+          (List.map viewPlayer (zipNamesWithColors <| syncInviteesAndPlayers model)))
         ]
       , div [ class "submit-game-btn-container col s12"]
         [
@@ -519,7 +540,7 @@ viewStartPrivateGameTab model =
 viewInvitedPlayer : (String, String) -> Html Msg
 viewInvitedPlayer (iconColor, player) =
   li [ class "collection-item avatar" ]
-    [ i [ class <| "material-icons large circle " ++ iconColor ] [ text "person" ]
+    [ i [ class <| "material-icons large " ++ iconColor ] [ text "person" ]
     , span [ class "title" ] [ text player ]
     , a [ class "secondary-content" ]
       [ a [ class "btn btn-floating red white-text", onClick (RemoveInvitee player) ]
@@ -530,7 +551,7 @@ viewInvitedPlayer (iconColor, player) =
 viewPlayer : (String, String) -> Html Msg
 viewPlayer (iconColor, player) =
   li [ class "collection-item avatar player-list-elem" ]
-    [ i [ class <| "material-icons large circle " ++ iconColor ] [ text "person" ]
+    [ i [ class <| "material-icons large " ++ iconColor ] [ text "person" ]
     , span [ class "title" ] [ text player ]
     , a [ class "btn btn-floating green white-text", onClick (AddInvitee player) ]
       [ i [ class "material-icons"] [ text "check"]]
@@ -687,9 +708,20 @@ handleAcceptInvitation model room =
   ( (model, acceptInvitationPush model room), NoOp )
 
 handlePaginate : Model -> String -> String -> ( ( Model, Cmd Msg), ExternalMsg )
-handlePaginate model type_ page_num =
-  Debug.log "TODO: Implement the handlePaginate function"
-  ( ( model, Cmd.none), NoOp )
+handlePaginate model type_ pageNum =
+  let
+    page =
+      case String.toInt pageNum of
+        Ok num -> num
+        Err _ -> 1
+    listing =
+      case type_ of
+        "current_rooms" -> OngoingGames
+        "invited_rooms" -> Invites
+        "players" -> Players
+        _ -> Players
+  in
+  ( ( model, getPageForPush model listing page), NoOp )
 
 handleSubmitCreateGameForm : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSubmitCreateGameForm model =
@@ -861,11 +893,12 @@ statusToString status =
     WaitingForPlayers -> "Waiting for Players"
     _ -> toString status
 
-paginationConfig : RoomListing -> Pagination.Config Msg
+paginationConfig : PageList -> Pagination.Config Msg
 paginationConfig roomListing =
   case roomListing of
-    Ongoing -> { onClickMsg = Paginate "current_games", linksToShow = 5 }
-    Invite -> { onClickMsg = Paginate "invites", linksToShow = 5 }
+    OngoingGames -> { onClickMsg = Paginate "current_games", linksToShow = 5 }
+    Invites -> { onClickMsg = Paginate "invites", linksToShow = 5 }
+    Players -> { onClickMsg = Paginate "players", linksToShow = 5 }
 
 syncInviteesAndPlayers : Model -> List String
 syncInviteesAndPlayers model =
@@ -908,3 +941,7 @@ emptyTitleErrorMsg =
 noInviteesErrorMsg : String
 noInviteesErrorMsg =
   "You must invite at least one player"
+
+getPlayerName : Model -> String
+getPlayerName model =
+  Player.usernameToString model.player.username
