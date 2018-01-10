@@ -61,7 +61,7 @@ type RoomListing
 
 type PageList = OngoingGames | Invites | Players
 
-type ProfileModal = None | DeleteModal
+type ProfileModal = AllClosed | DeleteModal
 
 type Msg
   = UpdateEmail String
@@ -78,6 +78,8 @@ type Msg
   | HeaderClicked UpdatableAttribute
   | ChangeSubTab StartGameSubTab
   | OpenDeleteConfirmation
+  | DeleteProfile
+  | CloseModal
   | SubmitCreateGameForm
   | SubmitSearch
   | SetGameTitle String
@@ -135,7 +137,7 @@ initialModel player =
   , startGameSubTab = PlayerList
   , searchQuery = ""
   , currentSearchPage = 1
-  , openModal = None
+  , openModal = AllClosed
   }
 
 profileFor : Player -> Profile
@@ -295,6 +297,7 @@ view session model =
       , div [ class "profile-pane" ]
         (viewTabs model)
       ]
+    , if model.openModal == DeleteModal then Modal.view <| deleteProfileModalConfig model else text ""
     ]
 
 viewProfileForm : Model -> List (Html Msg)
@@ -655,6 +658,18 @@ viewPlayerSearchForm model =
       ]
     ]
 
+viewDeleteProfileModal : Model -> List (Html Msg)
+viewDeleteProfileModal model =
+  [
+    h1 [ class "red-text" ] [ text "Are you sure?" ]
+  , div [ class "row" ]
+    [ div [ class "col s3 offset-s3" ]
+      [ button [ class "btn red white-text", onClick DeleteProfile ] [ text "Okay" ] ]
+    , div [ class "col s3"]
+      [ button [ class "btn-flat waves-effect teal-text", onClick CloseModal ] [ text "Cancel" ] ]
+    ]
+  ]
+
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
@@ -673,6 +688,8 @@ update msg model =
     HeaderClicked attribute ->    handleHeaderClicked model attribute
     ChangeSubTab newSubTab ->     handleChangeSubTab model newSubTab
     OpenDeleteConfirmation ->     handleOpenDeleteConfirmation model
+    DeleteProfile ->              handleDeleteProfile model
+    CloseModal ->                 handleCloseModal model
     Paginate type_ page_num ->    handlePaginate model type_ page_num
     PaginateSearch page_num ->    handlePaginateSearch model page_num
     SubmitCreateGameForm ->       handleSubmitCreateGameForm model
@@ -831,7 +848,7 @@ handleAcceptInvitation model room =
 
 handleOpenDeleteConfirmation : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 handleOpenDeleteConfirmation model =
-  ( ( model, Cmd.none), NoOp )
+  ( ( { model | openModal = DeleteModal }, Cmd.none), NoOp )
 
 handlePaginate : Model -> String -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handlePaginate model type_ pageNum =
@@ -961,6 +978,17 @@ handleCreateRoomFailed model payload =
   in
   ( ( { model | errorMessages = newMessages }, Cmd.none), NoOp )
 
+handleDeleteProfile : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleDeleteProfile model =
+  -- TODO: Push a message to the server to delete the user's profile
+  -- and redirect the user to the home route
+  ( ( model, Cmd.none), NoOp )
+
+handleCloseModal : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleCloseModal model =
+  ( ( { model | openModal = AllClosed }, Cmd.none), NoOp )
+
+
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
@@ -1057,6 +1085,13 @@ paginationObjectForSearch model =
         ((List.length model.playerSearchList) // 10) + 1
   in
   { totalPages = totalPages, page = model.currentSearchPage }
+
+deleteProfileModalConfig : Model -> Modal.Config Msg
+deleteProfileModalConfig model =
+  { classes = [ "center-align" ]
+  , contentHtml = viewDeleteProfileModal model
+  , styles = Nothing
+  }
 
 syncInviteesAndPlayers : Model -> List String -> List String
 syncInviteesAndPlayers model playerList =
