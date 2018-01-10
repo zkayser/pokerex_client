@@ -73,6 +73,7 @@ type Msg
   | AcceptInvitation String
   | HeaderClicked UpdatableAttribute
   | ChangeSubTab StartGameSubTab
+  | OpenDeleteConfirmation
   | SubmitCreateGameForm
   | SubmitSearch
   | SetGameTitle String
@@ -280,6 +281,10 @@ view session model =
         , div [ class "fb-invite-container" ]
           [ button [ onClick FBInviteBtnClicked, class "btn blue white-text" ]
             [ text "Invite your Facebook friends to PokerEx"]
+          ]
+        , div [ class "delete-profile-container" ]
+          [ button [ onClick OpenDeleteConfirmation, class "btn red white-text" ]
+            [ text "Delete your profile"]
           ]
         ]
       , div [ class "profile-pane" ]
@@ -662,6 +667,7 @@ update msg model =
     SubmitBlurbUpdate ->          handleSubmitUpdate model Blurb
     HeaderClicked attribute ->    handleHeaderClicked model attribute
     ChangeSubTab newSubTab ->     handleChangeSubTab model newSubTab
+    OpenDeleteConfirmation ->     handleOpenDeleteConfirmation model
     Paginate type_ page_num ->    handlePaginate model type_ page_num
     PaginateSearch page_num ->    handlePaginateSearch model page_num
     SubmitCreateGameForm ->       handleSubmitCreateGameForm model
@@ -817,6 +823,10 @@ handleChangeSubTab model subTab =
 handleAcceptInvitation : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleAcceptInvitation model room =
   ( (model, acceptInvitationPush model room), NoOp )
+
+handleOpenDeleteConfirmation : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleOpenDeleteConfirmation model =
+  ( ( model, Cmd.none), NoOp )
 
 handlePaginate : Model -> String -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handlePaginate model type_ pageNum =

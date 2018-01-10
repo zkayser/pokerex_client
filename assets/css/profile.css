@@ -21,6 +21,11 @@
 	text-align: center;
 }
 
+.delete-profile-container {
+	margin-top: 2rem;
+	text-align: center;
+}
+
 .game-info-header {
 	text-align: center;
 	text-decoration: underline;
