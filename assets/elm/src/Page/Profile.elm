@@ -7,6 +7,7 @@ import Data.AuthToken as AuthToken
 import Ports exposing (triggerFBInviteRequest)
 import Route
 import Widgets.Pagination as Pagination exposing (paginate)
+import Widgets.Modal as Modal
 import Html as Html exposing (..)
 import Html.Attributes as Attributes exposing (class, placeholder, classList, style, href)
 import Html.Events exposing (onClick, onSubmit, onInput)
@@ -35,6 +36,7 @@ type alias Model =
   , startGameSubTab : StartGameSubTab
   , searchQuery : String
   , currentSearchPage : Int
+  , openModal : ProfileModal
   }
 
 type alias Rooms = { rooms : RoomInfoList, page : Int, totalPages : Int}
@@ -58,6 +60,8 @@ type RoomListing
   | Ongoing
 
 type PageList = OngoingGames | Invites | Players
+
+type ProfileModal = None | DeleteModal
 
 type Msg
   = UpdateEmail String
@@ -131,6 +135,7 @@ initialModel player =
   , startGameSubTab = PlayerList
   , searchQuery = ""
   , currentSearchPage = 1
+  , openModal = None
   }
 
 profileFor : Player -> Profile
