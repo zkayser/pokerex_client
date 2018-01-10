@@ -67,6 +67,14 @@
 	justify-content: space-between;
 }
 
+.player-list-collection {
+	padding-top: 1.5rem;
+}
+
+.active-sub-tab {
+	background-color: var(--teal);
+	color: white;
+}
 
 .submit-game-btn-container {
 	display: flex;

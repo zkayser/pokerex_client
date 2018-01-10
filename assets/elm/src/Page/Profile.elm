@@ -31,6 +31,10 @@ type alias Model =
   , invitedGames : Rooms
   , newGame : NewGame
   , playerList : PlayerPage
+  , playerSearchList : List String
+  , startGameSubTab : StartGameSubTab
+  , searchQuery : String
+  , currentSearchPage : Int
   }
 
 type alias Rooms = { rooms : RoomInfoList, page : Int, totalPages : Int}
@@ -58,21 +62,26 @@ type PageList = OngoingGames | Invites | Players
 type Msg
   = UpdateEmail String
   | UpdateBlurb String
+  | UpdateSearch String
   | UpdateChips
   | SubmitEmailUpdate
   | SubmitBlurbUpdate
   | UpdatePlayer Decode.Value
   | UpdatePlayerList Decode.Value
   | UpdateCurrentRooms Decode.Value
+  | UpdateSearchList Decode.Value
   | AcceptInvitation String
   | HeaderClicked UpdatableAttribute
+  | ChangeSubTab StartGameSubTab
   | SubmitCreateGameForm
+  | SubmitSearch
   | SetGameTitle String
   | RemoveInvitee String
   | AddInvitee String
   | RoomCreated
   | CreateRoomFailed Decode.Value
   | Paginate String String
+  | PaginateSearch String
   | NewUpdateMessage Decode.Value
   | NewErrorMessage Decode.Value
   | TabClicked Tab
@@ -101,6 +110,8 @@ type Tab
   = CurrentGames
   | StartPrivateGame
 
+type StartGameSubTab = PlayerList | PlayerSearchList
+
 -- INITIALIZATION
 initialModel : Player -> Model
 initialModel player =
@@ -115,6 +126,10 @@ initialModel player =
   , invitedGames = { rooms = [], page = 1, totalPages = 0}
   , newGame = { title = "", owner = "", invitees = []}
   , playerList = { players = [], page = 1, totalPages = 0}
+  , playerSearchList = []
+  , startGameSubTab = PlayerList
+  , searchQuery = ""
+  , currentSearchPage = 1
   }
 
 profileFor : Player -> Profile
@@ -158,6 +173,7 @@ playerChannel player =
     |> Channel.on "player" (\payload -> UpdatePlayer payload)
     |> Channel.on "attr_updated" (\message -> NewUpdateMessage message)
     |> Channel.on "error" (\error -> NewErrorMessage error)
+    |> Channel.on "player_search_list" (\payload -> UpdateSearchList payload)
 
 privateRoomsChannel : Player -> Channel Msg
 privateRoomsChannel player =
@@ -236,6 +252,17 @@ getPage model pageType pageNum =
         |> Push.withPayload (Encode.object [  ("for", Encode.string getPageTypeParam ),
                                               ("page_num", Encode.int pageNum )
                                             ] )
+  in
+  Phoenix.push socketUrl push
+
+submitSearchPush : Model -> Cmd Msg
+submitSearchPush model =
+  let
+    playerName =
+      getPlayerName model
+    push =
+      Push.init("players:" ++ playerName) "player_search"
+        |> Push.withPayload (Encode.object [ ("query", Encode.string model.searchQuery)])
   in
   Phoenix.push socketUrl push
 
@@ -531,17 +558,52 @@ viewStartPrivateGameTab model =
         , ul [ class "collection" ]
           (List.map viewInvitedPlayer (zipNamesWithColors model.newGame.invitees))
         ]
-      , div [ class "player-list-container col s12" ]
-        [ h6 [ class "teal-text" ] [ text "Choose other players to invite"]
-        , ul [ class "collection" ]
-          ([ paginate model.playerList (paginationConfig Players) ] ++
-          (List.map viewPlayer (zipNamesWithColors <| syncInviteesAndPlayers model)))
-        ]
+      , viewCreateFormSubTab model
       , div [ class "submit-game-btn-container col s12"]
         [
           a [ class "submit-game-btn btn blue white-text", onClick SubmitCreateGameForm ]
             [ text "Create Game" ]
         ]
+      ]
+    ]
+
+viewCreateFormSubTab : Model -> Html Msg
+viewCreateFormSubTab model =
+  let
+    renderedList =
+      case model.startGameSubTab of
+        PlayerSearchList ->
+          List.map viewPlayer (zipNamesWithColors <| syncInviteesAndPlayers model (searchListForPage model))
+        _ ->
+          List.map viewPlayer (zipNamesWithColors <| syncInviteesAndPlayers model model.playerList.players)
+    pagination =
+      case model.startGameSubTab of
+        PlayerList -> paginate model.playerList (paginationConfig Players)
+        PlayerSearchList -> paginate (paginationObjectForSearch model) paginationConfigSearch
+  in
+  div [ class "player-list-container col s12" ]
+      [ h6 [ class "teal-text" ] [ text "Choose other players to invite"]
+      , viewSubTabs model
+      , ul [ class "collection player-list-collection" ]
+        ( [ viewPlayerSearchForm model ] ++
+          [ pagination ] ++
+        renderedList )
+      ]
+
+viewSubTabs : Model -> Html Msg
+viewSubTabs model =
+  div [ class "row" ]
+    [ div [ class "col s6 offset-s3" ]
+      [ a [ class "waves-effect waves-teal btn-flat sub-tab"
+          , classList [ ("active-sub-tab", model.startGameSubTab == PlayerList) ]
+          , onClick <| ChangeSubTab PlayerList
+          ]
+          [ text "Browse Players" ]
+      , a [ class "waves-effect waves-teal btn-flat sub-tab"
+          , classList [ ("active-sub-tab", model.startGameSubTab == PlayerSearchList) ]
+          , onClick <| ChangeSubTab PlayerSearchList
+          ]
+          [ text "Search"]
       ]
     ]
 
@@ -563,22 +625,47 @@ viewPlayer (iconColor, player) =
       [ i [ class "material-icons"] [ text "check"]]
     ]
 
+viewPlayerSearchForm : Model -> Html Msg
+viewPlayerSearchForm model =
+  div [ class "row" ]
+    [ form [ class "col s12", onSubmit SubmitSearch ]
+      [ div [ class "row" ]
+        [ div [ class "input-field col s6 offset-s3" ]
+          [ i [ class "material-icons prefix teal-text", onClick SubmitSearch ] [ text "search" ]
+          , input
+            [ Attributes.type_ "text"
+            , Attributes.value model.searchQuery
+            , Attributes.placeholder "Search"
+            , Attributes.id "player-search-query"
+            , onInput (\str -> UpdateSearch str)
+            ]
+            []
+          ]
+        ]
+      ]
+    ]
+
 -- Update
 update : Msg -> Model -> ( (Model, Cmd Msg), ExternalMsg )
 update msg model =
   case msg of
     UpdateEmail email ->          handleUpdateEmail model email
     UpdateBlurb blurb ->          handleUpdateBlurb model blurb
+    UpdateSearch query ->         handleUpdateSearch model query
     UpdateChips ->                handleUpdateChips model
     UpdatePlayer payload ->       handleUpdatePlayer model payload
     UpdatePlayerList payload ->   handleUpdatePlayerList model payload
     UpdateCurrentRooms payload -> handleUpdateCurrentRooms model payload
+    UpdateSearchList payload ->   handleUpdateSearchList model payload
     AcceptInvitation toRoom ->    handleAcceptInvitation model toRoom
     SubmitEmailUpdate ->          handleSubmitUpdate model Email
     SubmitBlurbUpdate ->          handleSubmitUpdate model Blurb
     HeaderClicked attribute ->    handleHeaderClicked model attribute
+    ChangeSubTab newSubTab ->     handleChangeSubTab model newSubTab
     Paginate type_ page_num ->    handlePaginate model type_ page_num
+    PaginateSearch page_num ->    handlePaginateSearch model page_num
     SubmitCreateGameForm ->       handleSubmitCreateGameForm model
+    SubmitSearch ->               handleSubmitSearch model
     RoomCreated ->                handleRoomCreated model
     CreateRoomFailed payload ->   handleCreateRoomFailed model payload
     SetGameTitle title ->         handleSetGameTitle model title
@@ -614,6 +701,10 @@ handleUpdateBlurb model blurb =
       { profile | blurb = blurb }
   in
   ( ( { model | profile = newProfile }, Cmd.none ), NoOp )
+
+handleUpdateSearch : Model -> String -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleUpdateSearch model query =
+  ( ( { model | searchQuery = query }, Cmd.none), NoOp )
 
 handleUpdateChips : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleUpdateChips model =
@@ -659,6 +750,16 @@ handleUpdateCurrentRooms model payload =
         Err _ -> model.invitedGames
   in
   ( ( { model | currentGames = newCurrentGames, invitedGames = newInvitedGames}, Cmd.none), NoOp )
+
+handleUpdateSearchList : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleUpdateSearchList model payload =
+  let
+    newSearchList =
+      case Decode.decodeValue (Decode.at ["players"] (Decode.list Decode.string)) payload of
+        Ok players -> players
+        Err _ -> model.playerSearchList
+  in
+  ( ( { model | playerSearchList = newSearchList }, Cmd.none), NoOp )
 
 handleSubmitUpdate : Model -> UpdatableAttribute -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSubmitUpdate model attribute =
@@ -709,6 +810,10 @@ handleTabClicked : Model -> Tab -> ( ( Model, Cmd Msg), ExternalMsg )
 handleTabClicked model tab =
   ( ( { model | currentTab = tab }, Cmd.none), NoOp )
 
+handleChangeSubTab : Model -> StartGameSubTab -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleChangeSubTab model subTab =
+  ( ( { model | startGameSubTab = subTab }, Cmd.none), NoOp )
+
 handleAcceptInvitation : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleAcceptInvitation model room =
   ( (model, acceptInvitationPush model room), NoOp )
@@ -728,6 +833,16 @@ handlePaginate model type_ pageNum =
         _ -> Players
   in
   ( ( model, getPage model listing page), NoOp )
+
+handlePaginateSearch : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handlePaginateSearch model page_num =
+  let
+    newPage =
+      case String.toInt page_num of
+        Ok page -> page
+        Err _ -> 1
+  in
+  ( ( { model | currentSearchPage = newPage }, Cmd.none ), NoOp )
 
 handleSubmitCreateGameForm : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSubmitCreateGameForm model =
@@ -760,6 +875,16 @@ handleSubmitCreateGameForm model =
         (False, False) -> createGamePush newModel
   in
   ( ( newModel, cmd ), NoOp)
+
+handleSubmitSearch : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleSubmitSearch model =
+  let
+    (subTab, cmd) =
+      case String.isEmpty model.searchQuery of
+        True -> (model.startGameSubTab, Cmd.none)
+        False -> (PlayerSearchList, submitSearchPush model)
+  in
+  ( ( { model | startGameSubTab = subTab }, cmd), NoOp )
 
 handleSetGameTitle : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSetGameTitle model title =
@@ -906,15 +1031,25 @@ paginationConfig roomListing =
     Invites -> { onClickMsg = Paginate "invites", linksToShow = 5 }
     Players -> { onClickMsg = Paginate "players", linksToShow = 5 }
 
-syncInviteesAndPlayers : Model -> List String
-syncInviteesAndPlayers model =
+paginationConfigSearch : Pagination.Config Msg
+paginationConfigSearch =
+  { onClickMsg = PaginateSearch, linksToShow = 5 }
+
+paginationObjectForSearch : Model -> { totalPages : Int, page : Int }
+paginationObjectForSearch model =
+  let
+    totalPages =
+        ((List.length model.playerSearchList) // 10) + 1
+  in
+  { totalPages = totalPages, page = model.currentSearchPage }
+
+syncInviteesAndPlayers : Model -> List String -> List String
+syncInviteesAndPlayers model playerList =
   let
     invitees =
       model.newGame.invitees
-    players =
-      model.playerList.players
   in
-  List.filter (\player -> not <| (List.member player invitees)) players
+  List.filter (\player -> not <| (List.member player invitees)) playerList
 
 zipNamesWithColors : List String -> List (String, String)
 zipNamesWithColors names =
@@ -951,3 +1086,11 @@ noInviteesErrorMsg =
 getPlayerName : Model -> String
 getPlayerName model =
   Player.usernameToString model.player.username
+
+searchListForPage : Model -> List String
+searchListForPage model =
+  if List.length model.playerSearchList <= 10 then
+    model.playerSearchList
+  else
+    List.drop (10 * (model.currentSearchPage - 1)) model.playerSearchList
+    |> List.take 10
