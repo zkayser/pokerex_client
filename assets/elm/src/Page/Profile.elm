@@ -221,8 +221,8 @@ createGamePush model =
   in
   Phoenix.push socketUrl push
 
-getPageForPush : Model -> PageList -> Int -> Cmd Msg
-getPageForPush model pageType pageNum =
+getPage : Model -> PageList -> Int -> Cmd Msg
+getPage model pageType pageNum =
   let
     playerName =
       getPlayerName model
@@ -685,7 +685,7 @@ handleNewErrorMessage model payload =
   case Decode.decodeValue (Decode.at ["error"] Decode.string) payload of
     Ok message ->
       -- The `getPlayerPush` command is used to reset the player to its correct current state
-      -- on the server.
+      -- based on its state on the server.
       ( ( { model | errorMessages = model.errorMessages ++ [message]}, getPlayerPush model), NoOp )
     Err error -> ( ( model, Cmd.none), NoOp)
 
@@ -727,7 +727,7 @@ handlePaginate model type_ pageNum =
         "players" -> Players
         _ -> Players
   in
-  ( ( model, getPageForPush model listing page), NoOp )
+  ( ( model, getPage model listing page), NoOp )
 
 handleSubmitCreateGameForm : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleSubmitCreateGameForm model =
