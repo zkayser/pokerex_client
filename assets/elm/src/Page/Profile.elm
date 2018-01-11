@@ -4,7 +4,7 @@ import Data.Player as Player exposing (Player, Username)
 import Data.Session as Session exposing (Session)
 import Data.Profile as Profile exposing (Profile)
 import Data.AuthToken as AuthToken
-import Ports exposing (triggerFBInviteRequest)
+import Ports exposing (triggerFBInviteRequest, logout)
 import Route
 import Widgets.Pagination as Pagination exposing (paginate)
 import Widgets.Modal as Modal
@@ -87,6 +87,8 @@ type Msg
   | AddInvitee String
   | RoomCreated
   | CreateRoomFailed Decode.Value
+  | ProfileDeleted
+  | DeleteFailed Decode.Value
   | Paginate String String
   | PaginateSearch String
   | NewUpdateMessage Decode.Value
@@ -100,8 +102,7 @@ type Msg
   | SocketClosed
   | SocketClosedAbnormally
 
-type ExternalMsg
-  = NoOp
+type ExternalMsg = NoOp | Deleted
 
 type MessageType
   = UpdateMessage String
@@ -274,6 +275,19 @@ submitSearchPush model =
   in
   Phoenix.push socketUrl push
 
+deleteProfilePush : Model -> Cmd Msg
+deleteProfilePush model =
+  let
+    playerName =
+      getPlayerName model
+    push =
+      Push.init("players:" ++ playerName) "delete_profile"
+        |> Push.withPayload (Encode.object [ ("player", Encode.string playerName)])
+        |> Push.onOk (\_ -> ProfileDeleted)
+        |> Push.onError (\payload -> DeleteFailed payload)
+  in
+  Phoenix.push socketUrl push
+
 -- VIEW
 view : Session -> Model -> Html Msg
 view session model =
@@ -297,7 +311,7 @@ view session model =
       , div [ class "profile-pane" ]
         (viewTabs model)
       ]
-    , if model.openModal == DeleteModal then Modal.view <| deleteProfileModalConfig model else text ""
+    , if model.openModal == DeleteModal then Modal.bottomModalView <| deleteProfileModalConfig model else text ""
     ]
 
 viewProfileForm : Model -> List (Html Msg)
@@ -696,6 +710,8 @@ update msg model =
     SubmitSearch ->               handleSubmitSearch model
     RoomCreated ->                handleRoomCreated model
     CreateRoomFailed payload ->   handleCreateRoomFailed model payload
+    ProfileDeleted ->             handleProfileDeleted model
+    DeleteFailed payload ->       handleDeleteFailed model payload
     SetGameTitle title ->         handleSetGameTitle model title
     RemoveInvitee invitee ->      handleRemoveInvitee model invitee
     AddInvitee invitee ->         handleAddInvitee model invitee
@@ -980,9 +996,19 @@ handleCreateRoomFailed model payload =
 
 handleDeleteProfile : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleDeleteProfile model =
-  -- TODO: Push a message to the server to delete the user's profile
-  -- and redirect the user to the home route
-  ( ( model, Cmd.none), NoOp )
+  ( ( { model | openModal = AllClosed }, deleteProfilePush model), NoOp )
+
+handleProfileDeleted : Model -> ( ( Model, Cmd Msg), ExternalMsg )
+handleProfileDeleted model =
+  ( ( model, Cmd.batch [ logout (), Route.modifyUrl Route.Home ] ), Deleted )
+
+handleDeleteFailed : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg )
+handleDeleteFailed model _ =
+  let
+    message =
+      "An error occurred. Please try again."
+  in
+  ( ( { model | errorMessages = message :: model.errorMessages}, Cmd.none), NoOp )
 
 handleCloseModal : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleCloseModal model =

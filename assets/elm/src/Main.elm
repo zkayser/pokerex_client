@@ -238,8 +238,14 @@ updatePage page msg model =
       let
         ( ( profileModel, cmd), msgsFromPage ) =
           Profile.update subMsg subModel
+        newModel =
+          case msgsFromPage of
+            Profile.NoOp ->
+              model
+            Profile.Deleted ->
+              { model | session = { player = Nothing }}
       in
-      ( { model | pageState = Loaded (Page.Profile profileModel) }, Cmd.map ProfileMsg cmd)
+      ( { newModel | pageState = Loaded (Page.Profile profileModel) }, Cmd.map ProfileMsg cmd)
     ( SetPlayer player, _ ) ->
       let
         session =
