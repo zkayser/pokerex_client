@@ -41,7 +41,7 @@ type alias Model =
 
 type alias Rooms = { rooms : RoomInfoList, page : Int, totalPages : Int}
 
-type alias RoomInfo = { room : String, playerCount : Int, status : RoomStatus }
+type alias RoomInfo = { room : String, playerCount : Int, isOwner : Bool, status : RoomStatus }
 
 type alias RoomInfoList = List RoomInfo
 
@@ -530,10 +530,20 @@ viewRoom listingType roomInfo =
       , p
         [ class <| "status " ++ (toString roomInfo.status)]
         [text <| "Status: " ++ (statusToString roomInfo.status)]
-
-      ] ++ (maybeViewJoinDeclineBtns listingType roomInfo))
+      ] ++ (maybeViewJoinDeclineBtns listingType roomInfo) ++
+       (viewDeleteLeaveBtns listingType roomInfo))
     , hr [] []
     ]
+
+viewDeleteLeaveBtns : RoomListing -> RoomInfo -> List (Html Msg)
+viewDeleteLeaveBtns listingType roomInfo =
+  case listingType of
+    Invite -> [ text "" ]
+    Ongoing ->
+      if roomInfo.isOwner then
+        [ button [ class "btn red white-text delete-room-btn"] [ text "Delete" ] ]
+      else
+        [ button [ class "btn blue-grey darken-2 white-text leave-room-btn"] [text "Leave"] ]
 
 viewRoomTitle : String -> String
 viewRoomTitle title =
@@ -1045,6 +1055,7 @@ roomInfoDecoder =
   decode RoomInfo
     |> required "room" Decode.string
     |> required "player_count" Decode.int
+    |> required "is_owner" Decode.bool
     |> required "player_count" (Decode.int |> Decode.andThen (\int -> numToStatus int))
 
 numToStatus : Int -> Decoder RoomStatus
