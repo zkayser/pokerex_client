@@ -79,6 +79,8 @@ type Msg
   | ChangeSubTab StartGameSubTab
   | OpenDeleteConfirmation
   | DeleteProfile
+  | DeleteRoom String
+  | LeaveRoom String
   | CloseModal
   | SubmitCreateGameForm
   | SubmitSearch
@@ -285,6 +287,23 @@ deleteProfilePush model =
         |> Push.withPayload (Encode.object [ ("player", Encode.string playerName)])
         |> Push.onOk (\_ -> ProfileDeleted)
         |> Push.onError (\payload -> DeleteFailed payload)
+  in
+  Phoenix.push socketUrl push
+
+leaveRoom : Model -> String -> Cmd Msg
+leaveRoom model roomTitle =
+  let
+    playerName =
+      getPlayerName model
+    currentPage =
+      model.currentGames.page
+    push =
+      Push.init("private_rooms:" ++ playerName) "leave_room"
+        |> Push.withPayload (Encode.object
+            [ ( "player", Encode.string playerName )
+            , ( "room", Encode.string roomTitle)
+            , ( "current_page", Encode.int currentPage)
+            ] )
   in
   Phoenix.push socketUrl push
 
@@ -541,9 +560,16 @@ viewDeleteLeaveBtns listingType roomInfo =
     Invite -> [ text "" ]
     Ongoing ->
       if roomInfo.isOwner then
-        [ button [ class "btn red white-text delete-room-btn"] [ text "Delete" ] ]
+        [ button
+          [ class "btn red white-text delete-room-btn"
+          , onClick <| DeleteRoom roomInfo.room
+          ]
+          [ text "Delete" ] ]
       else
-        [ button [ class "btn blue-grey darken-2 white-text leave-room-btn"] [text "Leave"] ]
+        [ button
+          [ class "btn blue-grey darken-2 white-text leave-room-btn"
+          , onClick <| LeaveRoom roomInfo.room
+          ] [text "Leave"] ]
 
 viewRoomTitle : String -> String
 viewRoomTitle title =
@@ -713,6 +739,8 @@ update msg model =
     ChangeSubTab newSubTab ->     handleChangeSubTab model newSubTab
     OpenDeleteConfirmation ->     handleOpenDeleteConfirmation model
     DeleteProfile ->              handleDeleteProfile model
+    DeleteRoom title ->           handleDeleteRoom model title
+    LeaveRoom title ->            handleLeaveRoom model title
     CloseModal ->                 handleCloseModal model
     Paginate type_ page_num ->    handlePaginate model type_ page_num
     PaginateSearch page_num ->    handlePaginateSearch model page_num
@@ -1024,6 +1052,14 @@ handleCloseModal : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleCloseModal model =
   ( ( { model | openModal = AllClosed }, Cmd.none), NoOp )
 
+handleDeleteRoom : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handleDeleteRoom model roomTitle =
+  -- TODO: Implement with push request to delete the room
+  ( ( model, Cmd.none), NoOp )
+
+handleLeaveRoom : Model -> String -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleLeaveRoom model roomTitle =
+  ( ( model, leaveRoom model roomTitle), NoOp )
 
 -- SUBSCRIPTIONS
 subscriptions : Model -> Session -> Sub Msg
