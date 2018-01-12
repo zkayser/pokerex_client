@@ -307,6 +307,23 @@ leaveRoom model roomTitle =
   in
   Phoenix.push socketUrl push
 
+deleteRoom : Model -> String -> Cmd Msg
+deleteRoom model roomTitle =
+  let
+    playerName =
+      getPlayerName model
+    currentPage =
+      model.currentGames.page
+    push =
+      Push.init("private_rooms:" ++ playerName) "delete_room"
+        |> Push.withPayload (Encode.object
+          [ ("player", Encode.string playerName)
+          , ("room", Encode.string roomTitle)
+          , ("current_page", Encode.int currentPage)
+          ])
+  in
+  Phoenix.push socketUrl push
+
 -- VIEW
 view : Session -> Model -> Html Msg
 view session model =
@@ -1054,8 +1071,7 @@ handleCloseModal model =
 
 handleDeleteRoom : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleDeleteRoom model roomTitle =
-  -- TODO: Implement with push request to delete the room
-  ( ( model, Cmd.none), NoOp )
+  ( ( model, deleteRoom model roomTitle), NoOp )
 
 handleLeaveRoom : Model -> String -> ( ( Model, Cmd Msg ), ExternalMsg )
 handleLeaveRoom model roomTitle =
