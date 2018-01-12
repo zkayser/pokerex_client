@@ -1036,10 +1036,14 @@ handleRoomCreated model =
   let
     newMessages =
       "Room successfully created" :: model.updateMessages
+    title =
+      model.newGame.title
     newGame =
       { title = "", owner = Player.usernameToString model.player.username, invitees = []}
+    redirect =
+      Route.modifyUrl (Route.Room "private" title)
   in
-  ( ({ model | newGame = newGame, updateMessages = newMessages}, Cmd.none), NoOp )
+  ( ({ model | newGame = newGame, updateMessages = newMessages}, redirect), NoOp )
 
 handleCreateRoomFailed : Model -> Decode.Value -> ( ( Model, Cmd Msg), ExternalMsg)
 handleCreateRoomFailed model payload =
