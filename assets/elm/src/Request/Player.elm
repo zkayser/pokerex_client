@@ -1,4 +1,4 @@
-module Request.Player exposing (login, register, storeSession)
+module Request.Player exposing (login, register, storeSession, facebookLogin)
 
 import Data.AuthToken as AuthToken exposing (AuthToken, withAuthorization)
 import Data.Player as Player exposing (Player, Username, encodeUsername)
@@ -51,6 +51,11 @@ login { username, password } =
   in
   Decode.field "player" Player.decoder
     |> Http.post (apiUrl ++ "/sessions") body
+
+facebookLogin : Encode.Value -> Http.Request Player
+facebookLogin playerData =
+  Decode.field "player" Player.decoder
+    |> Http.post (apiUrl ++ "/auth") (playerData |> Http.jsonBody)
 
 register : Registration r -> Http.Request Player
 register registration =

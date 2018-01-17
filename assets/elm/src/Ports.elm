@@ -13,3 +13,5 @@ port scrollChatToTop : () -> Cmd msg
 port onSessionChange : (Value -> msg) -> Sub msg
 
 port loginWithFB : () -> Cmd msg
+
+port onFBLogin : (Value -> msg) -> Sub msg

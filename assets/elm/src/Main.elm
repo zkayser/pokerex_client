@@ -2,11 +2,14 @@ module Main exposing (..)
 
 import Data.Session as Session exposing (Session)
 import Data.Player as Player exposing (Player)
+import Data.Facebook as Facebook
+import Request.Player
 import Html as Html exposing (..)
 import Html.Attributes as Attr exposing (..)
 import Html.Events as Events exposing (onInput, onClick)
 import Json.Encode exposing (Value)
 import Json.Decode as Decode
+import Http
 import Task
 import Navigation exposing (Location)
 import Ports
@@ -39,6 +42,8 @@ type Msg
  | RoomMsg Room.Msg
  | ProfileMsg Profile.Msg
  | SetPlayer (Maybe Player)
+ | FBLogin (Result String Facebook.FBData)
+ | SentLogin (Result Http.Error Player)
 
 type PageState
   = Loaded Page
@@ -257,6 +262,17 @@ updatePage page msg model =
             Cmd.none
       in
       ( { model | session = { session | player = player }}, cmd)
+    ( FBLogin result, _ ) ->
+      let
+        cmd =
+          case result of
+            (Ok fbData) -> Http.send SentLogin (Request.Player.facebookLogin <| Facebook.encode fbData)
+            _ -> Cmd.none
+      in
+      ( model, cmd )
+    ( SentLogin (Ok player), _ ) ->
+      ( { model | session = { session | player = Just player }},
+          Cmd.batch [ Request.Player.storeSession player, Route.modifyUrl Route.Home ])
     ( Logout, _ ) ->
       let
         session =
@@ -304,6 +320,7 @@ subscriptions model =
     subs =
       [ pageSubscriptions (getPage model.pageState) model.session
       , Sub.map SetPlayer sessionChange
+      , Sub.map FBLogin fbLogin
       ]
     withBlur =
       case model.openDropdown of
@@ -347,6 +364,10 @@ urlFromString navbarLink model =
 sessionChange : Sub (Maybe Player)
 sessionChange =
   Ports.onSessionChange (Decode.decodeValue Player.decoder >> Result.toMaybe)
+
+fbLogin : Sub (Result String Facebook.FBData)
+fbLogin =
+  Ports.onFBLogin (Decode.decodeValue Facebook.decoder)
 
 pageSubscriptions : Page -> Session -> Sub Msg
 pageSubscriptions page session =

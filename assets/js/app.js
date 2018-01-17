@@ -69,7 +69,10 @@ elmApp.ports.loginWithFB.subscribe(() => {
   FB.login((response) => {
     if (response.authResponse) {
       console.log('Auth successful, retrieving user information');
-      FB.api("/me", (response) => elmApp.ports.onUsernameReceived(response.name));
+      FB.api("/me", (response) => {
+        console.log('Response:', response);
+        elmApp.ports.onFBLogin.send(response);
+      });
     } else ( console.log('Auth failed...'));
   });
 });
