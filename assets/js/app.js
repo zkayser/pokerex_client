@@ -15,6 +15,27 @@ import "phoenix_html"
 
 import Elm from "./main.js";
 
+// FB SDK Setup/Functions
+const fbId = document.querySelector("[data-fb-id]").getAttribute('data-fb-id');
+
+console.log('FB id: ', `${fbId}`);
+window.fbAsyncInit = () => {
+  FB.init({
+    appId      : `${fbId}`,
+    xfbml      : true,
+    version    : 'v2.9'
+  });
+  FB.AppEvents.logPageView();
+};
+
+(function(d, s, id){
+   var js, fjs = d.getElementsByTagName(s)[0];
+   if (d.getElementById(id)) {return;}
+   js = d.createElement(s); js.id = id;
+   js.src = "//connect.facebook.net/en_US/sdk.js";
+   fjs.parentNode.insertBefore(js, fjs);
+ }(document, 'script', 'facebook-jssdk'));
+
 const ELM_DIV = document.getElementById("elm-div");
 let elmApp = Elm.Main.embed(ELM_DIV, localStorage.session || null);
 
@@ -42,7 +63,16 @@ elmApp.ports.triggerFBInviteRequest.subscribe(() => {
       console.log('Got response back from FB invite request: ', JSON.stringify(response));
     });
   }
-})
+});
+
+elmApp.ports.loginWithFB.subscribe(() => {
+  FB.login((response) => {
+    if (response.authResponse) {
+      console.log('Auth successful, retrieving user information');
+      FB.api("/me", (response) => elmApp.ports.onUsernameReceived(response.name));
+    } else ( console.log('Auth failed...'));
+  });
+});
 
 window.addEventListener("storage", (event) => {
   if (event.storageArea === localStorage && event.key === "session") {
@@ -50,9 +80,3 @@ window.addEventListener("storage", (event) => {
     app.ports.onSessionChange.send(event.newValue);
   }
 }, false);
-// Import local files
-//
-// Local files can be imported directly using relative
-// paths "./socket" or full ones "web/static/js/socket".
-
-// import socket from "./socket"

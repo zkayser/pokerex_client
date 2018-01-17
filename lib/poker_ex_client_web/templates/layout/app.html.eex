@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
+    <meta data-fb-id=<%= System.get_env("FACEBOOK_APP_ID") %>>
 
     <title>Hello PokerExClient!</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
@@ -14,29 +15,7 @@
   </head>
 
   <body id="elm-div">
-   <!-- <header></header>
-    <main role="main">
-      <%#= render @view_module, @view_template, assigns %>
-    </main> -->
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
-    <script>
-      window.fbAsyncInit = function() {
-        FB.init({
-          appId      : <%= System.get_env("FACEBOOK_APP_ID") %>,
-          xfbml      : true,
-          version    : 'v2.9'
-        });
-        FB.AppEvents.logPageView();
-      };
-
-      (function(d, s, id){
-         var js, fjs = d.getElementsByTagName(s)[0];
-         if (d.getElementById(id)) {return;}
-         js = d.createElement(s); js.id = id;
-         js.src = "//connect.facebook.net/en_US/sdk.js";
-         fjs.parentNode.insertBefore(js, fjs);
-       }(document, 'script', 'facebook-jssdk'));
-    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
   </body>
 </html>

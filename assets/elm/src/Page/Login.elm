@@ -9,6 +9,7 @@ import Http
 import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
 import Json.Decode.Pipeline as Pipeline exposing (decode, optional)
 import Request.Player exposing (storeSession)
+import Ports
 import Views.Form as Form
 import Validate exposing (..)
 import Route
@@ -41,6 +42,7 @@ view session model =
       [
        Form.viewErrors model.errors
       , viewForm
+      , viewFBLogin
       ]
     ]
 
@@ -63,6 +65,11 @@ viewForm =
         [ text "Login" ]
     ]
 
+viewFBLogin : Html Msg
+viewFBLogin =
+  button [ class "btn auth-btn waves-effect blue darken-4 white-text", onClick LoginWithFb ]
+    [ text "Login with Facebook" ]
+
 -- Update --
 
 type Msg
@@ -70,6 +77,7 @@ type Msg
   | SetUsername String
   | SetPassword String
   | LoginCompleted (Result Http.Error Player)
+  | LoginWithFb
 
 type ExternalMsg
   = NoOp
@@ -102,6 +110,8 @@ update msg model =
       ( ( { model | errors = List.map (\errorMessage -> (Form, errorMessage)) errorMessages }, Cmd.none), NoOp )
     LoginCompleted (Ok player) ->
       ( (model, Cmd.batch [ storeSession player, Route.modifyUrl Route.Home ]), SetPlayer player )
+    LoginWithFb ->
+      ( ( model, Ports.loginWithFB ()), NoOp )
 
 
 -- VALIDATION --
