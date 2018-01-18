@@ -273,6 +273,9 @@ updatePage page msg model =
     ( SentLogin (Ok player), _ ) ->
       ( { model | session = { session | player = Just player }},
           Cmd.batch [ Request.Player.storeSession player, Route.modifyUrl Route.Home ])
+    ( SentLogin (Err payload), _) ->
+      Debug.log ("Got bad payload: " ++ (toString payload))
+      ( model, Cmd.none )
     ( Logout, _ ) ->
       let
         session =
