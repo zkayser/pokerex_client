@@ -25,7 +25,7 @@ type ExternalMsg = NoOp
 
 initialModel : Model
 initialModel =
-  { email = "", errors = [], messages = ["Hallelujah!!!!!"] }
+  { email = "", errors = [], messages = [] }
 
 view : Model -> Html Msg
 view model =
@@ -99,7 +99,7 @@ handleServerResult model result =
             PasswordReset.Success -> { model | messages = passwordReset.message :: model.messages }
             PasswordReset.Error -> { model | errors = passwordReset.message :: model.errors }
       in
-      ( ( model, Cmd.none), NoOp)
+      ( ( newModel, Cmd.none), NoOp)
     Err _ ->
       let
         errorMessage =

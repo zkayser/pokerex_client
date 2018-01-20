@@ -66,7 +66,7 @@ passwordReset data =
         |> Http.jsonBody
   in
   Decode.field "data" PasswordReset.decoder
-    |> Http.post (apiUrl ++ "/password_reset") body
+    |> Http.post (apiUrl ++ "/forgot_password") body
 
 register : Registration r -> Http.Request Player
 register registration =
