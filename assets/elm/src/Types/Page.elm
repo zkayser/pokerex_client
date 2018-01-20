@@ -6,6 +6,7 @@ import Page.Home as Home
 import Page.Room as Room
 import Page.Rooms as Rooms
 import Page.Profile as Profile
+import Page.ForgotPassword as ForgotPassword
 
 type Page
   = Blank
@@ -16,3 +17,5 @@ type Page
   | Rooms Rooms.Model
   | Room Room.Model
   | Profile Profile.Model
+  | ForgotPassword ForgotPassword.Model
+

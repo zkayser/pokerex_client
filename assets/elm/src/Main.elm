@@ -27,6 +27,7 @@ import Page.Room as Room
 import Page.Rooms as Rooms
 import Page.Profile as Profile
 import Page.NotFound as NotFound
+import Page.ForgotPassword as ForgotPassword
 import Widgets.Dropdown as Dropdown
 import Mouse
 
@@ -41,6 +42,7 @@ type Msg
  | RoomsMsg Rooms.Msg
  | RoomMsg Room.Msg
  | ProfileMsg Profile.Msg
+ | ForgotPasswordMsg ForgotPassword.Msg
  | SetPlayer (Maybe Player)
  | FBLogin (Result String Facebook.FBData)
  | SentLogin (Result Http.Error Player)
@@ -84,6 +86,8 @@ setRoute maybeRoute model =
               Nothing -> Page.NotFound
         in
         ( { model | pageState = Loaded (page)}, Cmd.none )
+      Just Route.ForgotPassword ->
+        ( { model | pageState = Loaded (Page.ForgotPassword ForgotPassword.initialModel)}, Cmd.none)
 
 type alias Model =
   { session : Session
@@ -172,6 +176,9 @@ viewPage session isLoading page =
         |> Html.map ProfileMsg
     Page.NotFound ->
       NotFound.view session
+    Page.ForgotPassword subModel ->
+      ForgotPassword.view subModel
+        |> Html.map ForgotPasswordMsg
 
 -- UPDATE --
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -251,6 +258,12 @@ updatePage page msg model =
               { model | session = { player = Nothing }}
       in
       ( { newModel | pageState = Loaded (Page.Profile profileModel) }, Cmd.map ProfileMsg cmd)
+    ( ForgotPasswordMsg subMsg, Page.ForgotPassword subModel ) ->
+      let
+        ( (forgotPwdModel, cmd), msgFromPage) =
+          ForgotPassword.update subMsg subModel
+      in
+      ( { model | pageState = Loaded (Page.ForgotPassword forgotPwdModel ) }, Cmd.map ForgotPasswordMsg cmd)
     ( SetPlayer player, _ ) ->
       let
         session =
@@ -391,6 +404,8 @@ pageSubscriptions page session =
       Sub.map RoomMsg <| Room.subscriptions subModel session
     Page.Profile subModel ->
       Sub.map ProfileMsg <| Profile.subscriptions subModel session
+    Page.ForgotPassword _ ->
+      Sub.none
 
 main : Program Value Model Msg
 main =

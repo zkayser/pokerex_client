@@ -44,6 +44,8 @@ view session model =
        Form.viewErrors model.errors
       , viewForm
       , FBLogin.viewFBLogin LoginWithFb
+      , hr [] []
+      , div [ class "forgot-password-link grey-text", onClick GoToForgotPassword ] [ text "Forgot password?"]
       ]
     ]
 
@@ -74,6 +76,7 @@ type Msg
   | SetPassword String
   | LoginCompleted (Result Http.Error Player)
   | LoginWithFb
+  | GoToForgotPassword
 
 type ExternalMsg
   = NoOp
@@ -108,6 +111,8 @@ update msg model =
       ( (model, Cmd.batch [ storeSession player, Route.modifyUrl Route.Home ]), SetPlayer player )
     LoginWithFb ->
       ( ( model, Ports.loginWithFB ()), NoOp )
+    GoToForgotPassword ->
+      ( ( model, Route.modifyUrl Route.ForgotPassword), NoOp )
 
 
 -- VALIDATION --
