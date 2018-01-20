@@ -11,6 +11,7 @@ import Json.Decode.Pipeline as Pipeline exposing (decode, optional)
 import Request.Player exposing (storeSession)
 import Ports
 import Views.Form as Form
+import Widgets.FacebookLogin as FBLogin
 import Validate exposing (..)
 import Route
 
@@ -42,7 +43,7 @@ view session model =
       [
        Form.viewErrors model.errors
       , viewForm
-      , viewFBLogin
+      , FBLogin.viewFBLogin LoginWithFb
       ]
     ]
 
@@ -64,11 +65,6 @@ viewForm =
     , button [ class "btn waves-effect blue" ]
         [ text "Login" ]
     ]
-
-viewFBLogin : Html Msg
-viewFBLogin =
-  button [ class "btn auth-btn waves-effect blue darken-4 white-text", onClick LoginWithFb ]
-    [ text "Login with Facebook" ]
 
 -- Update --
 

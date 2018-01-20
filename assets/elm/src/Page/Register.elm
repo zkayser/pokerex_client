@@ -10,6 +10,8 @@ import Json.Decode as Decode exposing (Decoder, decodeString, field, string)
 import Json.Decode.Pipeline as Pipeline exposing (decode, optional)
 import Request.Player exposing (storeSession)
 import Views.Form as Form
+import Widgets.FacebookLogin as FBLogin
+import Ports
 import Validate exposing (..)
 import Route
 
@@ -45,6 +47,7 @@ view session model =
     [ div [ class "auth-form card-panel z-depth-4 rounded" ]
       [ Form.viewErrors model.errors
       , viewForm
+      , FBLogin.viewFBLogin LoginWithFB
       ]
     ]
 
@@ -75,6 +78,7 @@ type Msg
   = SubmitForm
   | Set RegistrationAttr
   | RegistrationCompleted (Result Http.Error Player)
+  | LoginWithFB
 
 type ExternalMsg
   = NoOp
@@ -127,3 +131,5 @@ update msg model =
       ( ( { model | errors = [ (Server, toString error) ] }, Cmd.none), NoOp )
     RegistrationCompleted (Ok player) ->
       ( ( model , Cmd.batch [ storeSession player, Route.modifyUrl Route.Home ] ), SetPlayer player )
+    LoginWithFB ->
+      ( ( model, Ports.loginWithFB ()), NoOp )
