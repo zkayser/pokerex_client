@@ -20,3 +20,7 @@
 .auth-btn {
 	margin: 1rem;
 }
+
+.forgot-password-link {
+	cursor: pointer;
+}

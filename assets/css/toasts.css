@@ -1,0 +1,36 @@
+.messages-container {
+	position: fixed;
+	z-index: 100;
+	min-width: 25%;
+	right: 0%;
+	top: 15%;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	    -ms-flex-direction: column;
+	        flex-direction: column;
+	-webkit-box-align: baseline;
+	    -ms-flex-align: baseline;
+	        align-items: baseline;
+}
+
+.message {
+	color: white;
+	font-size: 1.25rem;
+	margin: 0.5rem 0;
+	padding: 1rem;
+	-webkit-box-shadow: 0 0 1rem 0 black;
+	        box-shadow: 0 0 1rem 0 black;
+	-webkit-animation: slideInMessage 0.75s ease-in-out;
+	        animation: slideInMessage 0.75s ease-in-out;
+}
+
+.error-message {
+	background-color: var(--bright-red);
+}
+
+.success-message {
+	background-color: var(--green-accent);
+}

@@ -44,7 +44,7 @@ view session model =
        Form.viewErrors model.errors
       , viewForm
       , FBLogin.viewFBLogin LoginWithFb
-      , hr [] []
+      , br [] []
       , div [ class "forgot-password-link grey-text", onClick GoToForgotPassword ] [ text "Forgot password?"]
       ]
     ]

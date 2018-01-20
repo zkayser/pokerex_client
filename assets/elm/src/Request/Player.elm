@@ -1,7 +1,8 @@
-module Request.Player exposing (login, register, storeSession, facebookLogin)
+module Request.Player exposing (..)
 
 import Data.AuthToken as AuthToken exposing (AuthToken, withAuthorization)
 import Data.Player as Player exposing (Player, Username, encodeUsername)
+import Data.PasswordReset as PasswordReset exposing (PasswordReset)
 import Http
 import HttpBuilder exposing (RequestBuilder, withExpect, withQueryParams)
 import Json.Decode as Decode
@@ -56,6 +57,16 @@ facebookLogin : Encode.Value -> Http.Request Player
 facebookLogin playerData =
   Decode.field "player" Player.decoder
     |> Http.post (apiUrl ++ "/auth") (playerData |> Http.jsonBody)
+
+passwordReset : { r | email : String } -> Http.Request PasswordReset
+passwordReset data =
+  let
+    body =
+      Encode.object [ ("email", Encode.string data.email ) ]
+        |> Http.jsonBody
+  in
+  Decode.field "data" PasswordReset.decoder
+    |> Http.post (apiUrl ++ "/password_reset") body
 
 register : Registration r -> Http.Request Player
 register registration =

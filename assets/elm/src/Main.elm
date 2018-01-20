@@ -404,8 +404,8 @@ pageSubscriptions page session =
       Sub.map RoomMsg <| Room.subscriptions subModel session
     Page.Profile subModel ->
       Sub.map ProfileMsg <| Profile.subscriptions subModel session
-    Page.ForgotPassword _ ->
-      Sub.none
+    Page.ForgotPassword subModel ->
+      Sub.map ForgotPasswordMsg <| ForgotPassword.subscriptions subModel -- No session needed here
 
 main : Program Value Model Msg
 main =
