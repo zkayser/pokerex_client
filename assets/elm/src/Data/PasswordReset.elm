@@ -1,5 +1,6 @@
 module Data.PasswordReset exposing (..)
 
+import Data.Player as Player exposing (Player)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (required, decode)
 

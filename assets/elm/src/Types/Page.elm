@@ -7,6 +7,7 @@ import Page.Room as Room
 import Page.Rooms as Rooms
 import Page.Profile as Profile
 import Page.ForgotPassword as ForgotPassword
+import Page.ResetPassword as ResetPassword
 
 type Page
   = Blank
@@ -18,4 +19,5 @@ type Page
   | Room Room.Model
   | Profile Profile.Model
   | ForgotPassword ForgotPassword.Model
+  | ResetPassword ResetPassword.Model
 

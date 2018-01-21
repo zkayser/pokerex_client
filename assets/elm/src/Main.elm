@@ -28,6 +28,7 @@ import Page.Rooms as Rooms
 import Page.Profile as Profile
 import Page.NotFound as NotFound
 import Page.ForgotPassword as ForgotPassword
+import Page.ResetPassword as ResetPassword
 import Widgets.Dropdown as Dropdown
 import Mouse
 
@@ -43,6 +44,7 @@ type Msg
  | RoomMsg Room.Msg
  | ProfileMsg Profile.Msg
  | ForgotPasswordMsg ForgotPassword.Msg
+ | ResetPasswordMsg ResetPassword.Msg
  | SetPlayer (Maybe Player)
  | FBLogin (Result String Facebook.FBData)
  | SentLogin (Result Http.Error Player)
@@ -88,6 +90,8 @@ setRoute maybeRoute model =
         ( { model | pageState = Loaded (page)}, Cmd.none )
       Just Route.ForgotPassword ->
         ( { model | pageState = Loaded (Page.ForgotPassword ForgotPassword.initialModel)}, Cmd.none)
+      Just (Route.ResetPassword resetToken) ->
+        ( { model | pageState = Loaded (Page.ResetPassword <| ResetPassword.initialModel resetToken)}, Cmd.none)
 
 type alias Model =
   { session : Session
@@ -179,6 +183,9 @@ viewPage session isLoading page =
     Page.ForgotPassword subModel ->
       ForgotPassword.view subModel
         |> Html.map ForgotPasswordMsg
+    Page.ResetPassword subModel ->
+      ResetPassword.view subModel
+        |> Html.map ResetPasswordMsg
 
 -- UPDATE --
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -264,6 +271,22 @@ updatePage page msg model =
           ForgotPassword.update subMsg subModel
       in
       ( { model | pageState = Loaded (Page.ForgotPassword forgotPwdModel ) }, Cmd.map ForgotPasswordMsg cmd)
+    ( ResetPasswordMsg subMsg, Page.ResetPassword subModel ) ->
+      let
+          ( (resetPwdModel, cmd), msgFromPage) =
+            ResetPassword.update subMsg subModel
+          newModel =
+            case msgFromPage of
+              ResetPassword.NoOp ->
+                model
+              ResetPassword.SetPlayer player ->
+                let
+                  session =
+                    model.session
+                in
+                { model | session = { player = Just player }}
+      in
+      ( { newModel | pageState = Loaded (Page.ResetPassword resetPwdModel ) }, Cmd.map ResetPasswordMsg cmd )
     ( SetPlayer player, _ ) ->
       let
         session =
@@ -363,7 +386,7 @@ urlFromString navbarLink model =
         DropdownType.Logout -> ""
         DropdownType.Login -> "login"
         DropdownType.Register -> "register"
-        DropdownType.Room -> "rooms/public/room_1"
+        DropdownType.Room -> "rooms/public/room_1" -- This is probably dead code
         DropdownType.Rooms -> "rooms"
         DropdownType.Profile -> "profile"
     prefix =
@@ -406,6 +429,8 @@ pageSubscriptions page session =
       Sub.map ProfileMsg <| Profile.subscriptions subModel session
     Page.ForgotPassword subModel ->
       Sub.map ForgotPasswordMsg <| ForgotPassword.subscriptions subModel -- No session needed here
+    Page.ResetPassword subModel ->
+      Sub.map ResetPasswordMsg <| ResetPassword.subscriptions subModel
 
 main : Program Value Model Msg
 main =

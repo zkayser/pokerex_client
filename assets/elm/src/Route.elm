@@ -14,6 +14,7 @@ type Route
   | Rooms
   | Profile String
   | ForgotPassword
+  | ResetPassword String
 
 route : Parser (Route -> a) a
 route =
@@ -26,6 +27,7 @@ route =
         , Url.map Rooms (s "rooms")
         , Url.map Profile (s "profile" </> Url.string)
         , Url.map ForgotPassword (s "forgot-password")
+        , Url.map ResetPassword (s "reset-password" </> Url.string)
         ]
 
 fromLocation : Location -> Maybe Route
@@ -56,5 +58,6 @@ routeToString page =
         Rooms -> [ "rooms" ]
         Profile user -> [ "profile", user ]
         ForgotPassword -> [ "forgot-password" ]
+        ResetPassword resetToken -> ["reset-password", resetToken]
   in
   "#/" ++ String.join "/" pieces
