@@ -75,6 +75,7 @@ type Msg
   | UpdateCurrentRooms Decode.Value
   | UpdateSearchList Decode.Value
   | AcceptInvitation String
+  | DeclineInvitation String
   | HeaderClicked UpdatableAttribute
   | ChangeSubTab StartGameSubTab
   | OpenDeleteConfirmation
@@ -232,6 +233,20 @@ acceptInvitationPush model room =
             [ ("player", Encode.string playerName )
             , ("room", Encode.string room)
             ] )
+  in
+  Phoenix.push socketUrl push
+
+declineInvitationPush : Model -> String -> Cmd Msg
+declineInvitationPush model room =
+  let
+    playerName =
+      getPlayerName model
+    push =
+      Push.init ("private_rooms:" ++ playerName) "decline_invitation"
+        |> Push.withPayload (Encode.object
+          [ ("player", Encode.string playerName )
+          , ("room", Encode.string room )
+          ])
   in
   Phoenix.push socketUrl push
 
@@ -608,7 +623,9 @@ maybeViewJoinDeclineBtns listingType roomInfo =
           ]
         ]
       , p [ class "room-btn-container" ]
-        [ a [ class "btn red white-text waves-effect waves-light invite-btn"]
+        [ a [ class "btn red white-text waves-effect waves-light invite-btn"
+            , onClick <| DeclineInvitation roomInfo.room
+            ]
           [ i [ class "material-icons" ] [ text "close" ]
           , text "Decline"
           ]
@@ -750,6 +767,7 @@ update msg model =
     UpdateCurrentRooms payload -> handleUpdateCurrentRooms model payload
     UpdateSearchList payload ->   handleUpdateSearchList model payload
     AcceptInvitation toRoom ->    handleAcceptInvitation model toRoom
+    DeclineInvitation fromRoom -> handleDeclineInvitation model fromRoom
     SubmitEmailUpdate ->          handleSubmitUpdate model Email
     SubmitBlurbUpdate ->          handleSubmitUpdate model Blurb
     HeaderClicked attribute ->    handleHeaderClicked model attribute
@@ -916,6 +934,10 @@ handleChangeSubTab model subTab =
 handleAcceptInvitation : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleAcceptInvitation model room =
   ( (model, acceptInvitationPush model room), NoOp )
+
+handleDeclineInvitation : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
+handleDeclineInvitation model room =
+  ( ( model, declineInvitationPush model room), NoOp )
 
 handleOpenDeleteConfirmation : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 handleOpenDeleteConfirmation model =
