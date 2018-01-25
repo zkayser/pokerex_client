@@ -39,6 +39,18 @@ room : Model -> Channel Msg
 room model =
   Channel.init ("rooms:" ++ model.room)
     |> Channel.withPayload ( Encode.object [ ("type", Encode.string model.roomType), ("amount", Encode.int <| joinValToInt model.joinValue) ] )
+    |> roomChannel
+
+
+privateRoom : String -> Player -> Channel Msg
+privateRoom roomTitle player =
+  Channel.init ("rooms:" ++ roomTitle)
+    |> Channel.withPayload ( Encode.object [ ("type", Encode.string "private"), ("amount", Encode.int 0) ])
+    |> roomChannel
+
+roomChannel : Channel Msg -> Channel Msg
+roomChannel channel =
+  channel
     |> Channel.onJoin (\_ -> JoinedChannel)
     |> Channel.onJoinError (\json -> JoinFailed json)
     |> Channel.onRejoin (\json -> Rejoined json)
@@ -56,3 +68,10 @@ playerInfoChannel player =
   Channel.init ("players:" ++ (Player.usernameToString player.username))
     |> Channel.onJoin (\_ -> ConnectedToPlayerChannel)
     |> Channel.on "chip_info" (\payload -> ChipInfo payload)
+
+-- Channel helpers
+subscribeToChannels : Player -> String -> String -> List (Channel Msg)
+subscribeToChannels player roomTitle roomType =
+  case roomType of
+    "private" -> [ playerInfoChannel player, privateRoom roomTitle player ]
+    _ -> [ playerInfoChannel player ]

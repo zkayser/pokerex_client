@@ -39,7 +39,7 @@ handleJoin model =
     newSubscriptions =
       (room model) :: model.channelSubscriptions
   in
-  ( ( { model | channelSubscriptions = newSubscriptions}, Cmd.none), NoOp )
+  ( ( { model | channelSubscriptions = newSubscriptions, modalRendered = Closed }, Cmd.none), NoOp )
 
 handleJoinRoom : Model -> Player -> ( ( Model, Cmd Msg), ExternalMsg)
 handleJoinRoom model player =
@@ -66,12 +66,25 @@ handleJoinedChannel model =
 handleJoinFailed : Model -> Value -> ( (Model, Cmd Msg), ExternalMsg )
 handleJoinFailed model json =
   let
-    message =
-      case Decode.decodeValue (Decode.field "message" Decode.string) json of
-        Ok theMessage -> theMessage
-        Err _ -> "An error occurred when trying to join the room. Please try again."
+    -- The Ok message received is because the player is joining a private
+    -- room, but has not yet joined with an amount. To force the player to
+    -- enter an amount to join the game, we deny their auto join that the
+    -- client performs for "private" room users and make them join manually.
+    -- Subsequent auto-joins should be successful.
     newModel =
-      { model | errorMessages = message :: model.errorMessages }
+      case Decode.decodeValue (Decode.field "message" Decode.string) json of
+        Ok message ->
+          let
+            newSubscriptions =
+              List.filter (\channel -> channel.topic /= ("rooms:" ++ model.room)) model.channelSubscriptions
+          in
+          { model | roomMessages = message :: model.roomMessages, channelSubscriptions = newSubscriptions }
+        Err _ ->
+          let
+            message =
+              "An error occurred when trying to join the room. Please try again."
+          in
+          { model | errorMessages = message :: model.errorMessages }
   in
   ( (newModel, Cmd.none), NoOp )
 
