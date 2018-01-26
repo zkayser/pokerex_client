@@ -3,6 +3,7 @@ module Main exposing (..)
 import Data.Session as Session exposing (Session)
 import Data.Player as Player exposing (Player)
 import Data.Facebook as Facebook
+import Data.AuthToken as AuthToken
 import Request.Player
 import Html as Html exposing (..)
 import Html.Attributes as Attr exposing (..)
@@ -11,6 +12,9 @@ import Json.Encode exposing (Value)
 import Json.Decode as Decode
 import Http
 import Task
+import Phoenix.Socket as Socket exposing (Socket)
+import Phoenix.Channel as Channel exposing (Channel)
+import Phoenix
 import Navigation exposing (Location)
 import Ports
 import Route exposing (Route)
@@ -48,6 +52,9 @@ type Msg
  | SetPlayer (Maybe Player)
  | FBLogin (Result String Facebook.FBData)
  | SentLogin (Result Http.Error Player)
+ | SocketOpened
+ | SocketClosed
+ | SocketClosedAbnormally
 
 type PageState
   = Loaded Page
@@ -96,6 +103,7 @@ setRoute maybeRoute model =
 type alias Model =
   { session : Session
   , pageState : PageState
+  , socket : Socket Msg
   , openDropdown : OpenDropdown
   , selectedItem : DropdownItem
   }
@@ -107,6 +115,7 @@ init val location =
   setRoute (Route.fromLocation location)
    { pageState = Loaded initialPage
    , session = { player = decodeUserFromJson val }
+   , socket = socket { player = decodeUserFromJson val }
    , openDropdown = DropdownType.AllClosed
    , selectedItem = DropdownType.None
    }
@@ -310,7 +319,6 @@ updatePage page msg model =
       ( { model | session = { session | player = Just player }},
           Cmd.batch [ Request.Player.storeSession player, Route.modifyUrl Route.Home ])
     ( SentLogin (Err payload), _) ->
-      Debug.log ("Got bad payload: " ++ (toString payload))
       ( model, Cmd.none )
     ( Logout, _ ) ->
       let
@@ -347,10 +355,39 @@ updatePage page msg model =
             _ -> session
       in
       ( { model | session = newSession, openDropdown = DropdownType.AllClosed}, actionCmd)
+    ( SocketOpened, _ ) ->
+      Debug.log ("Socket connection was successful.")
+      ( model, Cmd.none)
+    (SocketClosed, _ ) ->
+      ( model, Cmd.none )
+    (SocketClosedAbnormally, _ ) ->
+      ( model, Cmd.none )
     ( _, Page.NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->
       ( model, Cmd.none )
+
+-- Socket Config & Setup --
+socket : Session -> Socket Msg
+socket session =
+  let
+    params =
+      case session.player of
+        Just player ->
+          let
+            token = AuthToken.authTokenToString player.token
+          in
+          [ ( "guardian_token", token ) ]
+        Nothing -> []
+  in
+  Socket.init socketUrl
+    |> Socket.withParams params
+    |> Socket.onOpen (SocketOpened)
+    |> Socket.onClose (\_ -> SocketClosed)
+    |> Socket.onAbnormalClose (\_ -> SocketClosedAbnormally)
+
+socketUrl : String
+socketUrl = "ws://localhost:8080/socket/websocket"
 
 -- SUBSCRIPTIONS --
 subscriptions : Model -> Sub Msg
