@@ -104,6 +104,7 @@ type alias Model =
   { session : Session
   , pageState : PageState
   , socket : Socket Msg
+  , channels : List (Channel Msg)
   , openDropdown : OpenDropdown
   , selectedItem : DropdownItem
   }
@@ -116,6 +117,7 @@ init val location =
    { pageState = Loaded initialPage
    , session = { player = decodeUserFromJson val }
    , socket = socket { player = decodeUserFromJson val }
+   , channels = initChannels { player = decodeUserFromJson val }
    , openDropdown = DropdownType.AllClosed
    , selectedItem = DropdownType.None
    }
@@ -356,7 +358,6 @@ updatePage page msg model =
       in
       ( { model | session = newSession, openDropdown = DropdownType.AllClosed}, actionCmd)
     ( SocketOpened, _ ) ->
-      Debug.log ("Socket connection was successful.")
       ( model, Cmd.none)
     (SocketClosed, _ ) ->
       ( model, Cmd.none )
@@ -389,6 +390,12 @@ socket session =
 socketUrl : String
 socketUrl = "ws://localhost:8080/socket/websocket"
 
+initChannels : Session -> List (Channel Msg)
+initChannels session =
+  case session.player of
+    Just _ -> [] -- TODO: Subscribe to channels if a user is logged in
+    Nothing -> []
+
 -- SUBSCRIPTIONS --
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -404,8 +411,10 @@ subscriptions model =
         _ -> [ Sub.map HeaderMsg (Mouse.clicks (always DropdownType.Blur)) ]
     subsWithBlur =
       subs ++ withBlur
+    channels =
+      Phoenix.connect (socket model.session) model.channels
   in
-  Sub.batch subsWithBlur
+  Sub.batch <| channels :: subsWithBlur
 
 getPage : PageState -> Page
 getPage pageState =
