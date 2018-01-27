@@ -40,7 +40,6 @@ const ELM_DIV = document.getElementById("elm-div");
 let elmApp = Elm.Main.embed(ELM_DIV, localStorage.session || null);
 
 elmApp.ports.storeSession.subscribe((session) => {
-  console.log("Store session port was called with: ", JSON.stringify(session));
   localStorage.session = session;
 });
 
@@ -50,30 +49,24 @@ elmApp.ports.scrollChatToTop.subscribe(() => {
 });
 
 elmApp.ports.logout.subscribe(() => {
-	console.log("Logout port called. Logging out...");
 	localStorage.removeItem('session');
 });
 
 elmApp.ports.triggerFBInviteRequest.subscribe(() => {
-  console.log("Triggering Facebook invite request...");
   if (window.FB) {
     FB.ui({method: 'apprequests',
       message: 'Join me for a game of Poker on PokerEX!'
-    }, (response) => {
-      console.log('Got response back from FB invite request: ', JSON.stringify(response));
-    });
+    }, (response) => { "ok" });
   }
 });
 
 elmApp.ports.loginWithFB.subscribe(() => {
   FB.login((response) => {
     if (response.authResponse) {
-      console.log('Auth successful, retrieving user information');
       FB.api("/me", (response) => {
-        console.log('Response:', response);
         elmApp.ports.onFBLogin.send(response);
       });
-    } else ( console.log('Auth failed...'));
+    }
   });
 });
 

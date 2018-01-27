@@ -1,7 +1,8 @@
 module Main exposing (..)
 
 import Data.Session as Session exposing (Session)
-import Data.Player as Player exposing (Player)
+import Data.Player as Player exposing (Player, usernameToString)
+import Data.Notifications.Invite as Invite
 import Data.Facebook as Facebook
 import Data.AuthToken as AuthToken
 import Request.Player
@@ -12,6 +13,7 @@ import Json.Encode exposing (Value)
 import Json.Decode as Decode
 import Http
 import Task
+import Time exposing (Time)
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
 import Phoenix
@@ -34,6 +36,7 @@ import Page.NotFound as NotFound
 import Page.ForgotPassword as ForgotPassword
 import Page.ResetPassword as ResetPassword
 import Widgets.Dropdown as Dropdown
+import Widgets.Toast as Toast
 import Mouse
 
 type Msg
@@ -55,6 +58,9 @@ type Msg
  | SocketOpened
  | SocketClosed
  | SocketClosedAbnormally
+ | ConnectedToNotifications
+ | InvitationReceived Value
+ | ClearMessages Time
 
 type PageState
   = Loaded Page
@@ -107,6 +113,8 @@ type alias Model =
   , channels : List (Channel Msg)
   , openDropdown : OpenDropdown
   , selectedItem : DropdownItem
+  , messages : List String
+  , errors : List String
   }
 
 -- INITIALIZATION --
@@ -120,6 +128,8 @@ init val location =
    , channels = initChannels { player = decodeUserFromJson val }
    , openDropdown = DropdownType.AllClosed
    , selectedItem = DropdownType.None
+   , messages = []
+   , errors = []
    }
 
 decodeUserFromJson : Value -> Maybe Player
@@ -151,19 +161,20 @@ frame model isLoading page children =
       activePageFrom page
   in
   div [ class "page-frame"]
-    [ header []
-      [ nav [ class "teal darken-4 nav-container" ]
-          [ div [ class "filler"] []
-            , div [ class "logo-container" ]
-              [ a [ Route.href Route.Home, class "logo" ] [ text "PokerEx"] ]
-            , ul [ class "nav-links", class "hide-on-med-and-down" ]
-              (viewNavBarLinks Logout model.session activePage)
-            , div [ class "filler hide-on-large-only" ] [ Html.map HeaderMsg navDropdownConfig.topLevelHtml ]
+    [ Toast.viewMessages model
+    , header []
+        [ nav [ class "teal darken-4 nav-container" ]
+            [ div [ class "filler"] []
+              , div [ class "logo-container" ]
+                [ a [ Route.href Route.Home, class "logo" ] [ text "PokerEx"] ]
+              , ul [ class "nav-links", class "hide-on-med-and-down" ]
+                (viewNavBarLinks Logout model.session activePage)
+              , div [ class "filler hide-on-large-only" ] [ Html.map HeaderMsg navDropdownConfig.topLevelHtml ]
+          ]
         ]
-      ]
-      , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) (navLinks model.session))
-      , children
-      , if activePage == Helpers.Home then Footer.view else text ""
+        , Html.map HeaderMsg (Dropdown.view navDropdownConfig (navDropdownContext model) (navLinks model.session))
+        , children
+        , if activePage == Helpers.Home then Footer.view else text ""
     ]
 
 viewPage : Session -> Bool -> Page -> Html Msg
@@ -307,8 +318,12 @@ updatePage page msg model =
             Route.modifyUrl Route.Home
           else
             Cmd.none
+        channels =
+          case player of
+            Nothing -> []
+            Just player -> [ notificationsFor <| usernameToString player.username ]
       in
-      ( { model | session = { session | player = player }}, cmd)
+      ( { model | session = { session | player = player }, channels = channels }, cmd)
     ( FBLogin result, _ ) ->
       let
         cmd =
@@ -363,6 +378,21 @@ updatePage page msg model =
       ( model, Cmd.none )
     (SocketClosedAbnormally, _ ) ->
       ( model, Cmd.none )
+    (ConnectedToNotifications, _ ) ->
+      ( model, Cmd.none )
+    (InvitationReceived invitation, _ ) ->
+      case Decode.decodeValue Invite.decoder invitation of
+        Ok invitation ->
+          let
+            newMessage =
+              invitation.owner ++ " invited you to " ++ invitation.title
+          in
+          ( { model | messages = newMessage :: model.messages }, Cmd.none )
+        Err _ -> ( model, Cmd.none )
+    ( ClearMessages _, _ ) ->
+      case List.tail model.messages of
+        Just messages -> ( { model | messages = messages }, Cmd.none )
+        Nothing -> ( model, Cmd.none )
     ( _, Page.NotFound ) ->
       ( model, Cmd.none )
     ( _, _ ) ->
@@ -390,10 +420,16 @@ socket session =
 socketUrl : String
 socketUrl = "ws://localhost:8080/socket/websocket"
 
+notificationsFor : String -> Channel Msg
+notificationsFor playerName =
+  Channel.init ("notifications:" ++ playerName)
+    |> Channel.onJoin (\_ -> ConnectedToNotifications)
+    |> Channel.on "invitation_received" (\payload -> InvitationReceived payload)
+
 initChannels : Session -> List (Channel Msg)
 initChannels session =
   case session.player of
-    Just _ -> [] -- TODO: Subscribe to channels if a user is logged in
+    Just player -> [ notificationsFor <| usernameToString player.username ] -- TODO: Subscribe to channels if a user is logged in
     Nothing -> []
 
 -- SUBSCRIPTIONS --
@@ -411,10 +447,14 @@ subscriptions model =
         _ -> [ Sub.map HeaderMsg (Mouse.clicks (always DropdownType.Blur)) ]
     subsWithBlur =
       subs ++ withBlur
+    clearMessages =
+      case model.messages of
+        [] -> Sub.none
+        _ -> Time.every 5000 ClearMessages
     channels =
       Phoenix.connect (socket model.session) model.channels
   in
-  Sub.batch <| channels :: subsWithBlur
+  Sub.batch <| clearMessages :: channels :: subsWithBlur
 
 getPage : PageState -> Page
 getPage pageState =

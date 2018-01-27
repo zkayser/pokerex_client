@@ -76,6 +76,7 @@ type Msg
   | UpdateSearchList Decode.Value
   | AcceptInvitation String
   | DeclineInvitation String
+  | InvitationReceived
   | HeaderClicked UpdatableAttribute
   | ChangeSubTab StartGameSubTab
   | OpenDeleteConfirmation
@@ -129,7 +130,11 @@ initialModel player =
   { player = player
   , profile = profileFor player
   , activeAttribute = None
-  , channelSubscriptions = [ playerChannel player, privateRoomsChannel player ]
+  , channelSubscriptions =
+    [ playerChannel player
+    , privateRoomsChannel player
+    , notificationsChannel <| Player.usernameToString player.username
+    ]
   , updateMessages = []
   , errorMessages = []
   , currentTab = CurrentGames
@@ -196,6 +201,12 @@ privateRoomsChannel player =
     |> Channel.on "new_current_rooms" (\payload -> UpdateCurrentRooms payload)
     |> Channel.on "new_invited_rooms" (\payload -> UpdateCurrentRooms payload)
     |> Channel.on "new_players" (\payload -> UpdatePlayerList payload)
+
+notificationsChannel : String -> Channel Msg
+notificationsChannel playerName =
+  Channel.init ("notifications:" ++ playerName)
+    |> Channel.on "invitation_received" (\_ -> InvitationReceived)
+    |> Channel.withDebug
 
 -- PUSH MESSAGES
 updatePlayerPush : Model -> UpdatableAttribute -> String -> Cmd Msg
@@ -768,6 +779,7 @@ update msg model =
     UpdateSearchList payload ->   handleUpdateSearchList model payload
     AcceptInvitation toRoom ->    handleAcceptInvitation model toRoom
     DeclineInvitation fromRoom -> handleDeclineInvitation model fromRoom
+    InvitationReceived ->         handleInvitationReceived model
     SubmitEmailUpdate ->          handleSubmitUpdate model Email
     SubmitBlurbUpdate ->          handleSubmitUpdate model Blurb
     HeaderClicked attribute ->    handleHeaderClicked model attribute
@@ -938,6 +950,11 @@ handleAcceptInvitation model room =
 handleDeclineInvitation : Model -> String -> ( ( Model, Cmd Msg), ExternalMsg )
 handleDeclineInvitation model room =
   ( ( model, declineInvitationPush model room), NoOp )
+
+handleInvitationReceived : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleInvitationReceived model =
+  Debug.log "Got handleInvitationReceived"
+  ( ( model, getPage model Invites model.invitedGames.page ), NoOp )
 
 handleOpenDeleteConfirmation : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 handleOpenDeleteConfirmation model =
