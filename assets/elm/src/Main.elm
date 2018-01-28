@@ -31,7 +31,7 @@ import Page.Login as Login
 import Page.Register as Register
 import Page.Room as Room
 import Page.Rooms as Rooms
-import Page.Profile as Profile
+import Page.Profile as Profile exposing (Msg(UpdateInvitations))
 import Page.NotFound as NotFound
 import Page.ForgotPassword as ForgotPassword
 import Page.ResetPassword as ResetPassword
@@ -380,6 +380,28 @@ updatePage page msg model =
       ( model, Cmd.none )
     (ConnectedToNotifications, _ ) ->
       ( model, Cmd.none )
+    (InvitationReceived invitation, Page.Profile subModel ) ->
+      -- Invitations are relevant to the Profile subModel, so this case clause
+      -- should be invoked if you are on the Profile page. The invitation coming in
+      -- should trigger the Profile sub-module to go and fetch the updated list
+      -- of invited rooms. Check the implementation of handleInvitationReceived
+      -- from the `Page.Profile` module
+      case Decode.decodeValue Invite.decoder invitation of
+        Ok invitation ->
+          let
+            ( (newProfileModel, cmd ), _) =
+              Profile.update UpdateInvitations subModel
+            newMessages =
+              (invitation.owner ++ " invited you to " ++ invitation.title) :: model.messages
+          in
+          ( { model | pageState = Loaded (Page.Profile newProfileModel), messages = newMessages}
+          , Cmd.map ProfileMsg cmd)
+        Err _ ->
+          let
+            ( (newProfileModel, _), _) =
+              Profile.update UpdateInvitations subModel
+          in
+          ( { model | pageState = Loaded (Page.Profile newProfileModel)}, Cmd.none)
     (InvitationReceived invitation, _ ) ->
       case Decode.decodeValue Invite.decoder invitation of
         Ok invitation ->

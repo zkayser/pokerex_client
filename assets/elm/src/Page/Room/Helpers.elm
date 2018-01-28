@@ -18,21 +18,21 @@ handWhereIs username playerHands player =
         _ -> Nothing
     handForPlayer =
       case theHand of
-        Just hand -> 
+        Just hand ->
           if Player.equals hand.player player.username then
             hand.hand
-          else 
+          else
             [ {rank = Card.RankError, suit = Card.SuitError}, {rank = Card.RankError, suit = Card.SuitError} ]
         _ -> [ { rank = Card.RankError, suit = Card.SuitError}, {rank = Card.RankError, suit = Card.SuitError} ]
   in
   handForPlayer
-  
+
 getChips : Model -> Dict String Int -> Int
 getChips model dict =
   case Dict.get (Player.usernameToString model.player.username) dict of
     Nothing -> 0
     Just chips -> chips
-    
+
 getIsActive : Model -> Bool
 getIsActive model =
   case model.roomModel.active of
@@ -48,3 +48,8 @@ joinValToInt stringAmount =
   case String.toInt stringAmount of
     Ok value -> value
     Err _ -> 0
+
+formatTitle : String -> String
+formatTitle title =
+  String.split "%20" title
+    |> String.join "_"

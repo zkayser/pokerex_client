@@ -27,7 +27,7 @@ type alias MessageType = RoomMessageType
 -- INITIALIZATION --
 initialModel : Player -> String -> String -> RoomPage
 initialModel player roomTitle roomType =
-  { room =  roomTitle
+  { room =  (formatTitle roomTitle)
   , roomModel = Room.defaultRoom
   , roomType = roomType
   , roomMessages = []
@@ -35,7 +35,7 @@ initialModel player roomTitle roomType =
   , player = player
   , joined = False
   , joinValue = "0"
-  , channelSubscriptions = subscribeToChannels player roomTitle roomType
+  , channelSubscriptions = subscribeToChannels player (formatTitle roomTitle) roomType
   , modalRendered = Closed
   , errorMessages = []
   , raiseAmount = 0
