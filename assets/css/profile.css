@@ -8,6 +8,43 @@
 	padding: 1rem;
 }
 
+.profile-pane-break {
+	display: none;
+}
+
+@media (max-width: 860px) {
+	.profile-pane-container {
+		flex-direction: column;
+	}
+
+	.profile-pane-container > * {
+		min-height: 0;
+	}
+
+	.profile-pane.game-info-pane {
+		order: 1;
+	}
+
+	.profile-pane.profile-info-pane {
+		order: 3;
+	}
+
+	.profile-pane-break {
+		display: block;
+		flex: 1;
+		order: 2;
+		height: 0.5rem;
+		padding: 0;
+		margin: 1rem;
+	}
+}
+
+@media (max-width: 435px) {
+	.fb-invite-btn {
+		font-size: 0.75rem;
+	}
+}
+
 .profile-greeting {
 	text-align: center;
 }

@@ -349,11 +349,11 @@ view session model =
     , h1 [ class "teal-text profile-greeting" ]
       [ text <| (playerGreeting model.player) ]
     , div [ class "profile-pane-container"]
-      [ div [ class "profile-pane" ]
+      [ div [ class "profile-pane profile-info-pane" ]
         [ ul [ class "collapsible popout"]
           (viewProfileForm model)
         , div [ class "fb-invite-container" ]
-          [ button [ onClick FBInviteBtnClicked, class "btn blue white-text" ]
+          [ button [ onClick FBInviteBtnClicked, class "btn blue white-text fb-invite-btn" ]
             [ text "Invite your Facebook friends to PokerEx"]
           ]
         , div [ class "delete-profile-container" ]
@@ -361,7 +361,8 @@ view session model =
             [ text "Delete your profile"]
           ]
         ]
-      , div [ class "profile-pane" ]
+      , hr [ class "profile-pane-break" ] []
+      , div [ class "profile-pane game-info-pane" ]
         (viewTabs model)
       ]
     , if model.openModal == DeleteModal then Modal.bottomModalView <| deleteProfileModalConfig model else text ""
