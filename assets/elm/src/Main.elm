@@ -3,6 +3,7 @@ module Main exposing (..)
 import Data.Session as Session exposing (Session)
 import Data.Player as Player exposing (Player, usernameToString)
 import Data.Notifications.Invite as Invite
+import Data.Notifications.Delete as Delete
 import Data.Facebook as Facebook
 import Data.AuthToken as AuthToken
 import Request.Player
@@ -31,7 +32,7 @@ import Page.Login as Login
 import Page.Register as Register
 import Page.Room as Room
 import Page.Rooms as Rooms
-import Page.Profile as Profile exposing (Msg(UpdateInvitations))
+import Page.Profile as Profile exposing (Msg(UpdateInvitations, RefreshAllRooms))
 import Page.NotFound as NotFound
 import Page.ForgotPassword as ForgotPassword
 import Page.ResetPassword as ResetPassword
@@ -60,6 +61,7 @@ type Msg
  | SocketClosedAbnormally
  | ConnectedToNotifications
  | InvitationReceived Value
+ | RoomDeleted Value
  | ClearMessages Time
 
 type PageState
@@ -411,6 +413,33 @@ updatePage page msg model =
           in
           ( { model | messages = newMessage :: model.messages }, Cmd.none )
         Err _ -> ( model, Cmd.none )
+    ( RoomDeleted deletion, Page.Profile subModel ) ->
+      case Decode.decodeValue Delete.decoder deletion of
+        Ok deletion ->
+          let
+            ( (newProfileModel, cmd ), _ ) =
+              Profile.update RefreshAllRooms subModel
+            newMessages =
+              (deletion.owner ++ " has deleted " ++ deletion.title) :: model.messages
+          in
+          ( { model | pageState = Loaded (Page.Profile newProfileModel), messages = newMessages}
+          , Cmd.map ProfileMsg cmd)
+        Err _ ->
+          let
+            ( ( newProfileModel, cmd), _) =
+              Profile.update RefreshAllRooms subModel
+          in
+          ( { model | pageState = Loaded (Page.Profile newProfileModel)}, Cmd.map ProfileMsg cmd)
+    ( RoomDeleted deletion, _ ) ->
+      case Decode.decodeValue Delete.decoder deletion of
+        Ok deletion ->
+          let
+            newMessages =
+              (deletion.owner ++ " has deleted " ++ deletion.title) :: model.messages
+          in
+          ( { model | messages = newMessages}, Cmd.none)
+        Err _ ->
+          ( model, Cmd.none)
     ( ClearMessages _, _ ) ->
       case List.tail model.messages of
         Just messages -> ( { model | messages = messages }, Cmd.none )
@@ -447,6 +476,7 @@ notificationsFor playerName =
   Channel.init ("notifications:" ++ playerName)
     |> Channel.onJoin (\_ -> ConnectedToNotifications)
     |> Channel.on "invitation_received" (\payload -> InvitationReceived payload)
+    |> Channel.on "room_deleted" (\payload -> RoomDeleted payload)
 
 initChannels : Session -> List (Channel Msg)
 initChannels session =

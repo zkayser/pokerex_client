@@ -77,6 +77,7 @@ type Msg
   | AcceptInvitation String
   | DeclineInvitation String
   | UpdateInvitations
+  | RefreshAllRooms
   | HeaderClicked UpdatableAttribute
   | ChangeSubTab StartGameSubTab
   | OpenDeleteConfirmation
@@ -770,6 +771,7 @@ update msg model =
     AcceptInvitation toRoom ->    handleAcceptInvitation model toRoom
     DeclineInvitation fromRoom -> handleDeclineInvitation model fromRoom
     UpdateInvitations ->          handleUpdateInvitations model
+    RefreshAllRooms ->            handleRefreshAllRooms model
     SubmitEmailUpdate ->          handleSubmitUpdate model Email
     SubmitBlurbUpdate ->          handleSubmitUpdate model Blurb
     HeaderClicked attribute ->    handleHeaderClicked model attribute
@@ -944,6 +946,16 @@ handleDeclineInvitation model room =
 handleUpdateInvitations : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 handleUpdateInvitations model =
   ( ( model, getPage model Invites model.invitedGames.page ), NoOp )
+
+handleRefreshAllRooms : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleRefreshAllRooms model =
+  let
+    currentCmd =
+      getPage model OngoingGames model.currentGames.page
+    invitesCmd =
+      getPage model Invites model.invitedGames.page
+  in
+  ( ( model, Cmd.batch [ currentCmd, invitesCmd ] ), NoOp )
 
 handleOpenDeleteConfirmation : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 handleOpenDeleteConfirmation model =
