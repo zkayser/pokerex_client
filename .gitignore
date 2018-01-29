@@ -11,6 +11,8 @@ erl_crash.dump
 npm-debug.log
 
 # Static artifacts
+/node_modules
+/package-lock.json
 /assets/node_modules
 /assets/elm/elm-stuff
 /assets/elm-stuff
