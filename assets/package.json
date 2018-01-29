@@ -7,7 +7,8 @@
   },
   "dependencies": {
     "phoenix": "file:../deps/phoenix",
-    "phoenix_html": "file:../deps/phoenix_html"
+    "phoenix_html": "file:../deps/phoenix_html",
+    "elm": "0.18"
   },
   "devDependencies": {
     "babel-brunch": "6.1.1",
