@@ -1,0 +1,19 @@
+echo "Now building static assets..."
+echo "PWD: "
+echo `pwd`
+
+brunch build --production
+
+echo "Brunch build completed"
+
+echo "Changing directories to phoenix_dir:"
+echo $phoenix_dir
+echo "Running mix phx.digest..."
+
+cd $phoenix_dir
+
+mix "${phoenix_ex}.digest"
+
+if mix help "${phoenix_ex}.digest.clean" 1>/dev/null 2>&1; then
+  mix "${phoenix_ex}.digest.clean"
+fi
