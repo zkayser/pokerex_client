@@ -93,13 +93,13 @@ rankToString card =
 -- Needs to be changed in prod
 rootCardsAssetsUrl : String
 rootCardsAssetsUrl =
-  "http://localhost:8081/images/cards/"
+  "https://poker-ex.herokuapp.com/images/cards/"
 
 -- Card back also needs to be changed in prod
 sourceUrlForCardImage : Card -> String
 sourceUrlForCardImage card =
   case (card.rank, card.suit) of
-    (RankError, SuitError) -> "http://localhost:8081/images/card-back.svg.png"
+    (RankError, SuitError) -> "https://poker-ex.herokuapp.com/images/card-back.svg.png"
     _ -> (rootCardsAssetsUrl ++ (rankToString card) ++ "_of_" ++ (suitToString card) ++ ".svg")
 
 tableCardImageFor : Card -> Html msg
