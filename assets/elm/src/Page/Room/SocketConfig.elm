@@ -14,12 +14,12 @@ type alias Msg = RoomMsg
 type alias Model = RoomPage
 
 -- TODO: Get this from the environment
-socketUrl : String
-socketUrl =
-  "ws://localhost:8080/socket/websocket"
+--socketUrl : String
+--socketUrl =
+--  "ws://localhost:8080/socket/websocket"
 
-socket : Session -> Socket Msg
-socket session =
+socket : Session -> String -> Socket Msg
+socket session socketUrl =
   let
     params =
       case session.player of

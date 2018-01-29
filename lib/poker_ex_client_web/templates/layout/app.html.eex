@@ -7,6 +7,8 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <meta data-fb-id=<%= System.get_env("FACEBOOK_APP_ID") %>>
+    <meta data-api-url=<%= System.get_env("API_ROOT_URL") %>>
+    <meta data-ws-url=<%= System.get_env("WS_ROOT_URL") %>>
 
     <title>Hello PokerExClient!</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">

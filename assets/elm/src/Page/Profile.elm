@@ -3,6 +3,7 @@ module Page.Profile exposing (..)
 import Data.Player as Player exposing (Player, Username)
 import Data.Session as Session exposing (Session)
 import Data.Profile as Profile exposing (Profile)
+import Data.Configuration exposing (Configuration)
 import Data.AuthToken as AuthToken
 import Ports exposing (triggerFBInviteRequest, logout)
 import Route
@@ -37,6 +38,8 @@ type alias Model =
   , searchQuery : String
   , currentSearchPage : Int
   , openModal : ProfileModal
+  , socketUrl : String
+  , apiUrl : String
   }
 
 type alias Rooms = { rooms : RoomInfoList, page : Int, totalPages : Int}
@@ -126,8 +129,8 @@ type Tab
 type StartGameSubTab = PlayerList | PlayerSearchList
 
 -- INITIALIZATION
-initialModel : Player -> Model
-initialModel player =
+initialModel : Player -> Configuration -> Model
+initialModel player envConfig =
   { player = player
   , profile = profileFor player
   , activeAttribute = None
@@ -144,6 +147,8 @@ initialModel player =
   , searchQuery = ""
   , currentSearchPage = 1
   , openModal = AllClosed
+  , socketUrl = envConfig.socketUrl
+  , apiUrl = envConfig.apiUrl
   }
 
 profileFor : Player -> Profile
@@ -162,8 +167,8 @@ socketUrl : String
 socketUrl =
   "ws://localhost:8080/socket/websocket"
 
-socket : Session -> Socket Msg
-socket session =
+socket : Session -> String -> Socket Msg
+socket session socketUrl =
   let
     params =
       case session.player of
@@ -213,7 +218,7 @@ updatePlayerPush model attribute value =
       Push.init ("players:" ++ (Player.usernameToString model.player.username)) "update_player"
         |> Push.withPayload (Encode.object [ (stringAttr, Encode.string value)])
   in
-  Phoenix.push socketUrl push
+  Phoenix.push model.socketUrl push
 
 getPlayerPush : Model -> Cmd Msg
 getPlayerPush model =
@@ -222,7 +227,7 @@ getPlayerPush model =
       Push.init ("players:" ++ (getPlayerName model)) "get_player"
         |> Push.withPayload (Encode.object [])
   in
-  Phoenix.push socketUrl push
+  Phoenix.push model.socketUrl push
 
 acceptInvitationPush : Model -> String -> Cmd Msg
 acceptInvitationPush model room =
@@ -236,7 +241,7 @@ acceptInvitationPush model room =
             , ("room", Encode.string room)
             ] )
   in
-  Phoenix.push socketUrl push
+  Phoenix.push model.socketUrl push
 
 declineInvitationPush : Model -> String -> Cmd Msg
 declineInvitationPush model room =
@@ -250,7 +255,7 @@ declineInvitationPush model room =
           , ("room", Encode.string room )
           ])
   in
-  Phoenix.push socketUrl push
+  Phoenix.push model.socketUrl push
 
 createGamePush : Model -> Cmd Msg
 createGamePush model =
@@ -263,7 +268,7 @@ createGamePush model =
         |> Push.onOk (\_ -> RoomCreated)
         |> Push.onError (\payload -> CreateRoomFailed payload)
   in
-  Phoenix.push socketUrl push
+  Phoenix.push model.socketUrl push
 
 getPage : Model -> PageList -> Int -> Cmd Msg
 getPage model pageType pageNum =
@@ -281,7 +286,7 @@ getPage model pageType pageNum =
                                               ("page_num", Encode.int pageNum )
                                             ] )
   in
-  (Phoenix.push socketUrl push)
+  (Phoenix.push model.socketUrl push)
 
 submitSearchPush : Model -> Cmd Msg
 submitSearchPush model =
@@ -292,7 +297,7 @@ submitSearchPush model =
       Push.init("players:" ++ playerName) "player_search"
         |> Push.withPayload (Encode.object [ ("query", Encode.string model.searchQuery)])
   in
-  Phoenix.push socketUrl push
+  Phoenix.push model.socketUrl push
 
 deleteProfilePush : Model -> Cmd Msg
 deleteProfilePush model =
@@ -305,7 +310,7 @@ deleteProfilePush model =
         |> Push.onOk (\_ -> ProfileDeleted)
         |> Push.onError (\payload -> DeleteFailed payload)
   in
-  Phoenix.push socketUrl push
+  Phoenix.push model.socketUrl push
 
 leaveRoom : Model -> String -> Cmd Msg
 leaveRoom model roomTitle =
@@ -322,7 +327,7 @@ leaveRoom model roomTitle =
             , ( "current_page", Encode.int currentPage)
             ] )
   in
-  Phoenix.push socketUrl push
+  Phoenix.push model.socketUrl push
 
 deleteRoom : Model -> String -> Cmd Msg
 deleteRoom model roomTitle =
@@ -339,7 +344,7 @@ deleteRoom model roomTitle =
           , ("current_page", Encode.int currentPage)
           ])
   in
-  Phoenix.push socketUrl push
+  Phoenix.push model.socketUrl push
 
 -- VIEW
 view : Session -> Model -> Html Msg
@@ -1127,7 +1132,7 @@ subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
   let
     phoenixSubscriptions =
-      [ Phoenix.connect (socket session) model.channelSubscriptions]
+      [ Phoenix.connect (socket session model.socketUrl) model.channelSubscriptions]
     clearMessages =
       case model.updateMessages of
         [] -> Sub.none

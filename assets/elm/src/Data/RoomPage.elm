@@ -26,4 +26,6 @@ type alias RoomPage =
   , addAmount : Int
   , chat : Chat
   , currentChatMsg : String
+  , socketUrl : String
+  , apiUrl : String
   }

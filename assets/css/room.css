@@ -1,6 +1,5 @@
 .room-container {
 	min-height: 88vh;
-	border: 1px dashed black;
 	display: -webkit-box;
 	display: -ms-flexbox;
 	display: flex;

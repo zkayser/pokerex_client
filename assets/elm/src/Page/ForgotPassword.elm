@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onSubmit, onInput)
 import Data.PasswordReset as PasswordReset exposing (PasswordReset)
+import Data.Configuration exposing (Configuration)
 import Http
 import Time exposing (Time)
 import Validate exposing (..)
@@ -11,7 +12,11 @@ import Request.Player as Request
 import Widgets.Toast as Toast
 
 type alias Model =
-  { email : String, errors : List String, messages : List String }
+  { email : String
+  , errors : List String
+  , messages : List String
+  , apiUrl : String
+  }
 
 type Msg
   = SendPasswordReset
@@ -23,9 +28,9 @@ type Msg
 
 type ExternalMsg = NoOp
 
-initialModel : Model
-initialModel =
-  { email = "", errors = [], messages = [] }
+initialModel : Configuration -> Model
+initialModel envConfig =
+  { email = "", errors = [], messages = [], apiUrl = envConfig.apiUrl }
 
 view : Model -> Html Msg
 view model =

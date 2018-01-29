@@ -10,9 +10,9 @@ import Json.Encode as Encode
 import Json.Encode.Extra as EncodeExtra
 import Ports
 
-apiUrl : String
-apiUrl =
-  "http://localhost:8080/api" -- Should be configurable, but hitting Phx server on this port for early development
+--apiUrl : String
+--apiUrl =
+--  "http://localhost:8080/api" -- Should be configurable, but hitting Phx server on this port for early development
 
 storeSession : Player -> Cmd msg
 storeSession player =
@@ -29,6 +29,7 @@ type alias Registration r =
   , firstName : String
   , lastName : String
   , blurb : String
+  , apiUrl : String
   }
 
 -- TODO: Need to come back and reconsider
@@ -42,6 +43,7 @@ type alias ResetPassword r =
   { r |
     resetToken : String
   , newPassword : String
+  , apiUrl : String
   }
 
 {-
@@ -49,8 +51,8 @@ Not sure if the detailed implementation of this is going to work right off the b
 Might need to tweak the server side implementation, add routes for api session requests,
 etc.; Also, this specific request should accept a json field with a "player" {"player": {...embeddedFields}}
 -}
-login : { r | username : String, password : String } -> Http.Request Player
-login { username, password } =
+login : { r | username : String, password : String, apiUrl : String } -> Http.Request Player
+login { username, password, apiUrl } =
   let
     player =
       Encode.object
@@ -66,14 +68,16 @@ login { username, password } =
   Decode.field "player" Player.decoder
     |> Http.post (apiUrl ++ "/sessions") body
 
-facebookLogin : Encode.Value -> Http.Request Player
-facebookLogin playerData =
+facebookLogin : Encode.Value -> String -> Http.Request Player
+facebookLogin playerData apiUrl =
   Decode.field "player" Player.decoder
     |> Http.post (apiUrl ++ "/auth") (playerData |> Http.jsonBody)
 
-passwordReset : { r | email : String } -> Http.Request PasswordReset
+passwordReset : { r | email : String, apiUrl : String } -> Http.Request PasswordReset
 passwordReset data =
   let
+    apiUrl =
+      data.apiUrl
     body =
       Encode.object [ ("email", Encode.string data.email ) ]
         |> Http.jsonBody
@@ -84,6 +88,8 @@ passwordReset data =
 resetPassword : ResetPassword r -> Http.Request Player
 resetPassword data =
   let
+    apiUrl =
+      data.apiUrl
     body =
       Encode.object [ ("password", Encode.string data.newPassword )
                     , ( "reset_token", Encode.string data.resetToken )
@@ -97,6 +103,8 @@ resetPassword data =
 register : Registration r -> Http.Request Player
 register registration =
   let
+    apiUrl =
+      registration.apiUrl
     registrationAttrs =
       Encode.object
         [ ("name", Encode.string registration.username)

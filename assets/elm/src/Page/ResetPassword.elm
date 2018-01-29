@@ -7,6 +7,7 @@ import Http
 import Time exposing (Time)
 import Route
 import Data.Player as Player exposing (Player)
+import Data.Configuration as Configuration exposing (Configuration)
 import Request.Player as Request
 import Widgets.Toast as Toast
 
@@ -15,6 +16,7 @@ type alias Model =
   , newPassword : String
   , errors : List String
   , messages : List String
+  , apiUrl : String
   }
 
 type Msg
@@ -26,12 +28,13 @@ type Msg
 
 type ExternalMsg = NoOp | SetPlayer Player
 
-initialModel : String -> Model
-initialModel resetToken =
+initialModel : String -> Configuration -> Model
+initialModel resetToken envConfig =
   { resetToken = resetToken
   , newPassword = ""
   , errors = []
   , messages = []
+  , apiUrl = envConfig.apiUrl
   }
 
 view : Model -> Html Msg

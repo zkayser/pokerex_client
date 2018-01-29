@@ -8,7 +8,7 @@ import Data.WinningHand as WinningHand exposing (WinningHand)
 import Ports exposing (scrollChatToTop)
 import Types.Room.Messages as Messages exposing (..)
 import Types.Room.ModalState as ModalState exposing (..)
-import Page.Room.SocketConfig exposing (socketUrl, room)
+import Page.Room.SocketConfig exposing (room)
 import Page.Room.PushMessages exposing (actionPush, playerInfoPush)
 import Page.Room.Helpers exposing (..)
 import Views.Actions as Actions
@@ -29,7 +29,7 @@ handleLeaveRoom player model =
     actionMsg =
       "action_leave"
     phoenixPush =
-      actionPush model.room actionMsg payload
+      actionPush model.room actionMsg payload model.socketUrl
   in
   ( ( {model | joined = False }, phoenixPush), NoOp )
 
@@ -45,7 +45,7 @@ handleJoinRoom : Model -> Player -> ( ( Model, Cmd Msg), ExternalMsg)
 handleJoinRoom model player =
   let
     cmd =
-      playerInfoPush (Player.usernameToString player.username) "get_chip_count"
+      playerInfoPush (Player.usernameToString player.username) "get_chip_count" model.socketUrl
   in
   ( ( { model | modalRendered = JoinModalOpen, joined = True }, cmd), NoOp)
 
@@ -152,7 +152,7 @@ handleActionMsg model actionString value =
   in
   case List.member actionString possibleActions of
     False -> ( ( model, Cmd.none), NoOp )
-    True -> ( ( newModel, actionPush model.room actionString value), NoOp)
+    True -> ( ( newModel, actionPush model.room actionString value model.socketUrl), NoOp)
 
 handleRejoin : Model -> ( ( Model, Cmd Msg), ExternalMsg )
 handleRejoin model =
@@ -257,7 +257,7 @@ handleBankPressed model =
     payload =
       Encode.object [("player", Player.encodeUsername model.player.username) ]
     cmd =
-      actionPush model.room "get_bank" payload
+      actionPush model.room "get_bank" payload model.socketUrl
    in
    ( ( { model | modalRendered = BankModalOpen }, cmd), NoOp)
 
@@ -267,7 +267,7 @@ handleAccountPressed model =
     payload =
       Encode.object [ ("player", Player.encodeUsername model.player.username) ]
     cmd =
-      actionPush model.room "get_bank" payload
+      actionPush model.room "get_bank" payload model.socketUrl
   in
   ( ( { model | modalRendered = BottomModalOpen Account }, cmd), NoOp )
 
@@ -299,4 +299,4 @@ handleSubmitChat model =
           Push.init ("rooms:" ++ model.room) "chat_msg"
             |> Push.withPayload payload
       in
-      ( ( { model | currentChatMsg = "" }, Phoenix.push socketUrl push), NoOp )
+      ( ( { model | currentChatMsg = "" }, Phoenix.push model.socketUrl push), NoOp )

@@ -1,6 +1,5 @@
 module Page.Room.PushMessages exposing (..)
 
-import Page.Room.SocketConfig exposing (socketUrl)
 import Types.Room.Messages as Messages exposing (..)
 import Json.Decode as Decode exposing (Value)
 import Json.Encode as Encode
@@ -9,8 +8,8 @@ import Phoenix.Push as Push
 
 type alias Msg = RoomMsg
 
-actionPush : String -> String -> Value -> Cmd Msg
-actionPush room actionString value =
+actionPush : String -> String -> Value -> String -> Cmd Msg
+actionPush room actionString value socketUrl =
   let
     push =
       Push.init ("rooms:" ++ room) actionString
@@ -18,8 +17,8 @@ actionPush room actionString value =
   in
   Phoenix.push socketUrl push
 
-playerInfoPush : String -> String -> Cmd Msg
-playerInfoPush username msgToChannel =
+playerInfoPush : String -> String -> String -> Cmd Msg
+playerInfoPush username msgToChannel socketUrl =
   let
     push =
       Push.init ("players:" ++ username) msgToChannel

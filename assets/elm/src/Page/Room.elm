@@ -4,6 +4,7 @@ import Data.Player as Player exposing (Player)
 import Data.Session as Session exposing (Session)
 import Data.Room as Room exposing (Room)
 import Data.RoomPage as RoomPage exposing (RoomPage)
+import Data.Configuration exposing (Configuration)
 import Page.Room.SocketConfig as SocketConfig exposing (..)
 import Page.Room.UpdateHelpers as Updaters exposing (..)
 import Page.Room.Helpers as Helpers exposing (..)
@@ -25,8 +26,13 @@ type alias Model = RoomPage
 type alias MessageType = RoomMessageType
 
 -- INITIALIZATION --
-initialModel : Player -> String -> String -> RoomPage
-initialModel player roomTitle roomType =
+initialModel :
+  Player ->
+  String ->
+  String ->
+  Configuration ->
+  RoomPage
+initialModel player roomTitle roomType envConfig =
   { room =  (formatTitle roomTitle)
   , roomModel = Room.defaultRoom
   , roomType = roomType
@@ -45,6 +51,8 @@ initialModel player roomTitle roomType =
   , addAmount = 0
   , chat = []
   , currentChatMsg = ""
+  , socketUrl = envConfig.socketUrl
+  , apiUrl = envConfig.apiUrl
   }
 
 -- VIEW --
@@ -115,7 +123,7 @@ subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
   let
     phoenixSubscriptions =
-      [ Phoenix.connect (socket session) model.channelSubscriptions ]
+      [ Phoenix.connect (socket session model.socketUrl) model.channelSubscriptions ]
     withBlur =
       case model.modalRendered of
         WinningHandModal _ -> Time.every 5000 ClearWinningHandModal

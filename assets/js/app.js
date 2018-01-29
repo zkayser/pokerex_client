@@ -18,7 +18,6 @@ import Elm from "./main.js";
 // FB SDK Setup/Functions
 const fbId = document.querySelector("[data-fb-id]").getAttribute('data-fb-id');
 
-console.log('FB id: ', `${fbId}`);
 window.fbAsyncInit = () => {
   FB.init({
     appId      : `${fbId}`,
@@ -37,7 +36,11 @@ window.fbAsyncInit = () => {
  }(document, 'script', 'facebook-jssdk'));
 
 const ELM_DIV = document.getElementById("elm-div");
-let elmApp = Elm.Main.embed(ELM_DIV, localStorage.session || null);
+let elmApp = Elm.Main.embed(ELM_DIV, {
+    session: localStorage.session,
+    socketUrl: document.querySelector("[data-ws-url]").getAttribute('data-ws-url'),
+    apiUrl: document.querySelector("[data-api-url]").getAttribute('data-api-url')
+});
 
 elmApp.ports.storeSession.subscribe((session) => {
   localStorage.session = session;
@@ -72,7 +75,6 @@ elmApp.ports.loginWithFB.subscribe(() => {
 
 window.addEventListener("storage", (event) => {
   if (event.storageArea === localStorage && event.key === "session") {
-  	console.log("onSessionChange received with event: ", event.newValue);
     app.ports.onSessionChange.send(event.newValue);
   }
 }, false);

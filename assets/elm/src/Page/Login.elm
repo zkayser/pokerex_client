@@ -2,6 +2,7 @@ module Page.Login exposing (ExternalMsg(..), Model, Msg, initialModel, update, v
 
 import Data.Session as Session exposing (Session)
 import Data.Player as Player exposing (Player)
+import Data.Configuration exposing (Configuration)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -22,16 +23,18 @@ type alias Model =
   { errors : List Error
   , username : String
   , password : String
+  , apiUrl : String
   }
 
 type alias Error =
   ( Field, String )
 
-initialModel : Model
-initialModel =
+initialModel : Configuration -> Model
+initialModel envConfig =
   { errors = []
   , username = ""
   , password = ""
+  , apiUrl = envConfig.apiUrl
   }
 
 -- View --

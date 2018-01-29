@@ -73,25 +73,29 @@ setRoute maybeRoute model =
   let
     transition toMsg task =
       ( { model | pageState = TransitioningFrom (getPage model.pageState) }, Task.attempt toMsg task )
+    envConfig =
+      { socketUrl = model.socketUrl
+      , apiUrl = model.apiUrl
+      }
   in
     case maybeRoute of
       Nothing ->
         ( { model | pageState = Loaded Page.NotFound }, Cmd.none)
       Just Route.Login ->
-        ( { model | pageState = Loaded (Page.Login Login.initialModel )}, Cmd.none )
+        ( { model | pageState = Loaded (Page.Login (Login.initialModel envConfig) )}, Cmd.none )
       Just Route.Logout ->
         ( model, Cmd.none )
       Just Route.Register ->
-        ( { model | pageState = Loaded (Page.Register Register.initialModel )}, Cmd.none )
+        ( { model | pageState = Loaded (Page.Register (Register.initialModel envConfig) )}, Cmd.none )
       Just Route.Home ->
         ( { model | pageState = Loaded (Page.Home Home.initialModel)}, Cmd.none )
       Just Route.Rooms ->
-        ( { model | pageState = Loaded (Page.Rooms Rooms.initialModel)}, Cmd.none )
+        ( { model | pageState = Loaded (Page.Rooms (Rooms.initialModel envConfig))}, Cmd.none )
       Just (Route.Room roomType roomTitle) ->
         let
           page =
             case model.session.player of
-              Just player -> Page.Room (Room.initialModel player roomTitle roomType)
+              Just player -> Page.Room (Room.initialModel player roomTitle roomType envConfig)
               Nothing -> Page.NotFound
         in
         ( { model | pageState = Loaded (page)}, Cmd.none )
@@ -99,14 +103,14 @@ setRoute maybeRoute model =
         let
           page =
             case model.session.player of
-              Just player -> Page.Profile (Profile.initialModel player)
+              Just player -> Page.Profile (Profile.initialModel player envConfig)
               Nothing -> Page.NotFound
         in
         ( { model | pageState = Loaded (page)}, Cmd.none )
       Just Route.ForgotPassword ->
-        ( { model | pageState = Loaded (Page.ForgotPassword ForgotPassword.initialModel)}, Cmd.none)
+        ( { model | pageState = Loaded (Page.ForgotPassword (ForgotPassword.initialModel envConfig))}, Cmd.none)
       Just (Route.ResetPassword resetToken) ->
-        ( { model | pageState = Loaded (Page.ResetPassword <| ResetPassword.initialModel resetToken)}, Cmd.none)
+        ( { model | pageState = Loaded (Page.ResetPassword <| ResetPassword.initialModel resetToken envConfig)}, Cmd.none)
 
 type alias Model =
   { session : Session
@@ -117,6 +121,8 @@ type alias Model =
   , selectedItem : DropdownItem
   , messages : List String
   , errors : List String
+  , socketUrl : String
+  , apiUrl : String
   }
 
 -- INITIALIZATION --
@@ -132,14 +138,28 @@ init val location =
    , selectedItem = DropdownType.None
    , messages = []
    , errors = []
+   , socketUrl = decodeSocketUrl val
+   , apiUrl = decodeApiUrl val
    }
 
 decodeUserFromJson : Value -> Maybe Player
 decodeUserFromJson json =
   json
-    |> Decode.decodeValue Decode.string
+    |> Decode.decodeValue (Decode.at ["session"] Decode.string)
     |> Result.toMaybe
     |> Maybe.andThen (Decode.decodeString Player.decoder >> Result.toMaybe)
+
+decodeSocketUrl : Value -> String
+decodeSocketUrl json =
+  case Decode.decodeValue (Decode.at ["socketUrl"] Decode.string) json of
+    Ok socketUrl -> Debug.log "Decoded socketUrl: " socketUrl
+    Err _ -> ""
+
+decodeApiUrl : Value -> String
+decodeApiUrl json =
+  case Decode.decodeValue (Decode.at ["apiUrl"] Decode.string) json of
+    Ok apiUrl -> Debug.log "Decoded apiUrl: " apiUrl
+    Err _ -> ""
 
 initialPage : Page
 initialPage =
@@ -330,7 +350,7 @@ updatePage page msg model =
       let
         cmd =
           case result of
-            (Ok fbData) -> Http.send SentLogin (Request.Player.facebookLogin <| Facebook.encode fbData)
+            (Ok fbData) -> Http.send SentLogin (Request.Player.facebookLogin (Facebook.encode fbData) (model.apiUrl))
             _ -> Cmd.none
       in
       ( model, cmd )
@@ -489,7 +509,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   let
     subs =
-      [ pageSubscriptions (getPage model.pageState) model.session
+      [ pageSubscriptions (getPage model.pageState) model
       , Sub.map SetPlayer sessionChange
       , Sub.map FBLogin fbLogin
       ]
@@ -546,8 +566,12 @@ fbLogin : Sub (Result String Facebook.FBData)
 fbLogin =
   Ports.onFBLogin (Decode.decodeValue Facebook.decoder)
 
-pageSubscriptions : Page -> Session -> Sub Msg
-pageSubscriptions page session =
+pageSubscriptions : Page -> Model -> Sub Msg
+pageSubscriptions page model =
+  let
+    session =
+      model.session
+  in
   case page of
     Page.Blank ->
       Sub.none

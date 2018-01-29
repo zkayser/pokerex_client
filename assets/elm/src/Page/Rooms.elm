@@ -2,6 +2,7 @@ module Page.Rooms exposing (..)
 
 import Data.Session as Session exposing (Session)
 import Data.AuthToken as AuthToken
+import Data.Configuration exposing (Configuration)
 import Widgets.Pagination as Pagination exposing (paginate)
 import Route
 import Html as Html exposing (..)
@@ -10,7 +11,6 @@ import Html.Events as Events exposing (onClick)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 import Json.Encode as Encode
-import Page.Room.SocketConfig exposing (socketUrl)
 import Phoenix.Push as Push exposing (Push)
 import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Channel as Channel exposing (Channel)
@@ -24,6 +24,7 @@ type alias Model =
   , page : Int
   , totalPages : Int
   , channelSubscriptions : List (Channel Msg)
+  , socketUrl : String
   }
 
 type RoomStatus
@@ -46,12 +47,13 @@ type ExternalMsg
   = NoOp
 
 -- Initialization
-initialModel : Model
-initialModel =
+initialModel : Configuration -> Model
+initialModel envConfig =
   { rooms = []
   , page = 1
   , totalPages = 0
   , channelSubscriptions = [ lobbyChannel ]
+  , socketUrl = envConfig.socketUrl
   }
 
 -- View
@@ -127,18 +129,18 @@ handlePaginationItemClicked model text =
     pushMessage =
       case text of
         "keyboard_arrow_right" ->
-          if onLastPage model then Cmd.none else getPage (toString <| model.page + 1)
+          if onLastPage model then Cmd.none else getPage (toString <| model.page + 1) model.socketUrl
         "keyboard_arrow_left" ->
-          if onFirstPage model then Cmd.none else getPage (toString <| model.page - 1)
-        "First" -> getPage "1"
-        "Last" -> getPage (toString model.totalPages)
-        _ -> getPage text
+          if onFirstPage model then Cmd.none else getPage (toString <| model.page - 1) model.socketUrl
+        "First" -> getPage "1" model.socketUrl
+        "Last" -> getPage (toString model.totalPages) model.socketUrl
+        _ -> getPage text model.socketUrl
   in
   ( ( model, pushMessage), NoOp )
 
 -- Socket config
-socket : Session -> Socket Msg
-socket session =
+socket : Session -> String -> Socket Msg
+socket session socketUrl =
   let
     params =
       case session.player of
@@ -167,8 +169,8 @@ lobbyChannel =
     |> Channel.withDebug
 
 -- Push messages
-getPage : String -> Cmd Msg
-getPage page_num =
+getPage : String -> String -> Cmd Msg
+getPage page_num socketUrl =
   let
     push =
       Push.init ("lobby:lobby") "get_page"
@@ -184,6 +186,7 @@ decoder model =
     |> required "page" Decode.int
     |> required "total_pages" Decode.int
     |> hardcoded model.channelSubscriptions
+    |> hardcoded model.socketUrl
 
 roomInfoDecoder : Decoder RoomInfo
 roomInfoDecoder =
@@ -205,7 +208,7 @@ subscriptions : Model -> Session -> Sub Msg
 subscriptions model session =
   let
     phoenixSubscriptions =
-      [ Phoenix.connect (socket session) model.channelSubscriptions ]
+      [ Phoenix.connect (socket session model.socketUrl) model.channelSubscriptions ]
   in
   Sub.batch phoenixSubscriptions
 

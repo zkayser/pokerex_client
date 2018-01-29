@@ -53,3 +53,5 @@ formatTitle : String -> String
 formatTitle title =
   String.split "%20" title
     |> String.join "_"
+    |> String.split " "
+    |> String.join "_"
