@@ -7,19 +7,19 @@ import Html exposing (Html, img)
 import Html.Attributes exposing (src, id)
 
 
-type alias Card = 
+type alias Card =
   {
     rank : Rank
   , suit : Suit
   }
-  
+
 type Suit
   = Hearts
   | Spades
   | Clubs
   | Diamonds
   | SuitError
-  
+
 type Rank
   = Two
   | Three
@@ -35,16 +35,16 @@ type Rank
   | King
   | Ace
   | RankError
-  
+
 stringToSuit : String -> Suit
-stringToSuit stringSuit = 
+stringToSuit stringSuit =
   case stringSuit of
     "hearts" -> Hearts
     "diamonds" -> Diamonds
     "spades" -> Spades
     "clubs" -> Clubs
     _ -> SuitError
-    
+
 suitToString : Card -> String
 suitToString card =
   case card.suit of
@@ -53,7 +53,7 @@ suitToString card =
     Spades -> "spades"
     Clubs -> "clubs"
     _ -> "error"
-    
+
 stringToRank : String -> Rank
 stringToRank stringRank =
   case stringRank of
@@ -71,7 +71,7 @@ stringToRank stringRank =
     "king" -> King
     "ace" -> Ace
     _ -> RankError
-    
+
 rankToString : Card -> String
 rankToString card =
   case card.rank of
@@ -89,30 +89,32 @@ rankToString card =
     King -> "king"
     Ace -> "ace"
     _ -> "error"
-    
+
+-- Needs to be changed in prod
 rootCardsAssetsUrl : String
 rootCardsAssetsUrl =
   "http://localhost:8081/images/cards/"
-  
+
+-- Card back also needs to be changed in prod
 sourceUrlForCardImage : Card -> String
 sourceUrlForCardImage card =
   case (card.rank, card.suit) of
     (RankError, SuitError) -> "http://localhost:8081/images/card-back.svg.png"
     _ -> (rootCardsAssetsUrl ++ (rankToString card) ++ "_of_" ++ (suitToString card) ++ ".svg")
-  
+
 tableCardImageFor : Card -> Html msg
 tableCardImageFor card =
   img [ src (sourceUrlForCardImage card), id ("table-card") ] []
-  
+
 playerHandCardImageFor : Int -> Card -> Html msg
 playerHandCardImageFor index card =
   img [ src (sourceUrlForCardImage card), id ("player-hand-card-" ++ (toString index)) ] []
-    
+
 rankDecoder : Decoder Rank
 rankDecoder =
-  Decode.string 
+  Decode.string
     |> Decode.andThen (\str -> Decode.succeed (stringToRank str))
-  
+
 suitDecoder : Decoder Suit
 suitDecoder =
   Decode.string

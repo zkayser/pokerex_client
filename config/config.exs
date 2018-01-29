@@ -8,7 +8,7 @@ use Mix.Config
 # Configures the endpoint
 config :poker_ex_client, PokerExClientWeb.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "aqsYJLyb9Lxe9ZWkvyPL2iyMJTMUBMnf/INx4rHqWswTD7LOizNi1iBHV2H4aj/z",
+  secret_key_base: System.get_env("SECRET_KEY_BASE"),
   render_errors: [view: PokerExClientWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: PokerExClient.PubSub,
            adapter: Phoenix.PubSub.PG2]
