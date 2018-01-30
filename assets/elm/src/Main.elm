@@ -152,13 +152,13 @@ decodeUserFromJson json =
 decodeSocketUrl : Value -> String
 decodeSocketUrl json =
   case Decode.decodeValue (Decode.at ["socketUrl"] Decode.string) json of
-    Ok socketUrl -> Debug.log "Decoded socketUrl: " socketUrl
+    Ok socketUrl -> socketUrl
     Err _ -> ""
 
 decodeApiUrl : Value -> String
 decodeApiUrl json =
   case Decode.decodeValue (Decode.at ["apiUrl"] Decode.string) json of
-    Ok apiUrl -> Debug.log "Decoded apiUrl: " apiUrl
+    Ok apiUrl -> apiUrl
     Err _ -> ""
 
 initialPage : Page
