@@ -132,7 +132,7 @@ init val location =
   setRoute (Route.fromLocation location)
    { pageState = Loaded initialPage
    , session = { player = decodeUserFromJson val }
-   , socket = socket { player = decodeUserFromJson val }
+   , socket = socket { player = decodeUserFromJson val } (decodeSocketUrl val)
    , channels = initChannels { player = decodeUserFromJson val }
    , openDropdown = DropdownType.AllClosed
    , selectedItem = DropdownType.None
