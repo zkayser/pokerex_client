@@ -30,7 +30,7 @@ viewPlayers session model =
     (seating, chipRoll, playerHands, isActive) =
       (model.roomModel, model.roomModel.chipRoll, model.roomModel.playerHands, getIsActive model)
     seatingWithChipRoll =
-      List.map (\seating -> 
+      List.map (\seating ->
         ( seating
         , model.player
         , Dict.get (Player.usernameToString seating.name) chipRoll
@@ -39,7 +39,7 @@ viewPlayers session model =
         model.roomModel.seating
   in
   List.map (viewSeat) seatingWithChipRoll
-  
+
 viewTableCenter : Room -> Html Msg
 viewTableCenter room =
   let
@@ -49,11 +49,11 @@ viewTableCenter room =
         False -> List.indexedMap (viewTableCard) room.table
   in
   div [ class "table-center" ]
-    [  span [ class "table-pot" ] 
+    [  span [ class "table-pot" ]
       [ span [ class "table-pot-text" ] [ text "POT: " ]
-      , text (toString room.pot) 
+      , text (toString room.pot)
       ]
-    ,  img [ id "deck", src "http://localhost:8081/images/card-back.svg.png"] []
+    ,  img [ id "deck", src "https://poker-ex.herokuapp.com/images/card-back.svg.png"] []
     ]
 
 viewTableCards : Room -> Html Msg
@@ -65,7 +65,7 @@ viewTableCards room =
         False -> List.indexedMap (viewTableCard) room.table
   in
   div [ class "table-card-container" ] cardsToHtml
-    
+
 viewTableCard : Int -> Card -> Html Msg
 viewTableCard index card =
   div [ class ("table-card table-card-" ++ (toString index)) ]
@@ -73,7 +73,7 @@ viewTableCard index card =
 
 viewSeat : (Room.Seating, Player, Maybe Int, List Card, Bool) -> Html Msg
 viewSeat (seating, player, maybeChipRoll, cards, isActive) =
-  let 
+  let
     chipsToHtml =
       case maybeChipRoll of
         Nothing -> text ""
@@ -81,10 +81,10 @@ viewSeat (seating, player, maybeChipRoll, cards, isActive) =
     cardImages =
       List.indexedMap Card.playerHandCardImageFor cards
   in
-  div [ 
+  div [
         id ("seat-" ++ (toString (seating.position + 1)))
       , class "player-seat"
-      , style [ ("text-align", "center") ] 
+      , style [ ("text-align", "center") ]
       , classList [("active-seat-" ++ (toString <| seating.position + 1), isActive && (seating.name == player.username))]
       ]
     ([ p [ class "player-emblem-name" ] [ Player.usernameToHtml seating.name ]
@@ -96,23 +96,23 @@ joinView model =
   div [ class "join-modal" ]
     [ h3 [ class "join-title red-text text-center" ] [ text "Join the Game" ]
     , h6 [ class "teal-text"] [ text <| "You currently have " ++ (toString model.chipsAvailableForJoin) ++ " chips." ]
-    , Html.form 
+    , Html.form
       [ class "join-form"
       , onSubmit Join
       ]
-      [ input 
+      [ input
         [ type_ "number"
         , placeholder "Enter the number of chips you'd like to bring to the table"
         , onInput SetJoinValue
         ]
         []
-      , button 
+      , button
         [ type_ "submit"
         , class <| "btn white-text " ++ (if (joinValToInt model.joinValue) >= 100 then "green" else "gray")
         , disabled <| (joinValToInt model.joinValue) < 100 || (joinValToInt model.joinValue) > model.chipsAvailableForJoin
-        , onClick Join 
+        , onClick Join
         ] [ text "Join" ]
-      ] 
+      ]
     ]
 
 maybeViewModal : Model -> Html Msg
@@ -130,7 +130,7 @@ maybeViewModal model =
 
 viewMessages : Model -> Html Msg
 viewMessages model =
-  let 
+  let
     errorMessages =
       case model.errorMessages of
         [] -> []
@@ -146,7 +146,7 @@ viewMessages model =
     [] -> text ""
     _ -> div [ class "room-message-container" ]
           <| List.map viewMessage messagesToView
-    
+
 viewMessage : MessageType -> Html Msg
 viewMessage messageType =
   case messageType of
@@ -156,7 +156,7 @@ viewMessage messageType =
     ErrorMessage errorMessage ->
       div [ class "message error-message" ]
         [ text errorMessage ]
-        
+
 viewWinningHandContent : WinningHand -> Html Msg
 viewWinningHandContent winningHand =
   div [ class "winning-hand-container" ]
@@ -184,8 +184,8 @@ toolbarConfig model =
       if hasJoined then ("Leave", LeaveRoom model.player) else ("Join", JoinRoom model.player)
     isActive = getIsActive model
   in
-  { joinLeaveMsg = msg 
-  , btnText = txt 
+  { joinLeaveMsg = msg
+  , btnText = txt
   , actionPressedMsg = ActionPressed
   , isActive = isActive
   , bankPressedMsg = BankPressed
@@ -201,14 +201,14 @@ joinModalConfig model =
   , contentHtml = [ joinView model ]
   , styles = Nothing
   }
-  
+
 raiseModalConfig : Model -> Modal.Config Msg
 raiseModalConfig model =
   { classes = ["white"]
   , contentHtml = [ Actions.raiseContent (actionsViewConfig model) ]
   , styles = Nothing
   }
-  
+
 actionsViewConfig : Model -> Actions.ActionsModel Msg
 actionsViewConfig model =
   let
@@ -233,12 +233,12 @@ actionsViewConfig model =
   , raiseMin = 0
   , raiseInterval = model.raiseInterval
   }
-  
+
 actionsModalConfig : Model -> Modal.Config Msg
 actionsModalConfig model =
   { classes = ["white"]
   , contentHtml = [ Actions.view (actionsViewConfig model) ]
-  , styles = Nothing  
+  , styles = Nothing
   }
 
 bankModalConfig : Model -> Modal.Config Msg
@@ -268,10 +268,10 @@ mobileMenuConfig model =
   , contentHtml = [ PlayerToolbar.viewMobileMenu <| toolbarConfig model ]
   , styles = Nothing
   }
-  
+
 winningHandConfig : WinningHand -> Model -> Modal.Config Msg
 winningHandConfig winningHand model =
   { classes = ["white", "winning-hand-modal"]
-  , contentHtml = [ viewWinningHandContent winningHand ] 
-  , styles = Nothing 
+  , contentHtml = [ viewWinningHandContent winningHand ]
+  , styles = Nothing
   }
