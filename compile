@@ -1,6 +1,11 @@
+echo "Running elm make..."
+
+elm make elm/src/Main.elm --output js/main.js --yes
+
 echo "Now building static assets..."
 echo "PWD: "
 echo `pwd`
+
 
 brunch build --production --debug
 
