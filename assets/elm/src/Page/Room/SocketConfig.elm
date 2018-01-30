@@ -13,11 +13,6 @@ import Phoenix.Channel as Channel exposing (Channel)
 type alias Msg = RoomMsg
 type alias Model = RoomPage
 
--- TODO: Get this from the environment
---socketUrl : String
---socketUrl =
---  "ws://localhost:8080/socket/websocket"
-
 socket : Session -> String -> Socket Msg
 socket session socketUrl =
   let

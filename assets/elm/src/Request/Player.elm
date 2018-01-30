@@ -10,10 +10,6 @@ import Json.Encode as Encode
 import Json.Encode.Extra as EncodeExtra
 import Ports
 
---apiUrl : String
---apiUrl =
---  "http://localhost:8080/api" -- Should be configurable, but hitting Phx server on this port for early development
-
 storeSession : Player -> Cmd msg
 storeSession player =
   Player.encode player

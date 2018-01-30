@@ -470,8 +470,8 @@ updatePage page msg model =
       ( model, Cmd.none )
 
 -- Socket Config & Setup --
-socket : Session -> Socket Msg
-socket session =
+socket : Session -> String -> Socket Msg
+socket session socketUrl =
   let
     params =
       case session.player of
@@ -487,9 +487,6 @@ socket session =
     |> Socket.onOpen (SocketOpened)
     |> Socket.onClose (\_ -> SocketClosed)
     |> Socket.onAbnormalClose (\_ -> SocketClosedAbnormally)
-
-socketUrl : String
-socketUrl = "ws://localhost:8080/socket/websocket"
 
 notificationsFor : String -> Channel Msg
 notificationsFor playerName =
@@ -524,7 +521,7 @@ subscriptions model =
         [] -> Sub.none
         _ -> Time.every 5000 ClearMessages
     channels =
-      Phoenix.connect (socket model.session) model.channels
+      Phoenix.connect (socket model.session model.socketUrl) model.channels
   in
   Sub.batch <| clearMessages :: channels :: subsWithBlur
 

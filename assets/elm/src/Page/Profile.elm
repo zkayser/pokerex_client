@@ -163,10 +163,6 @@ profileFor player =
   }
 
 -- SOCKET CONFIG
-socketUrl : String
-socketUrl =
-  "ws://localhost:8080/socket/websocket"
-
 socket : Session -> String -> Socket Msg
 socket session socketUrl =
   let
