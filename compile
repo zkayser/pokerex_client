@@ -2,7 +2,7 @@ echo "Now building static assets..."
 echo "PWD: "
 echo `pwd`
 
-brunch build --production --debug
+brunch build --production --debug LOGGY_STACKS=1
 
 echo "Brunch build completed"
 
