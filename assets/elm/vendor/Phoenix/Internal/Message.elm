@@ -51,7 +51,7 @@ encode { topic, event, payload, ref } =
     JE.object
         [ ( "topic", JE.string topic )
         , ( "event", JE.string event )
-        , ( "ref", Maybe.map (JE.int) ref |> (Maybe.withDefault JE.null) )
+        , ( "ref", Maybe.map JE.int ref |> Maybe.withDefault JE.null )
         , ( "payload", payload )
         ]
         |> JE.encode 0
@@ -67,4 +67,4 @@ decode msg =
                 (JD.field "payload" JD.value)
                 (JD.field "ref" (JD.oneOf [ JD.map Just JD.int, JD.null Nothing ]))
     in
-        JD.decodeString decoder msg
+    JD.decodeString decoder msg

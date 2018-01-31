@@ -1,15 +1,17 @@
 module Data.Notifications.Invite exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
-import Json.Decode.Pipeline exposing (required, decode)
+import Json.Decode.Pipeline exposing (decode, required)
+
 
 type alias Invite =
-  { title : String
-  , owner : String
-  }
+    { title : String
+    , owner : String
+    }
+
 
 decoder : Decoder Invite
 decoder =
-  decode Invite
-    |> required "title" Decode.string
-    |> required "owner" Decode.string
+    decode Invite
+        |> required "title" Decode.string
+        |> required "owner" Decode.string

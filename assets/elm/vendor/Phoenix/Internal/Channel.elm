@@ -2,10 +2,10 @@ module Phoenix.Internal.Channel exposing (..)
 
 import Dict exposing (Dict)
 import Json.Decode as Decode exposing (Value)
+import Phoenix.Channel as Channel
 import Phoenix.Internal.Helpers as Helpers
 import Phoenix.Internal.Message as Message exposing (Message)
 import Phoenix.Internal.Presence as Presence exposing (PresenceState)
-import Phoenix.Channel as Channel
 
 
 {-| The current channel state. This is completely handled by the effect manager.
@@ -45,12 +45,12 @@ joinMessage { channel } =
         base =
             Message.init channel.topic "phx_join"
     in
-        case channel.payload of
-            Nothing ->
-                base
+    case channel.payload of
+        Nothing ->
+            base
 
-            Just payload_ ->
-                Message.payload payload_ base
+        Just payload_ ->
+            Message.payload payload_ base
 
 
 leaveMessage : InternalChannel msg -> Message
@@ -77,7 +77,7 @@ getState endpoint topic channelsDict =
         |> Maybe.map (\{ state } -> state)
 
 
-{-|  Inserts the state, identity if channel for given endpoint topic doesn_t exist
+{-| Inserts the state, identity if channel for given endpoint topic doesn_t exist
 -}
 insertState : Endpoint -> Topic -> State -> InternalChannelsDict msg -> InternalChannelsDict msg
 insertState endpoint topic state dict =
@@ -85,13 +85,13 @@ insertState endpoint topic state dict =
         update =
             Maybe.map (updateState state)
     in
-        Helpers.updateIn endpoint topic update dict
+    Helpers.updateIn endpoint topic update dict
 
 
 updatePresenceState : PresenceState -> InternalChannel msg -> InternalChannel msg
 updatePresenceState presenceState internalChannel =
     -- TODO: debug?
-    (InternalChannel internalChannel.state presenceState internalChannel.channel)
+    InternalChannel internalChannel.state presenceState internalChannel.channel
 
 
 updateState : State -> InternalChannel msg -> InternalChannel msg
@@ -118,9 +118,9 @@ updateState state internalChannel =
                     _ ->
                         Debug.log ("Channel \"" ++ internalChannel.channel.topic ++ "\"") state
         in
-            (InternalChannel state internalChannel.presenceState internalChannel.channel)
+        InternalChannel state internalChannel.presenceState internalChannel.channel
     else
-        (InternalChannel state internalChannel.presenceState internalChannel.channel)
+        InternalChannel state internalChannel.presenceState internalChannel.channel
 
 
 updatePayload : Maybe Value -> InternalChannel msg -> InternalChannel msg

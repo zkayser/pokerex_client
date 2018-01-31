@@ -1,27 +1,32 @@
 module Phoenix.Socket
     exposing
-        ( Socket
-        , AbnormalClose
-        , init
+        ( AbnormalClose
+        , Socket
         , heartbeatIntervallSeconds
-        , withoutHeartbeat
-        , reconnectTimer
-        , withParams
-        , withDebug
-        , onOpen
-        , onClose
-        , onAbnormalClose
-        , onNormalClose
+        , init
         , map
+        , onAbnormalClose
+        , onClose
+        , onNormalClose
+        , onOpen
+        , reconnectTimer
+        , withDebug
+        , withParams
+        , withoutHeartbeat
         )
 
 {-| A socket declares to which endpoint a socket connection should be established.
 
+
 # Definition
+
 @docs Socket, AbnormalClose
 
+
 # Helpers
+
 @docs init, withParams, heartbeatIntervallSeconds, withoutHeartbeat, reconnectTimer, withDebug, onAbnormalClose, onNormalClose, onOpen, onClose, map
+
 -}
 
 import Time exposing (Time)
@@ -58,6 +63,7 @@ type alias PhoenixSocket msg =
 {-| Initialize a Socket connection with an endpoint.
 
     init "ws://localhost:4000/socket/websocket"
+
 -}
 init : String -> Socket msg
 init endpoint =
@@ -78,6 +84,7 @@ init endpoint =
 
     init "ws://localhost:4000/socket/websocket"
         |> withParams [("token", "GYMXZwXzKFzfxyGntVkYt7uAJnscVnFJ")]
+
 -}
 withParams : List ( String, String ) -> Socket msg -> Socket msg
 withParams params socket =
@@ -88,16 +95,18 @@ withParams params socket =
 
     init "ws://localhost:4000/socket/websocket"
         |> heartbeatIntervallSeconds 60
+
 -}
 heartbeatIntervallSeconds : Int -> Socket msg -> Socket msg
 heartbeatIntervallSeconds intervall socket =
-    { socket | heartbeatIntervall = (toFloat intervall) * Time.second }
+    { socket | heartbeatIntervall = toFloat intervall * Time.second }
 
 
 {-| The client regularly sends a heartbeat to the sever. With this function you can disable the heartbeat.
 
     init "ws://localhost:4000/socket/websocket"
         |> withoutHeartbeat
+
 -}
 withoutHeartbeat : Socket msg -> Socket msg
 withoutHeartbeat socket =
@@ -113,6 +122,7 @@ withoutHeartbeat socket =
             toFloat (10 * 2 ^ failedAttempts)
 
 With this function you can specify a custom strategy.
+
 -}
 reconnectTimer : (Int -> Time) -> Socket msg -> Socket msg
 reconnectTimer timerFunc socket =
@@ -141,6 +151,7 @@ onOpen onOpen socket =
         init "ws://localhost:4000/socket/websocket"
             |> withParams [ ( "accessToken", "abc123" ) ]
             |> onAbnormalClose RefreshAccessToken
+
 -}
 onAbnormalClose : (AbnormalClose -> msg) -> Socket msg -> Socket msg
 onAbnormalClose onAbnormalClose_ socket =

@@ -1,7 +1,7 @@
 module Phoenix.Internal.Helpers exposing (..)
 
-import Json.Decode as Decode exposing (Value)
 import Dict exposing (Dict)
+import Json.Decode as Decode exposing (Value)
 import Task exposing (Task)
 
 
@@ -19,12 +19,12 @@ updateIn a b update dict =
                 dict_ =
                     Dict.update b update (Maybe.withDefault Dict.empty maybeDict)
             in
-                if Dict.isEmpty dict_ then
-                    Nothing
-                else
-                    Just dict_
+            if Dict.isEmpty dict_ then
+                Nothing
+            else
+                Just dict_
     in
-        Dict.update a update_ dict
+    Dict.update a update_ dict
 
 
 insertIn : comparable -> comparable_ -> value -> Dict comparable (Dict comparable_ value) -> Dict comparable (Dict comparable_ value)
@@ -38,7 +38,7 @@ insertIn a b value dict =
                 Just dict_ ->
                     Just (Dict.insert b value dict_)
     in
-        Dict.update a update_ dict
+    Dict.update a update_ dict
 
 
 removeIn : comparable -> comparable_ -> Dict comparable (Dict comparable_ value) -> Dict comparable (Dict comparable_ value)
@@ -54,12 +54,12 @@ removeIn a b dict =
                         newDict =
                             Dict.remove b dict_
                     in
-                        if Dict.isEmpty newDict then
-                            Nothing
-                        else
-                            Just newDict
+                    if Dict.isEmpty newDict then
+                        Nothing
+                    else
+                        Just newDict
     in
-        Dict.update a remove dict
+    Dict.update a remove dict
 
 
 add : a -> Maybe (List a) -> Maybe (List a)
@@ -76,19 +76,19 @@ decodeReplyPayload : Value -> Maybe (Result Value Value)
 decodeReplyPayload value =
     let
         result =
-            Decode.decodeValue ((Decode.field "status" Decode.string) |> Decode.andThen statusInfo)
+            Decode.decodeValue (Decode.field "status" Decode.string |> Decode.andThen statusInfo)
                 value
     in
-        case result of
-            Err err ->
-                let
-                    _ =
-                        Debug.log err
-                in
-                    Nothing
+    case result of
+        Err err ->
+            let
+                _ =
+                    Debug.log err
+            in
+            Nothing
 
-            Ok payload ->
-                Just payload
+        Ok payload ->
+            Just payload
 
 
 statusInfo : String -> Decode.Decoder (Result Value Value)

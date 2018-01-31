@@ -4,27 +4,29 @@ effect module Phoenix where { command = MyCmd, subscription = MySub } exposing (
 
 This package makes it easy to connect to Phoenix Channels, but in a more declarative manner than the Phoenix Socket Javascript library. Simply provide a `Socket` and a list of `Channel`s you want to join and this library handles the tedious parts like opening a connection, joining channels, reconnecting after a network error and registering event handlers.
 
-
 #Connect with Phoenix
 @docs connect
 
+
 # Push messages
+
 @docs push
+
 -}
 
-import Json.Encode as Encode exposing (Value)
-import WebSocket.LowLevel as WS
 import Dict exposing (Dict)
-import Task exposing (Task)
-import Process
+import Json.Encode as Encode exposing (Value)
+import Phoenix.Channel as Channel exposing (Channel)
 import Phoenix.Internal.Channel as InternalChannel exposing (InternalChannel)
 import Phoenix.Internal.Helpers as Helpers exposing ((&>), (<&>))
 import Phoenix.Internal.Message as Message exposing (Message)
 import Phoenix.Internal.Presence as InternalPresence
 import Phoenix.Internal.Socket as InternalSocket exposing (InternalSocket)
-import Phoenix.Channel as Channel exposing (Channel)
-import Phoenix.Socket as Socket exposing (Socket)
 import Phoenix.Push as Push exposing (Push)
+import Phoenix.Socket as Socket exposing (Socket)
+import Process
+import Task exposing (Task)
+import WebSocket.LowLevel as WS
 
 
 -- SUBSCRIPTIONS
@@ -54,6 +56,7 @@ type MySub msg
         connect socket [channel]
 
 **Note**: An empty channel list keeps the socket connection open.
+
 -}
 connect : Socket msg -> List (Channel msg) -> Sub msg
 connect socket channels =
@@ -79,8 +82,8 @@ type MyCmd msg
 
     push "ws://localhost:4000/socket/websocket" message
 
-
 **Note**: The message will be queued until you successfully joined a channel to the topic of the message.
+
 -}
 push : String -> Push msg -> Cmd msg
 push endpoint push_ =
@@ -202,11 +205,11 @@ onEffects router cmds subs state =
                 getNewSockets =
                     handleSocketsUpdate router definedSockets newState.sockets
             in
-                Task.map2 (\newSockets newChannels -> { newState | sockets = newSockets, channels = newChannels })
-                    getNewSockets
-                    getNewChannels
+            Task.map2 (\newSockets newChannels -> { newState | sockets = newSockets, channels = newChannels })
+                getNewSockets
+                getNewChannels
     in
-        sendPushsHelp cmds state <&> \newState -> updateState newState
+    sendPushsHelp cmds state <&> (\newState -> updateState newState)
 
 
 
@@ -221,7 +224,7 @@ buildSocketsDict subs =
                 Connect socket _ ->
                     Dict.insert socket.endpoint socket dict
     in
-        List.foldl insert Dict.empty subs
+    List.foldl insert Dict.empty subs
 
 
 
@@ -237,12 +240,12 @@ buildChannelsDict subs dict =
         (Connect { endpoint } channels) :: rest ->
             let
                 internalChan chan =
-                    (InternalChannel InternalChannel.Closed Dict.empty chan)
+                    InternalChannel InternalChannel.Closed Dict.empty chan
 
                 build chan dict_ =
                     buildChannelsDict rest (Helpers.insertIn endpoint chan.topic (internalChan chan) dict_)
             in
-                List.foldl build dict channels
+            List.foldl build dict channels
 
 
 sendPushsHelp : List (MyCmd msg) -> State msg -> Task x (State msg)
@@ -256,8 +259,8 @@ sendPushsHelp cmds state =
                 message =
                     Message.fromPush push
             in
-                pushSocket endpoint message (Just <| PushResponse push) state
-                    <&> sendPushsHelp rest
+            pushSocket endpoint message (Just <| PushResponse push) state
+                <&> sendPushsHelp rest
 
 
 handleSocketsUpdate : Platform.Router msg (Msg msg) -> Dict String (Socket msg) -> InternalSocketsDict msg -> Task Never (InternalSocketsDict msg)
@@ -267,13 +270,15 @@ handleSocketsUpdate router definedSockets stateSockets =
         addedSocketsStep endpoint definedSocket taskChain =
             let
                 socket =
-                    (InternalSocket.internalSocket definedSocket)
+                    InternalSocket.internalSocket definedSocket
             in
-                taskChain
-                    <&> \addedSockets ->
-                            attemptOpen router 0 socket
-                                <&> \pid ->
-                                        Task.succeed (Dict.insert endpoint (InternalSocket.opening 0 pid socket) addedSockets)
+            taskChain
+                <&> (\addedSockets ->
+                        attemptOpen router 0 socket
+                            <&> (\pid ->
+                                    Task.succeed (Dict.insert endpoint (InternalSocket.opening 0 pid socket) addedSockets)
+                                )
+                    )
 
         -- we update the authentication parameters
         retainedSocketsStep endpoint definedSocket stateSocket taskChain =
@@ -282,7 +287,7 @@ handleSocketsUpdate router definedSockets stateSockets =
         removedSocketsStep endpoint stateSocket taskChain =
             InternalSocket.close stateSocket &> taskChain
     in
-        Dict.merge addedSocketsStep retainedSocketsStep removedSocketsStep definedSockets stateSockets (Task.succeed Dict.empty)
+    Dict.merge addedSocketsStep retainedSocketsStep removedSocketsStep definedSockets stateSockets (Task.succeed Dict.empty)
 
 
 handleChannelsUpdate : Platform.Router msg (Msg msg) -> InternalChannelsDict msg -> InternalChannelsDict msg -> Task Never (InternalChannelsDict msg)
@@ -298,16 +303,16 @@ handleChannelsUpdate router nextChannels previousChannels =
                 insert newChannels =
                     Task.succeed (Dict.insert endpoint definedEndpointChannels newChannels)
             in
-                sendJoin &> taskChain <&> insert
+            sendJoin &> taskChain <&> insert
 
         retainedChannelsStep endpoint definedEndpointChannels stateEndpointChannels taskChain =
             let
                 getEndpointChannels =
                     handleEndpointChannelsUpdate router endpoint definedEndpointChannels stateEndpointChannels
             in
-                Task.map2 (\endpointChannels newChannels -> Dict.insert endpoint endpointChannels newChannels)
-                    getEndpointChannels
-                    taskChain
+            Task.map2 (\endpointChannels newChannels -> Dict.insert endpoint endpointChannels newChannels)
+                getEndpointChannels
+                taskChain
 
         removedChannelsStep endpoint stateEndpointChannels taskChain =
             let
@@ -316,16 +321,16 @@ handleChannelsUpdate router nextChannels previousChannels =
                         |> List.foldl (\channel task -> task &> sendLeaveChannel router endpoint channel)
                             (Task.succeed ())
             in
-                sendLeave &> taskChain
+            sendLeave &> taskChain
     in
-        Dict.merge addedChannelsStep retainedChannelsStep removedChannelsStep nextChannels previousChannels (Task.succeed Dict.empty)
+    Dict.merge addedChannelsStep retainedChannelsStep removedChannelsStep nextChannels previousChannels (Task.succeed Dict.empty)
 
 
 handleEndpointChannelsUpdate : Platform.Router msg (Msg msg) -> Endpoint -> Dict Topic (InternalChannel msg) -> Dict Topic (InternalChannel msg) -> Task Never (Dict Topic (InternalChannel msg))
 handleEndpointChannelsUpdate router endpoint definedChannels stateChannels =
     let
         leftStep topic defined getNewChannels =
-            (sendJoinChannel router endpoint defined) &> Task.map (Dict.insert topic defined) getNewChannels
+            sendJoinChannel router endpoint defined &> Task.map (Dict.insert topic defined) getNewChannels
 
         bothStep topic defined state getNewChannels =
             let
@@ -334,12 +339,12 @@ handleEndpointChannelsUpdate router endpoint definedChannels stateChannels =
                         |> InternalChannel.updatePayload defined.channel.payload
                         |> InternalChannel.updateOn defined.channel.on
             in
-                Task.map (Dict.insert topic channel) getNewChannels
+            Task.map (Dict.insert topic channel) getNewChannels
 
         rightStep topic state getNewChannels =
-            (sendLeaveChannel router endpoint state) &> getNewChannels
+            sendLeaveChannel router endpoint state &> getNewChannels
     in
-        Dict.merge leftStep bothStep rightStep definedChannels stateChannels (Task.succeed Dict.empty)
+    Dict.merge leftStep bothStep rightStep definedChannels stateChannels (Task.succeed Dict.empty)
 
 
 sendLeaveChannel : Platform.Router msg (Msg msg) -> Endpoint -> InternalChannel msg -> Task Never ()
@@ -443,9 +448,9 @@ onSelfMsg router selfMsg state =
                         state_ =
                             insertSocket endpoint (InternalSocket.connected ws internalSocket) state
                     in
-                        notifyOnOpen
-                            &> (heartbeat router endpoint state_)
-                            <&> (rejoinAllChannels endpoint)
+                    notifyOnOpen
+                        &> heartbeat router endpoint state_
+                        <&> rejoinAllChannels endpoint
 
                 -- somehow the state is messed up
                 Nothing ->
@@ -476,10 +481,10 @@ onSelfMsg router selfMsg state =
                             internalSocket.socket.reconnectTimer backoffIteration
 
                         newState pid =
-                            (updateSocket endpoint (InternalSocket.opening backoffIteration pid internalSocket)) state
+                            updateSocket endpoint (InternalSocket.opening backoffIteration pid internalSocket) state
                     in
-                        attemptOpen router backoff internalSocket
-                            |> Task.map newState
+                    attemptOpen router backoff internalSocket
+                        |> Task.map newState
 
         Die endpoint details ->
             case Dict.get endpoint state.sockets of
@@ -527,21 +532,21 @@ onSelfMsg router selfMsg state =
                             else
                                 Task.succeed ()
                     in
-                        notifyOnClose
-                            &> notifyOnNormalClose
-                            &> notifyOnAbnormalClose
-                            &> attemptOpen router backoff internalSocket
-                            |> Task.andThen finalNewState
+                    notifyOnClose
+                        &> notifyOnNormalClose
+                        &> notifyOnAbnormalClose
+                        &> attemptOpen router backoff internalSocket
+                        |> Task.andThen finalNewState
 
         Receive endpoint message ->
             dispatchMessage router endpoint message state.channels
-                &> ((handleSelfcallback router endpoint message state.selfCallbacks)
+                &> (handleSelfcallback router endpoint message state.selfCallbacks
                         |> Task.map (\selfCbs -> updateSelfCallbacks selfCbs state)
                    )
                 <&> handlePhoenixMessage router endpoint message
 
         ChannelJoinReply endpoint topic oldState message ->
-            (handleChannelJoinReply router endpoint topic message oldState state.channels)
+            handleChannelJoinReply router endpoint topic message oldState state.channels
                 |> Task.map (\newChannels -> updateChannels newChannels state)
 
         JoinChannel endpoint internalChannel ->
@@ -595,7 +600,7 @@ onSelfMsg router selfMsg state =
                                     Platform.sendToApp router (onLeave ok) &> Task.succeed state
 
         SendHeartbeat endpoint ->
-            (heartbeat router endpoint state)
+            heartbeat router endpoint state
 
         GoodJoin endpoint topic ->
             case Helpers.getIn endpoint topic state.channelQueues of
@@ -697,7 +702,7 @@ handlePhoenixMessage router endpoint message state =
                                         Nothing ->
                                             Task.succeed ()
                     in
-                        sendToApp &> Task.succeed (updateChannels updatedChannels state)
+                    sendToApp &> Task.succeed (updateChannels updatedChannels state)
 
         "presence_diff" ->
             case Helpers.getIn endpoint message.topic state.channels of
@@ -713,7 +718,7 @@ handlePhoenixMessage router endpoint message state =
                                         newState =
                                             InternalPresence.syncPresenceDiff presenceDiff internalChannel.presenceState
                                     in
-                                        { newState = newState, joins = Just presenceDiff.joins, leaves = Just presenceDiff.leaves }
+                                    { newState = newState, joins = Just presenceDiff.joins, leaves = Just presenceDiff.leaves }
 
                                 Err err ->
                                     { newState = internalChannel.presenceState, joins = Nothing, leaves = Nothing }
@@ -755,9 +760,9 @@ handlePhoenixMessage router endpoint message state =
                                                 Nothing ->
                                                     Task.succeed ()
                                     in
-                                        sendOnJoins &> sendOnLeaves &> sendOnChange
+                                    sendOnJoins &> sendOnLeaves &> sendOnChange
                     in
-                        sendToApp &> Task.succeed (updateChannels updatedChannels state)
+                    sendToApp &> Task.succeed (updateChannels updatedChannels state)
 
         "phx_error" ->
             case Helpers.getIn endpoint message.topic state.channels of
@@ -777,7 +782,7 @@ handlePhoenixMessage router endpoint message state =
                                 Just onError ->
                                     Platform.sendToApp router onError
                     in
-                        sendToApp &> sendJoinHelper endpoint [ newChannel ] state
+                    sendToApp &> sendJoinHelper endpoint [ newChannel ] state
 
         -- TODO do we have to do something here?
         "phx_close" ->
@@ -835,25 +840,25 @@ handleChannelJoinReply router endpoint topic message prevState channels =
                             Platform.sendToSelf router (GoodJoin endpoint topic)
                                 &> newChannels InternalChannel.Joined
                     in
-                        case prevState of
-                            InternalChannel.Disconnected ->
-                                case channel.onRejoin of
-                                    Nothing ->
-                                        join
+                    case prevState of
+                        InternalChannel.Disconnected ->
+                            case channel.onRejoin of
+                                Nothing ->
+                                    join
 
-                                    Just onRejoin ->
-                                        Platform.sendToApp router (onRejoin response) &> join
+                                Just onRejoin ->
+                                    Platform.sendToApp router (onRejoin response) &> join
 
-                            _ ->
-                                case channel.onJoin of
-                                    Nothing ->
-                                        join
+                        _ ->
+                            case channel.onJoin of
+                                Nothing ->
+                                    join
 
-                                    Just onJoin ->
-                                        Platform.sendToApp router (onJoin response) &> join
+                                Just onJoin ->
+                                    Platform.sendToApp router (onJoin response) &> join
     in
-        Maybe.map2 handlePayload maybeChannel maybePayload
-            |> Maybe.withDefault (Task.succeed channels)
+    Maybe.map2 handlePayload maybeChannel maybePayload
+        |> Maybe.withDefault (Task.succeed channels)
 
 
 handleChannelDisconnect : Platform.Router msg (Msg msg) -> Endpoint -> State msg -> Task x (State msg)
@@ -886,12 +891,11 @@ handleChannelDisconnect router endpoint state =
                 updatedEndpointChannels =
                     Dict.map updateChannel endpointChannels
             in
-                notify
-                    &> Task.succeed
-                        ({ state
-                            | channels = Dict.insert endpoint updatedEndpointChannels state.channels
-                         }
-                        )
+            notify
+                &> Task.succeed
+                    { state
+                        | channels = Dict.insert endpoint updatedEndpointChannels state.channels
+                    }
 
 
 heartbeat : Platform.Router msg (Msg msg) -> Endpoint -> State msg -> Task x (State msg)
@@ -901,7 +905,7 @@ heartbeat router endpoint state =
             if socket.withoutHeartbeat then
                 Task.succeed state
             else
-                (Process.spawn (Process.sleep socket.heartbeatIntervall &> (Platform.sendToSelf router (SendHeartbeat endpoint))))
+                Process.spawn (Process.sleep socket.heartbeatIntervall &> Platform.sendToSelf router (SendHeartbeat endpoint))
                     &> pushSocket_ endpoint heartbeatMessage Nothing state
 
         Nothing ->
@@ -943,8 +947,8 @@ sendJoinHelper endpoint channels state =
                 newChannels =
                     Helpers.insertIn endpoint internalChannel.channel.topic newChannel state.channels
             in
-                pushSocket_ endpoint message (Just selfCb) (updateChannels newChannels state)
-                    <&> \newState -> sendJoinHelper endpoint rest newState
+            pushSocket_ endpoint message (Just selfCb) (updateChannels newChannels state)
+                <&> (\newState -> sendJoinHelper endpoint rest newState)
 
 
 
@@ -961,7 +965,7 @@ pushSocket_ endpoint message maybeSelfCb state =
 
         Just socket ->
             InternalSocket.push message socket
-                <&> \maybeRef ->
+                <&> (\maybeRef ->
                         case maybeRef of
                             Nothing ->
                                 Task.succeed state
@@ -970,6 +974,7 @@ pushSocket_ endpoint message maybeSelfCb state =
                                 insertSocket endpoint (InternalSocket.increaseRef socket) state
                                     |> insertSelfCallback ref maybeSelfCb
                                     |> Task.succeed
+                    )
 
 
 {-| pushes a message to a certain socket. Queues the message if the channel is not joined.
@@ -993,31 +998,31 @@ pushSocket endpoint message selfCb state =
                         |> insertSelfCallback ref selfCb
                         |> Task.succeed
     in
-        case Dict.get endpoint state.sockets of
-            Nothing ->
-                queuedState
+    case Dict.get endpoint state.sockets of
+        Nothing ->
+            queuedState
 
-            Just socket ->
-                case InternalChannel.get endpoint message.topic state.channels of
-                    Nothing ->
-                        let
-                            _ =
-                                Debug.log "Queued message (no channel exists)" message
-                        in
+        Just socket ->
+            case InternalChannel.get endpoint message.topic state.channels of
+                Nothing ->
+                    let
+                        _ =
+                            Debug.log "Queued message (no channel exists)" message
+                    in
+                    queuedState
+
+                Just channel ->
+                    case channel.state of
+                        InternalChannel.Joined ->
+                            InternalSocket.push message socket
+                                <&> afterSocketPush socket
+
+                        _ ->
+                            let
+                                _ =
+                                    Debug.log "Queued message (channel not joined)" message
+                            in
                             queuedState
-
-                    Just channel ->
-                        case channel.state of
-                            InternalChannel.Joined ->
-                                InternalSocket.push message socket
-                                    <&> afterSocketPush socket
-
-                            _ ->
-                                let
-                                    _ =
-                                        Debug.log "Queued message (channel not joined)" message
-                                in
-                                    queuedState
 
 
 
@@ -1037,7 +1042,7 @@ attemptOpen router backoff ({ connection, socket } as internalSocket) =
             (open internalSocket router |> Task.andThen goodOpen)
                 |> Task.onError badOpen
     in
-        Process.spawn (after backoff &> actuallyAttemptOpen)
+    Process.spawn (after backoff &> actuallyAttemptOpen)
 
 
 open : InternalSocket msg -> Platform.Router msg (Msg msg) -> Task WS.BadOpen WS.WebSocket
@@ -1052,10 +1057,10 @@ open socket router =
                 Err err ->
                     Task.succeed ()
     in
-        InternalSocket.open socket
-            { onMessage = onMessage
-            , onClose = \details -> Platform.sendToSelf router (Die socket.socket.endpoint details)
-            }
+    InternalSocket.open socket
+        { onMessage = onMessage
+        , onClose = \details -> Platform.sendToSelf router (Die socket.socket.endpoint details)
+        }
 
 
 after : Float -> Task x ()

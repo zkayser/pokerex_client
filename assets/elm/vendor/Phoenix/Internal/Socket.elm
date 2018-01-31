@@ -1,12 +1,12 @@
 module Phoenix.Internal.Socket exposing (..)
 
 import Dict exposing (Dict)
+import Phoenix.Internal.Message as Message exposing (Message)
+import Phoenix.Socket as Socket
 import Process
 import String
 import Task exposing (Task)
 import WebSocket.LowLevel as WS
-import Phoenix.Internal.Message as Message exposing (Message)
-import Phoenix.Socket as Socket
 
 
 type alias Endpoint =
@@ -54,12 +54,12 @@ isOpening internalSocket =
 
 opening : Int -> Process.Id -> InternalSocket msg -> InternalSocket msg
 opening backoff pid socket =
-    { socket | connection = (Opening backoff pid) }
+    { socket | connection = Opening backoff pid }
 
 
 connected : WS.WebSocket -> InternalSocket msg -> InternalSocket msg
 connected ws socket =
-    { socket | connection = (Connected ws 0) }
+    { socket | connection = Connected ws 0 }
 
 
 increaseRef : InternalSocket msg -> InternalSocket msg
@@ -81,7 +81,7 @@ update nextSocket { connection, socket } =
             else
                 connection
     in
-        InternalSocket updatedConnection nextSocket
+    InternalSocket updatedConnection nextSocket
 
 
 resetBackoff : Connection -> Connection
@@ -109,27 +109,26 @@ push message { connection, socket } =
                     else
                         Message.ref ref message
             in
-                WS.send ws (Message.encode message_)
-                    |> Task.map
-                        (\maybeBadSend ->
-                            (case maybeBadSend of
-                                Nothing ->
-                                    Just ref
+            WS.send ws (Message.encode message_)
+                |> Task.map
+                    (\maybeBadSend ->
+                        case maybeBadSend of
+                            Nothing ->
+                                Just ref
 
-                                Just badSend ->
-                                    if socket.debug then
-                                        let
-                                            _ =
-                                                Debug.log "BadSend" badSend
-                                        in
-                                            Nothing
-                                    else
-                                        Nothing
-                            )
-                        )
+                            Just badSend ->
+                                if socket.debug then
+                                    let
+                                        _ =
+                                            Debug.log "BadSend" badSend
+                                    in
+                                    Nothing
+                                else
+                                    Nothing
+                    )
 
         _ ->
-            Task.succeed (Nothing)
+            Task.succeed Nothing
 
 
 
@@ -150,7 +149,7 @@ open { socket } settings =
             else
                 socket.endpoint ++ "?" ++ query
     in
-        WS.open url settings
+    WS.open url settings
 
 
 after : Float -> Task x ()

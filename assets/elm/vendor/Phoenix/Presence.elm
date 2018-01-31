@@ -1,13 +1,18 @@
-module Phoenix.Presence exposing (Presence, create, onChange, onJoins, onLeaves, map)
+module Phoenix.Presence exposing (Presence, create, map, onChange, onJoins, onLeaves)
 
 {-| Presence is an extension for channels to support the Presence feature of Phoenix.
 
+
 # Definition
+
 @docs Presence
 
+
 # Helpers
+
 @docs init, withPayload, on, onJoin, onRequestJoin, onJoinError, onError, onDisconnect, onRejoin, onLeave, onLeaveError, withDebug, map
 @docs init, withPayload, on, onJoin, onRequestJoin, onJoinError, onError, onDisconnect, onRejoin, onLeave, onLeaveError, withDebug, withPresence, map
+
 -}
 
 import Dict exposing (Dict)
@@ -49,7 +54,6 @@ then an example would be a Dict with
     , "user2": [{online_at: 1491492646123}, {online_at: 1491492646624}]
     }
 
-
 -}
 onChange : (Dict String (List Value) -> msg) -> PhoenixPresence msg -> PhoenixPresence msg
 onChange func presence =
@@ -80,4 +84,4 @@ map func pres =
         f =
             Maybe.map ((<<) func)
     in
-        { pres | onChange = f pres.onChange, onJoins = f pres.onJoins, onLeaves = f pres.onLeaves }
+    { pres | onChange = f pres.onChange, onJoins = f pres.onJoins, onLeaves = f pres.onLeaves }
