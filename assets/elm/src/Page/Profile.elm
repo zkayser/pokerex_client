@@ -646,7 +646,7 @@ viewTabs model =
                             ]
                         , onClick (TabClicked StartPrivateGame)
                         ]
-                        [ text "Start Private Game" ]
+                        [ text "Create Game" ]
                     ]
                 ]
             ]
