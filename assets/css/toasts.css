@@ -34,3 +34,21 @@
 .success-message {
 	background-color: var(--green-accent);
 }
+
+@media (max-width: 600px) {
+	.message-container {
+		min-width: 100%;
+		max-width: 100%;
+		bottom: 0%;
+		position: fixed;
+	}
+
+	.message {
+		margin: 0;
+		font-size: 1.5rem;
+		text-align: center;
+		bottom: 0%;
+		width: 100%;
+		position: fixed;
+	}
+}

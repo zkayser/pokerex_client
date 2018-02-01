@@ -45,6 +45,15 @@
 	        animation: slideInMessage 0.75s ease-in-out;
 }
 
+@media (max-width: 600px) {
+	.room-message-container {
+		position: fixed;
+		min-width: 100%;
+		max-width: 100%;
+		bottom: 0%;
+	}
+}
+
 .error-message {
 	background-color: var(--bright-red);
 }
