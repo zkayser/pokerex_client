@@ -22,9 +22,9 @@ exports.config = {
     stylesheets: {
       joinTo: "css/app.css"
     },
-    // templates: {
-    //   joinTo: "js/app.js"
-    // }
+    templates: {
+      joinTo: "js/app.js"
+    }
   },
 
   conventions: {
@@ -44,14 +44,15 @@ exports.config = {
 
   // Configure your plugins
   plugins: {
-    elmBrunch: {
-      mainModules: ["elm/src/Main.elm"],
-      outputFolder: "js/"
-    },
     babel: {
       // Do not use ES6 compiler in vendor code
       ignore: [/vendor/]
-    }
+    },
+    elmBrunch: {
+      mainModules: ["elm/src/Main.elm"],
+      makeParameters: ["--debug"],
+      outputFolder: "js/"
+    },
   },
 
   modules: {

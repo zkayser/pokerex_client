@@ -10,7 +10,8 @@
     <meta data-api-url=<%= System.get_env("API_ROOT_URL") %>>
     <meta data-ws-url=<%= System.get_env("WS_ROOT_URL") %>>
 
-    <title>Hello PokerExClient!</title>
+    <title>PokerEx</title>
+    <link rel="shortcut icon" href="<%= static_path(@conn, "/images/spades.png") %>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
