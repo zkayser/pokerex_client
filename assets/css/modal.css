@@ -27,7 +27,7 @@
 .bottom-modal {
 	position: fixed;
 	width: 100vw;
-	height: 20vh;
+	height: 25vh;
 	bottom: 0;
 	text-align: center;
 }
