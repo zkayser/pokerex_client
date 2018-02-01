@@ -58,31 +58,32 @@ view session model =
     div [ class "auth-page", style [ ( "text-align", "center" ) ] ]
         [ div [ class "auth-form card-panel z-depth-4 rounded" ]
             [ Form.viewErrors model.errors
-            , viewForm
+            , viewForm model
             , FBLogin.viewFBLogin LoginWithFB
             ]
         ]
 
 
-viewForm : Html Msg
-viewForm =
+viewForm : Model -> Html Msg
+viewForm model =
     Html.form [ onSubmit SubmitForm ]
-        [ inputFor "Username" Username "text"
-        , inputFor "Password" Password "password"
-        , inputFor "First Name" FirstName "text"
-        , inputFor "Last Name" LastName "text"
-        , inputFor "Message" Blurb "text"
-        , inputFor "Email" Email "text"
+        [ inputFor model.username "Username" Username "text"
+        , inputFor model.password "Password" Password "password"
+        , inputFor model.firstName "First Name" FirstName "text"
+        , inputFor model.lastName "Last Name" LastName "text"
+        , inputFor model.blurb "Message" Blurb "text"
+        , inputFor model.email "Email" Email "text"
         , button [ class "btn blue waves-effect" ]
             [ text "Sign Up" ]
         ]
 
 
-inputFor : String -> (String -> RegistrationAttr) -> String -> Html Msg
-inputFor holder attr inputType =
+inputFor : String -> String -> (String -> RegistrationAttr) -> String -> Html Msg
+inputFor val holder attr inputType =
     input
         [ placeholder holder
         , type_ inputType
+        , value val
         , onInput (\s -> Set (attr s))
         ]
         []

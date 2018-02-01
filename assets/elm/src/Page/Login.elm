@@ -50,7 +50,7 @@ view session model =
     div [ class "auth-page", style [ ( "text-align", "center" ) ] ]
         [ div [ class "auth-form card-panel z-depth-4 rounded" ]
             [ Form.viewErrors model.errors
-            , viewForm
+            , viewForm model
             , FBLogin.viewFBLogin LoginWithFb
             , br [] []
             , div [ class "forgot-password-link grey-text", onClick GoToForgotPassword ] [ text "Forgot password?" ]
@@ -58,18 +58,20 @@ view session model =
         ]
 
 
-viewForm : Html Msg
-viewForm =
+viewForm : Model -> Html Msg
+viewForm model =
     Html.form [ onSubmit SubmitForm ]
         [ input
             [ placeholder "Username"
             , type_ "text"
+            , value model.username
             , onInput SetUsername
             ]
             []
         , input
             [ placeholder "Password"
             , type_ "password"
+            , value model.password
             , onInput SetPassword
             ]
             []
