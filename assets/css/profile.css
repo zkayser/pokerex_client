@@ -33,7 +33,7 @@
 		display: block;
 		flex: 1;
 		order: 2;
-		height: 0.5rem;
+		height: 1px;
 		padding: 0;
 		margin: 1rem;
 	}
