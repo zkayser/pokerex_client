@@ -84,6 +84,7 @@ inputFor val holder attr inputType =
         [ placeholder holder
         , type_ inputType
         , value val
+        , autocomplete False
         , onInput (\s -> Set (attr s))
         ]
         []

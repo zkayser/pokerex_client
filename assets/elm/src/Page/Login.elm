@@ -66,6 +66,7 @@ viewForm model =
             , type_ "text"
             , value model.username
             , onInput SetUsername
+            , autocomplete False
             ]
             []
         , input
@@ -73,6 +74,7 @@ viewForm model =
             , type_ "password"
             , value model.password
             , onInput SetPassword
+            , autocomplete False
             ]
             []
         , button [ class "btn waves-effect blue" ]
