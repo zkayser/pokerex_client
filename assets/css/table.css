@@ -51,28 +51,48 @@
 }
 
 .table-card-0 {
-	-webkit-animation: animate-card-0 0.75s ease-in-out;
-	        animation: animate-card-0 0.75s ease-in-out
+	        animation-name: animate-card-0;
+	        animation-duration: 1s;
+	        animation-delay: 1s;
+	        animation-timing-function: ease-in-out;
+	        animation-fill-mode: forwards;
+	        opacity: 0;
 }
 
 .table-card-1 {
-	-webkit-animation: animate-card-1 0.75s ease-in-out;
-	        animation: animate-card-1 0.75s ease-in-out
+	        animation-name: animate-card-1;
+	        animation-duration: 1s;
+	        animation-delay: 1s;
+	        animation-timing-function: ease-in-out;
+	        animation-fill-mode: forwards;
+	        opacity: 0;
 }
 
 .table-card-2 {
-	-webkit-animation: animate-card-2 0.75s ease-in-out;
-	        animation: animate-card-2 0.75s ease-in-out
+	        animation-name: animate-card-2;
+	        animation-duration: 1s;
+	        animation-delay: 1s;
+	        animation-timing-function: ease-in-out;
+	        animation-fill-mode: forwards;
+	        opacity: 0;
 }
 
 .table-card-3 {
-	-webkit-animation: animate-card-3 0.75s ease-in-out;
-	        animation: animate-card-3 0.75s ease-in-out
+	        animation-name: animate-card-3;
+	        animation-duration: 1s;
+	        animation-delay: 1s;
+	        animation-timing-function: ease-in-out;
+	        animation-fill-mode: forwards;
+	        opacity: 0;
 }
 
 .table-card-4 {
-	-webkit-animation: animate-card-4 0.75s ease-in-out;
-	        animation: animate-card-4 0.75s ease-in-out
+	        animation-name: animate-card-4;
+	        animation-duration: 1s;
+	        animation-delay: 1s;
+	        animation-timing-function: ease-in-out;
+	        animation-fill-mode: forwards;
+	        opacity: 0;
 }
 
 #deck {
@@ -238,55 +258,141 @@
 	width: 4rem;
 }
 
+@media (max-width: 600px) {
+	.card-back {
+		transform: scale(1, 0.7);
+	}
+}
+
 /* Keyframes for table cards */
 @-webkit-keyframes animate-card-0 {
-	0% { -webkit-transform: translate(100%, -9.5vh); transform: translate(100%, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0); }
+	0% {
+		-webkit-transform: translate(100%, -9.5vh);
+		transform: translate(100%, -9.5vh);
+		opacity: 0;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @keyframes animate-card-0 {
-	0% { -webkit-transform: translate(100%, -9.5vh); transform: translate(100%, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0); }
+	0% {
+		-webkit-transform: translate(100%, -9.5vh);
+		transform: translate(100%, -9.5vh);
+		opacity: 1;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @-webkit-keyframes animate-card-1 {
-	0% { -webkit-transform: translate(0, -9.5vh); transform: translate(0, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
+	0% {
+		-webkit-transform: translate(0, -9.5vh);
+		transform: translate(0, -9.5vh);
+		opacity: 1;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @keyframes animate-card-1 {
-	0% { -webkit-transform: translate(0, -9.5vh); transform: translate(0, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
+	0% {
+		-webkit-transform: translate(0, -9.5vh);
+		transform: translate(0, -9.5vh);
+		opacity: 1;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @-webkit-keyframes animate-card-2 {
-	0% { -webkit-transform: translate(-100%, -9.5vh); transform: translate(-100%, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
+	0% {
+		-webkit-transform: translate(-100%, -9.5vh);
+		transform: translate(-100%, -9.5vh);
+		opacity: 1;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @keyframes animate-card-2 {
-	0% { -webkit-transform: translate(-100%, -9.5vh); transform: translate(-100%, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
+	0% {
+		-webkit-transform: translate(-100%, -9.5vh);
+		transform: translate(-100%, -9.5vh);
+		opacity: 1;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @-webkit-keyframes animate-card-3 {
-	0% { -webkit-transform: translate(-100%, -9.5vh); transform: translate(-100%, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
+	0% {
+		-webkit-transform: translate(-100%, -9.5vh);
+		transform: translate(-100%, -9.5vh);
+		opacity: 1;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @keyframes animate-card-3 {
-	0% { -webkit-transform: translate(-100%, -9.5vh); transform: translate(-100%, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
+	0% {
+		-webkit-transform: translate(-100%, -9.5vh);
+		transform: translate(-100%, -9.5vh);
+		opacity: 1;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @-webkit-keyframes animate-card-4 {
-	0% { -webkit-transform: translate(-200%, -9.5vh); transform: translate(-200%, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
+	0% {
+		-webkit-transform: translate(-200%, -9.5vh);
+		transform: translate(-200%, -9.5vh);
+		opacity: 1;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @keyframes animate-card-4 {
-	0% { -webkit-transform: translate(-200%, -9.5vh); transform: translate(-200%, -9.5vh); }
-	100% { -webkit-transform: translate(0, 0); transform: translate(0, 0);}
+	0% {
+		-webkit-transform: translate(-200%, -9.5vh);
+		transform: translate(-200%, -9.5vh);
+		opacity: 1;
+	}
+	100% {
+		-webkit-transform: translate(0, 0);
+		transform: translate(0, 0);
+		opacity: 1;
+	}
 }
 
 @keyframes flashing-seat {
@@ -359,12 +465,12 @@
 		position: absolute;
 		top: 0;
 	}
-	
+
 	#table-card {
 		height: 3.5rem;
 		width: 3.5rem;
 	}
-	
+
 	#deck {
 		height: 2rem;
 		width: 2rem;
@@ -372,49 +478,49 @@
 		    -ms-flex: 0.2;
 		        flex: 0.2;
 	}
-	
+
 	.table-pot {
 		-webkit-box-flex: 0.2;
 		    -ms-flex: 0.2;
 		        flex: 0.2;
 	}
-	
+
 	.table-pot-text {
 		display: none;
 	}
-	
+
 	.player-seat {
-		height: 4rem;
-		width: 4rem;
+		height: 6rem;
+		width: 6rem;
 	}
-	
+
 	#seat-1 {
 		left: 50%;
 		-webkit-transform: translate(-50%, -2.5rem);
 		    -ms-transform: translate(-50%, -2.5rem);
 		        transform: translate(-50%, -2.5rem);
 	}
-	
+
 	.player-emblem-name {
 		font-size: 0.75rem;
 	}
-	
+
 	.player-chip-count {
 		font-size: 0.75rem;
 	}
-	
+
 	#player-hand-card-0 {
-		height: 3.5rem;
-		width: 3.5rem;
-		top: 3rem;
-		right: 1.5rem;
+		height: 6rem;
+		width: 3rem;
+		top: 3.2rem;
+		right: 3.25rem;
 	}
-	
+
 	#player-hand-card-1 {
-		height: 3.5rem;
-		width: 3.5rem;
-		top: 3rem;
-		right: -1rem;
+		height: 6rem;
+		width: 3rem;
+		top: 3.2rem;
+		right: -0.5rem;
 	}
 }
 
@@ -423,5 +529,5 @@
 		width: 15vw;
 		height: 4rem;
 	}
-	
+
 }

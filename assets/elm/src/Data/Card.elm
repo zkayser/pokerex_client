@@ -1,7 +1,7 @@
 module Data.Card exposing (..)
 
 import Html exposing (Html, img)
-import Html.Attributes exposing (id, src)
+import Html.Attributes exposing (class, id, src)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
 import Json.Encode as Encode exposing (Value)
@@ -198,7 +198,17 @@ tableCardImageFor card =
 
 playerHandCardImageFor : Int -> Card -> Html msg
 playerHandCardImageFor index card =
-    img [ src (sourceUrlForCardImage card), id ("player-hand-card-" ++ toString index) ] []
+    case ( card.rank, card.suit ) of
+        ( RankError, SuitError ) ->
+            img
+                [ src (sourceUrlForCardImage card)
+                , id ("player-hand-card-" ++ toString index)
+                , class "card-back"
+                ]
+                []
+
+        _ ->
+            img [ src (sourceUrlForCardImage card), id ("player-hand-card-" ++ toString index) ] []
 
 
 rankDecoder : Decoder Rank

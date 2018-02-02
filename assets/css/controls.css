@@ -28,9 +28,9 @@
 	        flex: 1;
 	display: -webkit-box;
 	display: -ms-flexbox;
-	display: flex; 
-	-webkit-box-pack: center; 
-	    -ms-flex-pack: center; 
+	display: flex;
+	-webkit-box-pack: center;
+	    -ms-flex-pack: center;
 	        justify-content: center;
 	cursor: pointer;
 }
@@ -74,7 +74,7 @@
 	.mobile-controls-container {
 		display: inline;
 		position: fixed;
-		bottom: 10%;
+		bottom: 22%;
 		left: 10%;
 	}
 }
