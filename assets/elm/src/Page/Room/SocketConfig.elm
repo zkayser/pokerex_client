@@ -68,7 +68,6 @@ roomChannel channel =
         |> Channel.on "clear_ui" Clear
         |> Channel.on "bank_info" (\payload -> SetBankInfo payload)
         |> Channel.on "new_chat_msg" (\payload -> NewChatMsg payload)
-        |> Channel.withDebug
 
 
 playerInfoChannel : Player -> Channel Msg

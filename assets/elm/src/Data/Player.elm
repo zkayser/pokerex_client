@@ -25,6 +25,19 @@ type alias TablePlayer =
 
 
 
+-- Initialization --
+
+
+defaultPlayer : Player
+defaultPlayer =
+    { email = ""
+    , token = AuthToken.AuthToken ""
+    , username = Username ""
+    , chips = 0
+    }
+
+
+
 -- Serialization --
 
 

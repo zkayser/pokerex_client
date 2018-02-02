@@ -209,11 +209,7 @@ handleActionMsg model actionString value =
 
 handleRejoin : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 handleRejoin model =
-    let
-        newModel =
-            { model | roomMessages = model.roomMessages ++ [ "Your connection has been re-established." ] }
-    in
-    ( ( newModel, Cmd.none ), NoOp )
+    ( ( model, Cmd.none ), NoOp )
 
 
 handleSetRaise : Model -> String -> ( ( Model, Cmd Msg ), ExternalMsg )

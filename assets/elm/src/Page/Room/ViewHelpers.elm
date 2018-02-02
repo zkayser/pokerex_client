@@ -47,6 +47,7 @@ viewPlayers session model =
                     , Dict.get (Player.usernameToString seating.name) chipRoll
                     , handWhereIs seating.name playerHands model.player
                     , isActive
+                    , model.roomModel.active
                     )
                 )
                 model.roomModel.seating
@@ -94,8 +95,8 @@ viewTableCard index card =
         [ Card.tableCardImageFor card ]
 
 
-viewSeat : ( Room.Seating, Player, Maybe Int, List Card, Bool ) -> Html Msg
-viewSeat ( seating, player, maybeChipRoll, cards, isActive ) =
+viewSeat : ( Room.Seating, Player, Maybe Int, List Card, Bool, Maybe Player.Username ) -> Html Msg
+viewSeat ( seating, player, maybeChipRoll, cards, isActive, maybeActivePlayer ) =
     let
         chipsToHtml =
             case maybeChipRoll of
@@ -107,12 +108,20 @@ viewSeat ( seating, player, maybeChipRoll, cards, isActive ) =
 
         cardImages =
             List.indexedMap Card.playerHandCardImageFor cards
+
+        activePlayer =
+            case maybeActivePlayer of
+                Just active ->
+                    active
+
+                Nothing ->
+                    Player.Username ""
     in
     div
         [ id ("seat-" ++ toString (seating.position + 1))
         , class "player-seat"
         , style [ ( "text-align", "center" ) ]
-        , classList [ ( "active-seat-" ++ (toString <| seating.position + 1), isActive && (seating.name == player.username) ) ]
+        , classList [ ( "active-seat-" ++ (toString <| seating.position + 1), Player.equals seating.name activePlayer ) ]
         ]
         ([ p [ class "player-emblem-name" ] [ Player.usernameToHtml seating.name ]
          , p [ class "player-chip-count" ] [ chipsToHtml ]
