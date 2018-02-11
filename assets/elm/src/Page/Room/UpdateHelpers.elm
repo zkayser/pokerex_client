@@ -196,8 +196,8 @@ handleActionMsg model actionString value =
                 "action_add_chips" ->
                     { model | addAmount = 0, modalRendered = Closed }
 
-                _ ->
-                    model
+                action ->
+                    { model | roomMessages = actionMessageFor model action :: model.roomMessages }
     in
     case List.member actionString possibleActions of
         False ->

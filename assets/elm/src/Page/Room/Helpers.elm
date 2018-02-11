@@ -80,3 +80,27 @@ formatTitle title =
         |> String.join "_"
         |> String.split " "
         |> String.join "_"
+
+
+actionMessageFor : Model -> String -> String
+actionMessageFor model action =
+    case model.roomModel.active of
+        Nothing ->
+            ""
+
+        Just player ->
+            case action of
+                "action_call" ->
+                    Player.usernameToString player ++ " called " ++ (toString <| model.roomModel.toCall)
+
+                "action_raise" ->
+                    Player.usernameToString player ++ " raised " ++ (toString <| model.raiseAmount)
+
+                "action_fold" ->
+                    Player.usernameToString player ++ " folded"
+
+                "action_check" ->
+                    Player.usernameToString player ++ " checked"
+
+                _ ->
+                    ""
