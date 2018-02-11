@@ -99,39 +99,49 @@ viewActionBtn actionsModel action platform =
     in
     case canCallAction actionsModel action of
         True ->
-            a [ class (actionBtnClass color platform), onClick message ] [ childrenForBtn btnText platform ]
+            a [ class (actionBtnClass color platform), onClick message ] [ childrenForBtn btnText platform actionsModel.toCall ]
 
         False ->
             text ""
 
 
-childrenForBtn : String -> Platform -> Html msg
-childrenForBtn btnText platform =
+childrenForBtn : String -> Platform -> Int -> Html msg
+childrenForBtn btnText platform toCall =
     case platform of
         Desktop ->
             text btnText
 
         Mobile ->
-            getIconForMobileBtn btnText
+            getIconForMobileBtn btnText toCall
 
 
-getIconForMobileBtn : String -> Html msg
-getIconForMobileBtn btnText =
-    case btnText of
-        "Call" ->
-            i [ class "material-icons" ] [ text "phone" ]
+getIconForMobileBtn : String -> Int -> Html msg
+getIconForMobileBtn btnText toCall =
+    case toCall of
+        0 ->
+            case btnText of
+                "Raise" ->
+                    i [ class "material-icons" ] [ text "arrow_upward" ]
 
-        "Raise" ->
-            i [ class "material-icons" ] [ text "arrow_upward" ]
+                "Check" ->
+                    i [ class "material-icons" ] [ text "check" ]
 
-        "Check" ->
-            i [ class "material-icons" ] [ text "check" ]
+                _ ->
+                    text ""
 
-        "Fold" ->
-            i [ class "material-icons" ] [ text "block" ]
+        callAmount ->
+            case btnText of
+                "Raise" ->
+                    i [ class "material-icons" ] [ text "arrow_upward" ]
 
-        _ ->
-            text ""
+                "Check" ->
+                    i [ class "material-icons" ] [ text "check" ]
+
+                "Fold" ->
+                    i [ class "material-icons" ] [ text "block" ]
+
+                _ ->
+                    text <| toString callAmount
 
 
 raiseContent : ActionsModel msg -> Html msg
@@ -205,7 +215,7 @@ getAttributesFor : ActionsModel msg -> Action -> ( String, msg, String )
 getAttributesFor actionsModel action =
     case action of
         Call ->
-            ( "blue darken-3", actionMsgWith actionsModel "action_call", "Call" )
+            ( "blue darken-3", actionMsgWith actionsModel "action_call", "Call " ++ toString actionsModel.toCall )
 
         Raise ->
             ( "red darken-3", actionsModel.openRaiseMsg, "Raise" )
