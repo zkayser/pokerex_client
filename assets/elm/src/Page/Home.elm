@@ -91,8 +91,7 @@ viewButton : Maybe Player -> Html msg
 viewButton player =
     case player of
         Just player ->
-            -- This goes to the login page for the time being because we don't have an account page yet
-            a [ class "waves-effect waves-light btn-large white-text margin-bottom-small", Route.href Route.Login ]
+            a [ class "waves-effect waves-light btn-large white-text margin-bottom-small", Route.href (Route.Profile (Player.usernameToString player.username)) ]
                 [ i [ class "material-icons left large-text" ]
                     [ text "account_box" ]
                 , text "Go to your account"
