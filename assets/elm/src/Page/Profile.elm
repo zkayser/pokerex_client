@@ -253,23 +253,23 @@ privateRoomsChannel player =
 updatePlayerPush : Model -> UpdatableAttribute -> String -> Cmd Msg
 updatePlayerPush model attribute value =
     let
-        stringAttr =
+        ( stringAttr, encodedValue ) =
             case attribute of
                 Email ->
-                    "email"
+                    ( "email", Encode.string value )
 
                 Blurb ->
-                    "blurb"
+                    ( "blurb", Encode.string value )
 
                 Chips ->
-                    "chips"
+                    ( "chips", Encode.int 1000 )
 
                 _ ->
-                    "error"
+                    ( "error", Encode.string value )
 
         push =
             Push.init ("players:" ++ Player.usernameToString model.player.username) "update_player"
-                |> Push.withPayload (Encode.object [ ( stringAttr, Encode.string value ) ])
+                |> Push.withPayload (Encode.object [ ( stringAttr, encodedValue ) ])
     in
     Phoenix.push model.socketUrl push
 
@@ -542,7 +542,7 @@ viewEditFieldFor attribute msg model =
                 ]
 
         Chips ->
-            div [ class "collapsible-body chip-restore", styleBodyFor model attribute ]
+            div [ class "collapsible-body", styleBodyFor model attribute ]
                 [ form [ onSubmit msg ]
                     [ button [ class "btn blue white-text", onClick msg ]
                         [ text "Restore chip count to 1000" ]
@@ -567,7 +567,7 @@ addEditIcon attribute model =
             editHtml
 
         Chips ->
-            if model.player.chips <= 100 then
+            if model.profile.chips <= 100 then
                 editHtml
             else
                 text ""
@@ -1112,7 +1112,11 @@ handleUpdateSearch model query =
 
 handleUpdateChips : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 handleUpdateChips model =
-    ( ( model, Cmd.none ), NoOp )
+    let
+        cmd =
+            updatePlayerPush model Chips ""
+    in
+    ( ( model, cmd ), NoOp )
 
 
 handleHeaderClicked : Model -> UpdatableAttribute -> ( ( Model, Cmd Msg ), ExternalMsg )
@@ -1126,7 +1130,7 @@ handleHeaderClicked model attribute =
 
         -- The `Chips` field should not be editable unless the player has 100 chips or fewer
         newActiveAttribute =
-            if activeAttribute == Chips && model.player.chips > 100 then
+            if activeAttribute == Chips && model.profile.chips > 100 then
                 None
             else
                 activeAttribute
