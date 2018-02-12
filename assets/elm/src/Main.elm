@@ -19,7 +19,7 @@ import Page.ForgotPassword as ForgotPassword
 import Page.Home as Home
 import Page.Login as Login
 import Page.NotFound as NotFound
-import Page.Profile as Profile exposing (Msg(RefreshAllRooms, UpdateInvitations))
+import Page.Profile as Profile exposing (Msg(RefreshAllRooms, RefreshPlayer, UpdateInvitations))
 import Page.Register as Register
 import Page.ResetPassword as ResetPassword
 import Page.Room as Room
@@ -115,15 +115,22 @@ setRoute maybeRoute model =
 
         Just (Route.Profile user) ->
             let
-                page =
+                ( page, cmd ) =
                     case model.session.player of
                         Just player ->
-                            Page.Profile (Profile.initialModel player envConfig)
+                            let
+                                initialModel =
+                                    Profile.initialModel player envConfig
+
+                                ( ( updatedSubModel, cmdFromPage ), msgFromPage ) =
+                                    Profile.update RefreshPlayer initialModel
+                            in
+                            ( Page.Profile (Profile.initialModel player envConfig), Cmd.map ProfileMsg cmdFromPage )
 
                         Nothing ->
-                            Page.NotFound
+                            ( Page.NotFound, Cmd.none )
             in
-            ( { model | pageState = Loaded page }, Cmd.none )
+            ( { model | pageState = Loaded page }, cmd )
 
         Just Route.ForgotPassword ->
             ( { model | pageState = Loaded (Page.ForgotPassword (ForgotPassword.initialModel envConfig)) }, Cmd.none )

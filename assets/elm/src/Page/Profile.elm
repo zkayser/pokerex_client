@@ -102,6 +102,7 @@ type Msg
     | DeclineInvitation String
     | UpdateInvitations
     | RefreshAllRooms
+    | RefreshPlayer
     | HeaderClicked UpdatableAttribute
     | ChangeSubTab StartGameSubTab
     | OpenDeleteConfirmation
@@ -986,6 +987,9 @@ update msg model =
         RefreshAllRooms ->
             handleRefreshAllRooms model
 
+        RefreshPlayer ->
+            handleRefreshPlayer model
+
         SubmitEmailUpdate ->
             handleSubmitUpdate model Email
 
@@ -1292,6 +1296,15 @@ handleRefreshAllRooms model =
             getPage model Invites model.invitedGames.page
     in
     ( ( model, Cmd.batch [ currentCmd, invitesCmd ] ), NoOp )
+
+
+handleRefreshPlayer : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleRefreshPlayer model =
+    let
+        cmd =
+            getPlayerPush model
+    in
+    ( ( model, cmd ), NoOp )
 
 
 handleOpenDeleteConfirmation : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
