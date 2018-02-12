@@ -543,7 +543,7 @@ viewEditFieldFor attribute msg model =
 
         Chips ->
             div [ class "collapsible-body", styleBodyFor model attribute ]
-                [ form [ onSubmit msg ]
+                [ form []
                     [ button [ class "btn blue white-text", onClick msg ]
                         [ text "Restore chip count to 1000" ]
                     ]
