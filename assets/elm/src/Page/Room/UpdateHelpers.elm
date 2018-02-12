@@ -196,8 +196,8 @@ handleActionMsg model actionString value =
                 "action_add_chips" ->
                     { model | addAmount = 0, modalRendered = Closed }
 
-                action ->
-                    { model | roomMessages = actionMessageFor model action :: model.roomMessages }
+                _ ->
+                    model
     in
     case List.member actionString possibleActions of
         False ->
@@ -339,6 +339,16 @@ handleNewChatMsg model payload =
             ( ( { model | chat = newChat }, scrollChatToTop () ), NoOp )
 
         _ ->
+            ( ( model, Cmd.none ), NoOp )
+
+
+handleNewMessage : Model -> Value -> ( ( Model, Cmd Msg ), ExternalMsg )
+handleNewMessage model payload =
+    case Decode.decodeValue (Decode.at [ "message" ] Decode.string) payload of
+        Ok message ->
+            ( ( { model | roomMessages = message :: model.roomMessages }, Cmd.none ), NoOp )
+
+        Err _ ->
             ( ( model, Cmd.none ), NoOp )
 
 

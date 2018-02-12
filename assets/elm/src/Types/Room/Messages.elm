@@ -31,6 +31,7 @@ type RoomMsg
     | GameStarted Value
     | WinnerMessage Value
     | Clear Value
+    | NewMessage Value
     | PresentWinningHand Value -- END MESSAGES FROM GAME SERVER
     | NewChatMsg Value -- START CHAT MESSAGES
     | SetChatMsg String

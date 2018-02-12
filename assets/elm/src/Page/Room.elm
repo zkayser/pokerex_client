@@ -151,6 +151,9 @@ update msg model =
         NewChatMsg value ->
             handleNewChatMsg model value
 
+        NewMessage value ->
+            handleNewMessage model value
+
         BankPressed ->
             handleBankPressed model
 
