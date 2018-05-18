@@ -21,6 +21,7 @@ type alias Room =
     , round : ChipTracker
     , pot : Int
     , table : Table
+    , leaving : List Username
     }
 
 
@@ -60,6 +61,7 @@ decoder =
         |> required "round" chipTrackerDecoder
         |> required "pot" Decode.int
         |> required "table" (Decode.list Card.decoder)
+        |> optional "leaving" (Decode.list usernameDecoder) []
 
 
 chipTrackerDecoder : Decoder ChipTracker
@@ -96,4 +98,5 @@ defaultRoom =
     , round = Dict.empty
     , pot = 0
     , table = []
+    , leaving = []
     }

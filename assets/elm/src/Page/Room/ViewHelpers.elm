@@ -47,7 +47,7 @@ viewPlayers session model =
                     , Dict.get (Player.usernameToString seating.name) chipRoll
                     , handWhereIs seating.name playerHands model.player
                     , isActive
-                    , model.roomModel.active
+                    , model.roomModel
                     )
                 )
                 model.roomModel.seating
@@ -95,8 +95,8 @@ viewTableCard index card =
         [ Card.tableCardImageFor card ]
 
 
-viewSeat : ( Room.Seating, Player, Maybe Int, List Card, Bool, Maybe Player.Username ) -> Html Msg
-viewSeat ( seating, player, maybeChipRoll, cards, isActive, maybeActivePlayer ) =
+viewSeat : ( Room.Seating, Player, Maybe Int, List Card, Bool, Room ) -> Html Msg
+viewSeat ( seating, player, maybeChipRoll, cards, isActive, room ) =
     let
         chipsToHtml =
             case maybeChipRoll of
@@ -110,18 +110,22 @@ viewSeat ( seating, player, maybeChipRoll, cards, isActive, maybeActivePlayer ) 
             List.indexedMap Card.playerHandCardImageFor cards
 
         activePlayer =
-            case maybeActivePlayer of
+            case room.active of
                 Just active ->
                     active
 
                 Nothing ->
                     Player.Username ""
+        isPlayerLeaving =
+            List.member seating.name room.leaving
     in
     div
         [ id ("seat-" ++ toString (seating.position + 1))
         , class "player-seat"
         , style [ ( "text-align", "center" ) ]
-        , classList [ ( "active-seat-" ++ (toString <| seating.position + 1), Player.equals seating.name activePlayer ) ]
+        , classList [ ( "active-seat-" ++ (toString <| seating.position + 1), Player.equals seating.name activePlayer )
+                    , ( "seat-leaving", isPlayerLeaving )
+                    ]
         ]
         ([ p [ class "player-emblem-name" ] [ Player.usernameToHtml seating.name ]
          , p [ class "player-chip-count" ] [ chipsToHtml ]
@@ -263,13 +267,16 @@ toolbarConfig : Model -> PlayerToolbar.Config Msg
 toolbarConfig model =
     let
         hasJoined =
-            List.member model.player.username (List.map .name model.roomModel.players)
+            List.member model.player.username (List.map .name model.roomModel.seating)
 
         ( txt, msg ) =
             if hasJoined then
                 ( "Leave", LeaveRoom model.player )
             else
                 ( "Join", JoinRoom model.player )
+
+        hasLeft =
+            List.member model.player.username model.roomModel.leaving
 
         isActive =
             getIsActive model
@@ -283,6 +290,7 @@ toolbarConfig model =
     , chatPressedMsg = ChatPressed
     , mobileToolbarPressed = MobileToolbarPressed
     , closeModalMsg = CloseModal
+    , isLeaving = hasLeft
     }
 
 

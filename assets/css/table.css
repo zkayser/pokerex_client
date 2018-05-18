@@ -124,6 +124,10 @@
 	color: white;
 }
 
+.seat-leaving {
+	background-color: lightgrey;
+}
+
 .player-emblem-name {
 	margin-bottom: 0;
 }

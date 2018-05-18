@@ -8,7 +8,7 @@ import Data.WinningHand as WinningHand exposing (WinningHand)
 import Json.Decode as Decode exposing (Value)
 import Json.Encode as Encode
 import Page.Room.Helpers exposing (..)
-import Page.Room.PushMessages exposing (actionPush, playerInfoPush)
+import Page.Room.PushMessages exposing (actionPush, playerInfoPush, rejoinPush)
 import Page.Room.SocketConfig exposing (room)
 import Phoenix
 import Phoenix.Push as Push exposing (Push)
@@ -49,9 +49,16 @@ handleJoin : Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 handleJoin model =
     let
         newSubscriptions =
-            room model :: model.channelSubscriptions
+            case List.member ("games:" ++ model.room) (List.map .topic model.channelSubscriptions) of
+                True -> model.channelSubscriptions
+                False -> room model :: model.channelSubscriptions
+
+        joinCmd =
+            case List.member ("games:" ++ model.room) (List.map .topic model.channelSubscriptions) of
+                True -> rejoinPush model.room (Player.usernameToString model.player.username) "action_join" model.joinValue model.socketUrl
+                False -> Cmd.none
     in
-    ( ( { model | channelSubscriptions = newSubscriptions, modalRendered = Closed }, Cmd.none ), NoOp )
+    ( ( { model | channelSubscriptions = newSubscriptions, modalRendered = Closed }, joinCmd ), NoOp )
 
 
 handleJoinRoom : Model -> Player -> ( ( Model, Cmd Msg ), ExternalMsg )
@@ -93,7 +100,7 @@ handleJoinFailed model json =
                 Ok message ->
                     let
                         newSubscriptions =
-                            List.filter (\channel -> channel.topic /= ("rooms:" ++ model.room)) model.channelSubscriptions
+                            List.filter (\channel -> channel.topic /= ("games:" ++ model.room)) model.channelSubscriptions
                     in
                     { model | roomMessages = message :: model.roomMessages, channelSubscriptions = newSubscriptions }
 
@@ -411,7 +418,7 @@ handleSubmitChat model =
                     Data.Chat.encode model.player model.currentChatMsg
 
                 push =
-                    Push.init ("rooms:" ++ model.room) "chat_msg"
+                    Push.init ("games:" ++ model.room) "chat_msg"
                         |> Push.withPayload payload
             in
             ( ( { model | currentChatMsg = "" }, Phoenix.push model.socketUrl push ), NoOp )

@@ -15,7 +15,7 @@ actionPush : String -> String -> Value -> String -> Cmd Msg
 actionPush room actionString value socketUrl =
     let
         push =
-            Push.init ("rooms:" ++ room) actionString
+            Push.init ("games:" ++ room) actionString
                 |> Push.withPayload value
     in
     Phoenix.push socketUrl push
@@ -29,3 +29,12 @@ playerInfoPush username msgToChannel socketUrl =
                 |> Push.withPayload (Encode.object [ ( "player", Encode.string username ) ])
     in
     Phoenix.push socketUrl push
+
+rejoinPush : String -> String -> String -> String -> String -> Cmd Msg
+rejoinPush roomId username actionString amountString socketUrl =
+         case String.toInt amountString of
+            Ok joinAmount ->
+                Phoenix.push socketUrl (Push.init ("games:" ++ roomId) actionString
+                |> Push.withPayload (Encode.object [("player", Encode.string username),
+                    ("amount", Encode.int joinAmount)]))
+            Err _ -> Cmd.none

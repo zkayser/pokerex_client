@@ -43,14 +43,14 @@ socket session socketUrl =
 
 room : Model -> Channel Msg
 room model =
-    Channel.init ("rooms:" ++ model.room)
+    Channel.init ("games:" ++ model.room)
         |> Channel.withPayload (Encode.object [ ( "type", Encode.string model.roomType ), ( "amount", Encode.int <| joinValToInt model.joinValue ) ])
         |> roomChannel
 
 
 privateRoom : String -> Player -> Channel Msg
 privateRoom roomTitle player =
-    Channel.init ("rooms:" ++ roomTitle)
+    Channel.init ("games:" ++ roomTitle)
         |> Channel.withPayload (Encode.object [ ( "type", Encode.string "private" ), ( "amount", Encode.int 0 ) ])
         |> roomChannel
 

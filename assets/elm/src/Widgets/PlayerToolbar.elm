@@ -15,23 +15,31 @@ type alias Config msg =
     , chatPressedMsg : msg
     , mobileToolbarPressed : msg
     , closeModalMsg : msg
+    , isLeaving : Bool
     }
 
 
 view : Config msg -> Html msg
 view config =
-    div [ class "controls-container" ]
-        [ li [ class "control-item" ]
-            [ a [ onClick config.joinLeaveMsg ] [ text config.btnText ] ]
-        , li [ class "control-item" ]
-            [ viewActionBtn config ]
-        , li [ class "control-item" ]
-            [ a [ onClick config.accountPressedMsg ] [ text "Account" ] ]
-        , li [ class "control-item" ]
-            [ a [ onClick config.chatPressedMsg ] [ text "Chat" ] ]
-        , li [ class "control-item" ]
-            [ a [ onClick config.bankPressedMsg ] [ text "Bank" ] ]
-        ]
+    case config.isLeaving of
+        True ->
+            div [ class "controls-container controls-disabled" ]
+                [ h4 [ class "controls-msg" ]
+                    [ text "You have left the game"]
+                ]
+        False ->
+            div [ class "controls-container" ]
+                [ li [ class "control-item" ]
+                    [ a [ onClick config.joinLeaveMsg ] [ text config.btnText ] ]
+                , li [ class "control-item" ]
+                    [ viewActionBtn config ]
+                , li [ class "control-item" ]
+                    [ a [ onClick config.accountPressedMsg ] [ text "Account" ] ]
+                , li [ class "control-item" ]
+                    [ a [ onClick config.chatPressedMsg ] [ text "Chat" ] ]
+                , li [ class "control-item" ]
+                    [ a [ onClick config.bankPressedMsg ] [ text "Bank" ] ]
+                ]
 
 
 viewActionBtn : Config msg -> Html msg
