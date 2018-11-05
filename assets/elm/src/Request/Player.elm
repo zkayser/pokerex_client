@@ -32,29 +32,12 @@ type alias Registration r =
 
 
 
--- TODO: Need to come back and reconsider
--- the naming of PasswordReset and ResetPassword.
--- The type below is the type that needs to be
--- sent to the server to actually execute the password reset.
--- `PasswordReset` right now is the payload used when a player
--- is on the `ForgotPassword` page and we want to tell the server
--- to initiate the process to reset the player's password.
-
-
 type alias ResetPassword r =
     { r
         | resetToken : String
         , newPassword : String
         , apiUrl : String
     }
-
-
-
-{-
-   Not sure if the detailed implementation of this is going to work right off the bat.
-   Might need to tweak the server side implementation, add routes for api session requests,
-   etc.; Also, this specific request should accept a json field with a "player" {"player": {...embeddedFields}}
--}
 
 
 login : { r | username : String, password : String, apiUrl : String } -> Http.Request Player
