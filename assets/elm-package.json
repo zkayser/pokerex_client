@@ -29,5 +29,5 @@
         "rtfeldman/selectlist": "1.0.0 <= v < 2.0.0",
         "simonh1000/elm-jwt": "5.0.0 <= v < 6.0.0"
     },
-    "elm-version": "0.18.0 <= v < 0.19.0"
+    "elm-version": "0.18.0"
 }
